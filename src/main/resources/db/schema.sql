@@ -9,9 +9,11 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
-    role ENUM('USER', 'ADMIN') DEFAULT 'USER',
+    role VARCHAR(20) DEFAULT 'USER',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
 );
 
 -- 숙소 테이블
@@ -25,9 +27,11 @@ CREATE TABLE accommodations (
     price_per_night DECIMAL(10, 2) NOT NULL,
     rating DECIMAL(3, 2),
     review_count INT DEFAULT 0,
-    status ENUM('ACTIVE', 'INACTIVE', 'DELETED') DEFAULT 'ACTIVE',
+    status VARCHAR(20) DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
 );
 
 -- 숙소 이미지 테이블
@@ -37,6 +41,8 @@ CREATE TABLE accommodation_images (
     image_url VARCHAR(255) NOT NULL,
     is_main BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id) ON DELETE CASCADE
 );
 
@@ -48,9 +54,11 @@ CREATE TABLE rooms (
     description TEXT,
     capacity INT NOT NULL,
     price_per_night DECIMAL(10, 2) NOT NULL,
-    status ENUM('AVAILABLE', 'OCCUPIED', 'MAINTENANCE') DEFAULT 'AVAILABLE',
+    status VARCHAR(20) DEFAULT 'AVAILABLE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id) ON DELETE CASCADE
 );
 
@@ -61,6 +69,8 @@ CREATE TABLE room_images (
     image_url VARCHAR(255) NOT NULL,
     is_main BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 );
 
@@ -72,10 +82,12 @@ CREATE TABLE reservations (
     check_in_date DATE NOT NULL,
     check_out_date DATE NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
-    status ENUM('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED') DEFAULT 'PENDING',
-    payment_status ENUM('PENDING', 'PAID', 'REFUNDED') DEFAULT 'PENDING',
+    status VARCHAR(20) DEFAULT 'PENDING',
+    payment_status VARCHAR(20) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (room_id) REFERENCES rooms(id)
 );
@@ -90,6 +102,8 @@ CREATE TABLE reviews (
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id),
     FOREIGN KEY (reservation_id) REFERENCES reservations(id)
@@ -101,6 +115,8 @@ CREATE TABLE review_images (
     review_id BIGINT NOT NULL,
     image_url VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE
 );
 
@@ -110,6 +126,8 @@ CREATE TABLE wishlists (
     user_id BIGINT NOT NULL,
     accommodation_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id),
     UNIQUE KEY unique_wishlist (user_id, accommodation_id)
@@ -121,14 +139,16 @@ CREATE TABLE coupons (
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    discount_type ENUM('PERCENTAGE', 'FIXED') NOT NULL,
+    discount_type VARCHAR(20) NOT NULL,
     discount_value DECIMAL(10, 2) NOT NULL,
     min_purchase_amount DECIMAL(10, 2),
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
 );
 
 -- 사용자 쿠폰 테이블
@@ -139,6 +159,8 @@ CREATE TABLE user_coupons (
     is_used BOOLEAN DEFAULT FALSE,
     used_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (coupon_id) REFERENCES coupons(id)
 );
@@ -148,11 +170,13 @@ CREATE TABLE payments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     reservation_id BIGINT NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    payment_method ENUM('CREDIT_CARD', 'BANK_TRANSFER', 'KAKAO_PAY') NOT NULL,
-    status ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED') DEFAULT 'PENDING',
+    payment_method VARCHAR(20) NOT NULL,
+    status VARCHAR(20) DEFAULT 'PENDING',
     transaction_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (reservation_id) REFERENCES reservations(id)
 );
 
@@ -161,13 +185,17 @@ CREATE TABLE amenities (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     icon_url VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
 );
 
 -- 숙소-편의시설 매핑 테이블
 CREATE TABLE accommodation_amenities (
     accommodation_id BIGINT NOT NULL,
     amenity_id BIGINT NOT NULL,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     PRIMARY KEY (accommodation_id, amenity_id),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id) ON DELETE CASCADE,
     FOREIGN KEY (amenity_id) REFERENCES amenities(id) ON DELETE CASCADE
@@ -178,13 +206,17 @@ CREATE TABLE room_options (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255)
 );
 
 -- 객실-옵션 매핑 테이블
 CREATE TABLE room_option_mappings (
     room_id BIGINT NOT NULL,
     option_id BIGINT NOT NULL,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     PRIMARY KEY (room_id, option_id),
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     FOREIGN KEY (option_id) REFERENCES room_options(id) ON DELETE CASCADE
@@ -198,6 +230,8 @@ CREATE TABLE reservation_options (
     quantity INT NOT NULL DEFAULT 1,
     price DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
     FOREIGN KEY (option_id) REFERENCES room_options(id)
 ); 
