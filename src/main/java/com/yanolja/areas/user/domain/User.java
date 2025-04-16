@@ -1,4 +1,4 @@
-package com.yanolja.user.domain;
+package com.yanolja.areas.user.domain;
 
 import com.yanolja.common.BaseEntity;
 import jakarta.persistence.*;
