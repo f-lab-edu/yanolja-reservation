@@ -1,6 +1,6 @@
 -- 데이터베이스 생성
-CREATE DATABASE IF NOT EXISTS yanolja_db;
-USE yanolja_db;
+CREATE DATABASE IF NOT EXISTS yanolja;
+USE yanolja;
 
 -- 사용자 테이블
 CREATE TABLE users (
@@ -15,6 +15,25 @@ CREATE TABLE users (
     created_by VARCHAR(255),
     updated_by VARCHAR(255)
 );
+
+INSERT INTO users (
+    email,
+    password,
+    name,
+    phone,
+    role,
+    created_by,
+    updated_by
+) VALUES (
+    'admin@example.com',
+    '$2a$10$uIqPcm7xNLFF35AaICiE/OtxPGzT9jYvFUrXSSSodjUliReRW99Yi',  -- asdf1234!
+    '관리자',
+    '010-0000-0000',
+    'ADMIN',
+    'system',
+    'system'
+);
+
 
 -- 숙소 테이블
 CREATE TABLE accommodations (
