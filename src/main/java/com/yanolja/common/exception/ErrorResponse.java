@@ -1,4 +1,4 @@
-package com.yanolja.exception;
+package com.yanolja.common.exception;
 
 import lombok.Getter;
 
