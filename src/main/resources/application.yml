@@ -29,7 +29,10 @@ springdoc:
 
 jwt:
   secret: your-secret-key-here
-  expiration: 86400000 # 24 hours
+  access-token-expiration: 900000 # 15분 (밀리초)
+  refresh-token-expiration: 1209600000 # 2주 (밀리초)
+  header: Authorization
+  prefix: "Bearer "
 
 logging:
   level:
