@@ -5,6 +5,8 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'org.springframework.boot' version '3.2.5'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 repositories {
@@ -15,23 +17,26 @@ repositories {
 }
 
 dependencies {
-    api libs.org.springframework.boot.spring.boot.starter.web
-    api libs.org.springframework.boot.spring.boot.starter.data.jpa
-    api libs.org.springframework.boot.spring.boot.starter.security
-    api libs.org.springframework.boot.spring.boot.starter.validation
-    api libs.org.springdoc.springdoc.openapi.starter.webmvc.ui
-    api libs.org.projectlombok.lombok
-    api libs.io.jsonwebtoken.jjwt.api
-    api libs.com.querydsl.querydsl.jpa
-    api libs.com.querydsl.querydsl.apt
-    api libs.org.springframework.boot.spring.boot.starter.oauth2.client
-    runtimeOnly libs.mysql.mysql.connector.java
-    runtimeOnly libs.io.jsonwebtoken.jjwt.impl
-    runtimeOnly libs.io.jsonwebtoken.jjwt.jackson
-    testImplementation libs.org.springframework.boot.spring.boot.starter.test
-    
-    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'org.projectlombok:lombok'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'com.querydsl:querydsl-jpa:5.0.0'
+    implementation 'com.querydsl:querydsl-apt:5.0.0'
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    annotationProcessor 'org.projectlombok:lombok'
+
 }
 
 group = 'com.yanolja'
