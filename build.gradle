@@ -29,6 +29,9 @@ dependencies {
     runtimeOnly libs.io.jsonwebtoken.jjwt.impl
     runtimeOnly libs.io.jsonwebtoken.jjwt.jackson
     testImplementation libs.org.springframework.boot.spring.boot.starter.test
+    
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 group = 'com.yanolja'
