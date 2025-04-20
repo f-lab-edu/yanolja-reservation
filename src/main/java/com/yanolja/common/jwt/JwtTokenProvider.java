@@ -4,7 +4,6 @@ import com.yanolja.common.config.JwtConfig;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,13 +14,19 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-@RequiredArgsConstructor
 public class JwtTokenProvider {
 
     @Getter
     private final JwtConfig jwtConfig;
     private final UserDetailsService userDetailsService;
-    private final Key key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
+    private final Key key;
+
+    // 생성자에서 key 초기화
+    public JwtTokenProvider(JwtConfig jwtConfig, UserDetailsService userDetailsService) {
+        this.jwtConfig = jwtConfig;
+        this.userDetailsService = userDetailsService;
+        this.key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
+    }
 
     public String createAccessToken(Authentication authentication) {
         Date now = new Date();
