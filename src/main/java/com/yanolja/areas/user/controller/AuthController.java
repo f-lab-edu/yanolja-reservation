@@ -4,6 +4,7 @@ import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.user.dto.LoginRequest;
 import com.yanolja.areas.user.dto.LogoutRequest;
 import com.yanolja.areas.user.dto.RegisterRequest;
+import com.yanolja.areas.user.dto.TokenRefreshRequest;
 import com.yanolja.areas.user.dto.TokenResponse;
 import com.yanolja.areas.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,5 +56,13 @@ public class AuthController {
         response.put("success", result);
         response.put("message", result ? "로그아웃 되었습니다." : "로그아웃 처리 중 오류가 발생했습니다.");
         return ResponseEntity.ok(response);
+    }
+    
+    @Operation(summary = "토큰 갱신", description = "requestDto[TokenRefreshRequest] responseDto[TokenResponse]", tags = {"인증"})
+    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
+        TokenResponse tokenResponse = userService.refreshToken(refreshRequest);
+        return ResponseEntity.ok(tokenResponse);
     }
 } 
