@@ -1,0 +1,28 @@
+### 회원가입 요청
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "테스트 사용자",
+  "email": "test@example.com",
+  "password": "Test1234!",
+  "phone": "010-1234-5678"
+}
+
+
+### 로그인 요청
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+"email": "test@example.com",
+"password": "Test1234!"
+}
+
+### 로그아웃 요청
+POST http://localhost:8080/api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ1MTA5MjUxLCJleHAiOjE3NDYzMTg4NTF9.alM70TBytQT5WkswgA2vCNfMhK4x-busB98a8C1Xrf4"
+}
