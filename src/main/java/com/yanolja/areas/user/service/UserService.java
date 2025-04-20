@@ -4,6 +4,7 @@ import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.user.dto.LoginRequest;
 import com.yanolja.areas.user.dto.LogoutRequest;
 import com.yanolja.areas.user.dto.RegisterRequest;
+import com.yanolja.areas.user.dto.TokenRefreshRequest;
 import com.yanolja.areas.user.dto.TokenResponse;
 
 /**
@@ -32,4 +33,11 @@ public interface UserService {
      * @return 로그아웃 성공 여부
      */
     boolean logout(LogoutRequest request);
+    
+    /**
+     * 액세스 토큰 갱신
+     * @param request 토큰 갱신 요청 정보
+     * @return 새로 발급된 토큰 정보
+     */
+    TokenResponse refreshToken(TokenRefreshRequest request);
 } 

@@ -5,6 +5,7 @@ import com.yanolja.areas.user.domain.UserRole;
 import com.yanolja.areas.user.dto.LoginRequest;
 import com.yanolja.areas.user.dto.LogoutRequest;
 import com.yanolja.areas.user.dto.RegisterRequest;
+import com.yanolja.areas.user.dto.TokenRefreshRequest;
 import com.yanolja.areas.user.dto.TokenResponse;
 import com.yanolja.areas.user.repository.UserRepository;
 import com.yanolja.common.jwt.JwtTokenProvider;
@@ -128,6 +129,62 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             log.error("로그아웃 처리 중 오류 발생", e);
             return false;
+        }
+    }
+
+    /**
+     * 액세스 토큰 갱신
+     * @param request 토큰 갱신 요청 정보
+     * @return 새로 발급된 토큰 정보
+     */
+    @Override
+    @Transactional
+    public TokenResponse refreshToken(TokenRefreshRequest request) {
+        try {
+            String refreshToken = request.getRefreshToken();
+            log.debug("토큰 갱신 요청 처리 시작");
+            
+            // 리프레시 토큰에서 사용자 이름 추출
+            String token = jwtTokenProvider.resolveToken(refreshToken);
+            if (token == null || !jwtTokenProvider.validateToken(token)) {
+                log.warn("유효하지 않은 리프레시 토큰");
+                throw new RuntimeException("유효하지 않은 리프레시 토큰입니다.");
+            }
+            
+            String username = jwtTokenProvider.getUsernameFromToken(token);
+            
+            // Redis에 저장된 리프레시 토큰과 비교
+            String savedRefreshToken = tokenRepository.getRefreshToken(username);
+            if (savedRefreshToken == null || !savedRefreshToken.equals(token)) {
+                log.warn("저장된 리프레시 토큰과 일치하지 않음: {}", username);
+                throw new RuntimeException("리프레시 토큰이 유효하지 않습니다.");
+            }
+            
+            // 사용자 정보로 인증 객체 생성
+            User user = userRepository.findByEmail(username)
+                    .orElseThrow(() -> {
+                        log.warn("사용자를 찾을 수 없음: {}", username);
+                        return new RuntimeException("사용자를 찾을 수 없습니다.");
+                    });
+            
+            // UserDetailsService를 통해 로드하지 않고 직접 Authentication 객체 생성
+            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            
+            // 새로운 액세스 토큰 생성 (리프레시 토큰은 그대로 유지)
+            String newAccessToken = jwtTokenProvider.createAccessToken(authentication);
+            
+            log.info("토큰 갱신 완료: {}", username);
+            
+            return TokenResponse.builder()
+                    .accessToken(newAccessToken)
+                    .refreshToken(token)  // 기존 리프레시 토큰 유지
+                    .tokenType("Bearer")
+                    .build();
+            
+        } catch (Exception e) {
+            log.error("토큰 갱신 중 오류 발생", e);
+            throw new RuntimeException("토큰 갱신 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 } 
