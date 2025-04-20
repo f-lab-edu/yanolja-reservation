@@ -1,6 +1,5 @@
 package com.yanolja.areas.user.domain;
 
-import com.yanolja.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,7 @@ import org.hibernate.annotations.Comment;
 @Table(name = "users")
 @Getter
 @NoArgsConstructor
-public class User extends BaseEntity{
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("사용자 ID")
@@ -32,8 +31,8 @@ public class User extends BaseEntity{
     @Comment("전화번호")
     private String phone;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Convert(converter = UserRole.Converter.class)
     @Comment("사용자 역할")
     private UserRole role = UserRole.USER;
 
