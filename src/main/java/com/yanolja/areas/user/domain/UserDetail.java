@@ -13,14 +13,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserDetail implements UserDetails {
 
-
     private final User user;
-
     private final Collection<? extends GrantedAuthority> authorities;
 
     public static UserDetail create(User user) {
+        String roleName = "ROLE_" + user.getRole().getType(); // "ROLE_" 접두사 추가\
+        
         List<GrantedAuthority> authorities = List.of(
-            new SimpleGrantedAuthority(user.getRole().name())
+            new SimpleGrantedAuthority(roleName)
         );
         return new UserDetail(user, authorities);
     }
