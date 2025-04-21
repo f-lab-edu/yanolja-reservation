@@ -114,9 +114,7 @@ public class UserServiceImpl implements UserService {
             String username = jwtTokenProvider.getUsernameFromToken(
                     jwtTokenProvider.resolveToken(refreshToken)
             );
-            
-            log.debug("로그아웃 처리 시작: {}", username);
-            
+                        
             // Redis에서 리프레시 토큰 삭제
             if (tokenRepository.existsRefreshToken(username)) {
                 tokenRepository.removeRefreshToken(username);
