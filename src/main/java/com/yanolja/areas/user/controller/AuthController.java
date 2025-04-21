@@ -7,14 +7,11 @@ import com.yanolja.areas.user.dto.RegisterRequest;
 import com.yanolja.areas.user.dto.TokenRefreshRequest;
 import com.yanolja.areas.user.dto.TokenResponse;
 import com.yanolja.areas.user.service.UserService;
+import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,38 +28,34 @@ public class AuthController {
 
     private final UserService userService;
 
-    @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest] responseDto[User]", tags = {"인증"})
-    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = User.class)))
+    @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest]", tags = {"인증"})
     @PostMapping("/register")
-    public ResponseEntity<User> register(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ApiResponse<User> register(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = userService.registerUser(registerRequest);
-        return ResponseEntity.ok(user);
+        return ApiResponse.success(user, "회원가입이 성공적으로 완료되었습니다.");
     }
 
-    @Operation(summary = "사용자 로그인", description = "requestDto[LoginRequest] responseDto[TokenResponse]", tags = {"인증"})
-    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    @Operation(summary = "사용자 로그인", description = "requestDto[LoginRequest]", tags = {"인증"})
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         TokenResponse tokenResponse = userService.login(loginRequest);
-        return ResponseEntity.ok(tokenResponse);
+        return ApiResponse.success(tokenResponse, "로그인이 성공적으로 완료되었습니다.");
     }
     
-    @Operation(summary = "사용자 로그아웃", description = "requestDto[LogoutRequest] responseDto[Map]", tags = {"인증"})
-    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = Map.class)))
+    @Operation(summary = "사용자 로그아웃", description = "requestDto[LogoutRequest]", tags = {"인증"})
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(@Valid @RequestBody LogoutRequest logoutRequest) {
+    public ApiResponse<Map<String, Object>> logout(@Valid @RequestBody LogoutRequest logoutRequest) {
         boolean result = userService.logout(logoutRequest);
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", result);
-        response.put("message", result ? "로그아웃 되었습니다." : "로그아웃 처리 중 오류가 발생했습니다.");
-        return ResponseEntity.ok(response);
+        Map<String, Object> data = new HashMap<>();
+        data.put("success", result);
+        String message = result ? "로그아웃 되었습니다." : "로그아웃 처리 중 오류가 발생했습니다.";
+        return ApiResponse.success(data, message);
     }
     
-    @Operation(summary = "토큰 갱신", description = "requestDto[TokenRefreshRequest] responseDto[TokenResponse]", tags = {"인증"})
-    @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    @Operation(summary = "토큰 갱신", description = "requestDto[TokenRefreshRequest]", tags = {"인증"})
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
+    public ApiResponse<TokenResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
         TokenResponse tokenResponse = userService.refreshToken(refreshRequest);
-        return ResponseEntity.ok(tokenResponse);
+        return ApiResponse.success(tokenResponse, "토큰이 성공적으로 갱신되었습니다.");
     }
 } 
