@@ -40,7 +40,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User registerUser(RegisterRequest request) {
-        log.debug("회원가입 처리 시작: {}", request.getEmail());
 
         // 이메일 중복 확인
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -48,21 +47,16 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("이미 사용 중인 이메일입니다.");
         }
 
-        // 엔티티 생성
-        User user = new User();
-        user.changeName(request.getName());
-        user.changeEmail(request.getEmail());
-
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-        user.changePassword(encodedPassword);
-        log.debug("비밀번호 암호화 완료");
-
-        // 전화번호 설정
-        user.changePhone(request.getPhone());
-
-        // 기본 역할 설정 (USER)
-        user.changeRole(UserRole.USER);
+        
+        // 사용자 엔티티 생성
+        User user = User.createUser(
+            request.getName(),
+            request.getEmail(),
+            encodedPassword,
+            request.getPhone()
+        );
 
         // 사용자 저장
         User savedUser = userRepository.save(user);
@@ -140,7 +134,6 @@ public class UserServiceImpl implements UserService {
     public TokenResponse refreshToken(TokenRefreshRequest request) {
         try {
             String refreshToken = request.getRefreshToken();
-            log.debug("토큰 갱신 요청 처리 시작");
             
             // 리프레시 토큰에서 사용자 이름 추출
             String token = jwtTokenProvider.resolveToken(refreshToken);
