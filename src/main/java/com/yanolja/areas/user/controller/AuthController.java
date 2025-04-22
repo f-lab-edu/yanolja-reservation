@@ -28,21 +28,21 @@ public class AuthController {
 
     private final UserService userService;
 
-    @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest]", tags = {"인증"})
+    @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest], responseDto[User]", tags = {"인증"})
     @PostMapping("/register")
     public ApiResponse<User> register(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = userService.registerUser(registerRequest);
         return ApiResponse.success(user, "회원가입이 성공적으로 완료되었습니다.");
     }
 
-    @Operation(summary = "사용자 로그인", description = "requestDto[LoginRequest]", tags = {"인증"})
+    @Operation(summary = "사용자 로그인", description = "requestDto[LoginRequest], responseDto[TokenResponse]", tags = {"인증"})
     @PostMapping("/login")
     public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         TokenResponse tokenResponse = userService.login(loginRequest);
         return ApiResponse.success(tokenResponse, "로그인이 성공적으로 완료되었습니다.");
     }
     
-    @Operation(summary = "사용자 로그아웃", description = "requestDto[LogoutRequest]", tags = {"인증"})
+    @Operation(summary = "사용자 로그아웃", description = "requestDto[LogoutRequest], responseDto[Map<String, Object>]", tags = {"인증"})
     @PostMapping("/logout")
     public ApiResponse<Map<String, Object>> logout(@Valid @RequestBody LogoutRequest logoutRequest) {
         boolean result = userService.logout(logoutRequest);
@@ -52,7 +52,7 @@ public class AuthController {
         return ApiResponse.success(data, message);
     }
     
-    @Operation(summary = "토큰 갱신", description = "requestDto[TokenRefreshRequest]", tags = {"인증"})
+    @Operation(summary = "토큰 갱신", description = "requestDto[TokenRefreshRequest], responseDto[TokenResponse]", tags = {"인증"})
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
         TokenResponse tokenResponse = userService.refreshToken(refreshRequest);
