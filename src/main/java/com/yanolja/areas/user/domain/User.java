@@ -34,7 +34,7 @@ public class User {
     private String phone;
 
     @Column(nullable = false)
-    @Convert(converter = UserRole.Converter.class)
+    @Enumerated(EnumType.STRING)
     @Comment("사용자 역할")
     private UserRole role = UserRole.USER;
 
