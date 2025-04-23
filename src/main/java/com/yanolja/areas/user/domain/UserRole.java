@@ -1,9 +1,8 @@
 package com.yanolja.areas.user.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
-import lombok.AllArgsConstructor;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -12,17 +11,15 @@ public enum UserRole {
     USER("USER", "일반 사용자"),
     ADMIN("ADMIN", "관리자");
 
-    private String type;
-    private String name;
+    private String code;
+    private String label;
 
-    @Override
-    public String getType() {
-        return this.type;
+    public String getCode() {
+        return this.code;
     }
 
-    @Override
-    public String getName() {
-        return this.name;
+    public String getLabel() {
+        return this.label;
     }
 
 } 
