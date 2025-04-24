@@ -1,4 +1,4 @@
-package com.yanolja.config;
+package com.yanolja.common.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

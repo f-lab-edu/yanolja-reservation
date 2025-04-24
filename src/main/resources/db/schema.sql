@@ -1,6 +1,6 @@
 -- 데이터베이스 생성
-CREATE DATABASE IF NOT EXISTS yanolja_db;
-USE yanolja_db;
+CREATE DATABASE IF NOT EXISTS yanolja;
+USE yanolja;
 
 -- 사용자 테이블
 CREATE TABLE users (
