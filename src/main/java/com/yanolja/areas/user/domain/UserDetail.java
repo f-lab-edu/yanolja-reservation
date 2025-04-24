@@ -17,7 +17,7 @@ public class UserDetail implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
 
     public static UserDetail create(User user) {
-        String roleName = "ROLE_" + user.getRole().getCode(); // "ROLE_" 접두사 추가\
+        String roleName = "ROLE_" + user.getRole().name(); // "ROLE_" 접두사 추가\
         
         List<GrantedAuthority> authorities = List.of(
             new SimpleGrantedAuthority(roleName)

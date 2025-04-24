@@ -8,18 +8,12 @@ import lombok.AllArgsConstructor;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum UserRole {
     @Schema(description = "유저 권한")
-    USER("USER", "일반 사용자"),
-    ADMIN("ADMIN", "관리자");
+    USER("일반 사용자"),
+    ADMIN("관리자");
 
-    private String code;
     private String label;
-
-    public String getCode() {
-        return this.code;
-    }
-
+    
     public String getLabel() {
         return this.label;
     }
-
 } 
