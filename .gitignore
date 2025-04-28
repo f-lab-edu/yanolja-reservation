@@ -42,3 +42,5 @@ hs_err_pid*
 build/
 *.iml
 /target/
+
+.env
