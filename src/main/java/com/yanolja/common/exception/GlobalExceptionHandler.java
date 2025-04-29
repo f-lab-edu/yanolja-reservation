@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public ApiResponse<Void> handleValidationException(MethodArgumentNotValidException e) {
         log.error("유효성 검증 예외: {}", e.getMessage(), e);
-        return ApiResponse.error(ErrorCode.INVALID_INPUT);
+        return ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
