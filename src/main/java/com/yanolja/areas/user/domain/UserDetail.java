@@ -5,24 +5,47 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @RequiredArgsConstructor
-public class UserDetail implements UserDetails {
+public class UserDetail implements UserDetails, OAuth2User {
 
     private final User user;
     private final Collection<? extends GrantedAuthority> authorities;
+    private Map<String, Object> attributes;
 
     public static UserDetail create(User user) {
-        String roleName = "ROLE_" + user.getRole().name(); // "ROLE_" 접두사 추가\
+        String roleName = "ROLE_" + user.getRole().name();
         
         List<GrantedAuthority> authorities = List.of(
             new SimpleGrantedAuthority(roleName)
         );
         return new UserDetail(user, authorities);
+    }
+
+    public static UserDetail create(User user, Map<String, Object> attributes) {
+        UserDetail userDetail = create(user);
+        userDetail.setAttributes(attributes);
+        return userDetail;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    @Override
+    public String getName() {
+        return user.getEmail();
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
     }
 
     @Override
@@ -59,7 +82,4 @@ public class UserDetail implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
-
-
 }
