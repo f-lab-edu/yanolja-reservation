@@ -34,9 +34,3 @@ Content-Type: application/json
 {
   "refreshToken": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzQ1MTE0NzYxLCJleHAiOjE3NDYzMjQzNjF9.v7ZsTgyxVU_N2UM9ug7-EZ4Cl3kz01EMYDzJbQS_aZU"
 }
-
-### 구글 소셜 로그인 요청
-GET http://localhost:8080/oauth2/authorize/google?redirect_uri=http://localhost:8080/login/oauth2/code/google
-
-### 카카오 소셜 로그인 요청
-GET http://localhost:8080/oauth2/authorize/kakao?redirect_uri=http://localhost:8080/login/oauth2/code/kakao
