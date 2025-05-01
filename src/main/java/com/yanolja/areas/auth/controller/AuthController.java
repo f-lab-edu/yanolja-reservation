@@ -1,12 +1,12 @@
-package com.yanolja.areas.user.controller;
+package com.yanolja.areas.auth.controller;
 
-import com.yanolja.areas.user.domain.User;
-import com.yanolja.areas.user.dto.LoginRequest;
-import com.yanolja.areas.user.dto.LogoutRequest;
-import com.yanolja.areas.user.dto.RegisterRequest;
-import com.yanolja.areas.user.dto.TokenRefreshRequest;
-import com.yanolja.areas.user.dto.TokenResponse;
-import com.yanolja.areas.user.service.UserService;
+import com.yanolja.areas.auth.domain.User;
+import com.yanolja.areas.auth.dto.LoginRequest;
+import com.yanolja.areas.auth.dto.LogoutRequest;
+import com.yanolja.areas.auth.dto.RegisterRequest;
+import com.yanolja.areas.auth.dto.TokenRefreshRequest;
+import com.yanolja.areas.auth.dto.TokenResponse;
+import com.yanolja.areas.auth.service.UserService;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

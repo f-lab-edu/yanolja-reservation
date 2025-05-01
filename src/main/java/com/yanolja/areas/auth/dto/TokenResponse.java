@@ -1,4 +1,4 @@
-package com.yanolja.areas.user.dto;
+package com.yanolja.areas.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

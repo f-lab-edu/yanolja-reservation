@@ -1,9 +1,9 @@
-package com.yanolja.areas.user.service;
+package com.yanolja.areas.auth.service;
 
 
-import com.yanolja.areas.user.domain.User;
-import com.yanolja.areas.user.domain.UserDetail;
-import com.yanolja.areas.user.repository.UserRepository;
+import com.yanolja.areas.auth.domain.User;
+import com.yanolja.areas.auth.domain.UserDetail;
+import com.yanolja.areas.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

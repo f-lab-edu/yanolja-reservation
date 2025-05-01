@@ -1,13 +1,12 @@
-package com.yanolja.areas.user.service;
+package com.yanolja.areas.auth.service;
 
-import com.yanolja.areas.user.domain.User;
-import com.yanolja.areas.user.domain.UserRole;
-import com.yanolja.areas.user.dto.LoginRequest;
-import com.yanolja.areas.user.dto.LogoutRequest;
-import com.yanolja.areas.user.dto.RegisterRequest;
-import com.yanolja.areas.user.dto.TokenRefreshRequest;
-import com.yanolja.areas.user.dto.TokenResponse;
-import com.yanolja.areas.user.repository.UserRepository;
+import com.yanolja.areas.auth.domain.User;
+import com.yanolja.areas.auth.dto.LoginRequest;
+import com.yanolja.areas.auth.dto.LogoutRequest;
+import com.yanolja.areas.auth.dto.RegisterRequest;
+import com.yanolja.areas.auth.dto.TokenRefreshRequest;
+import com.yanolja.areas.auth.dto.TokenResponse;
+import com.yanolja.areas.auth.repository.UserRepository;
 import com.yanolja.common.jwt.JwtTokenProvider;
 import com.yanolja.common.jwt.TokenRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,9 +1,9 @@
-package com.yanolja.areas.user.service;
+package com.yanolja.areas.auth.service;
 
-import com.yanolja.areas.user.domain.SocialProvider;
-import com.yanolja.areas.user.domain.User;
-import com.yanolja.areas.user.domain.UserDetail;
-import com.yanolja.areas.user.repository.UserRepository;
+import com.yanolja.areas.auth.domain.SocialProvider;
+import com.yanolja.areas.auth.domain.User;
+import com.yanolja.areas.auth.domain.UserDetail;
+import com.yanolja.areas.auth.repository.UserRepository;
 import com.yanolja.common.exception.ErrorCode;
 import com.yanolja.common.exception.UserException;
 import com.yanolja.common.oauth2.OAuth2UserInfo;

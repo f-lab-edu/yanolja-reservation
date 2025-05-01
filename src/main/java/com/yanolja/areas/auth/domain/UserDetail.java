@@ -1,4 +1,4 @@
-package com.yanolja.areas.user.domain;
+package com.yanolja.areas.auth.domain;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
-package com.yanolja.areas.user.dto;
+package com.yanolja.areas.auth.dto;
 
-import com.yanolja.areas.user.domain.SocialProvider;
-import com.yanolja.areas.user.domain.User;
-import com.yanolja.areas.user.domain.UserRole;
+import com.yanolja.areas.auth.domain.SocialProvider;
+import com.yanolja.areas.auth.domain.User;
+import com.yanolja.areas.auth.domain.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
