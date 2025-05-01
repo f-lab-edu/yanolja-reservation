@@ -42,3 +42,6 @@ hs_err_pid*
 build/
 *.iml
 /target/
+
+# Configuration files with sensitive data
+src/main/resources/application-dev.yml

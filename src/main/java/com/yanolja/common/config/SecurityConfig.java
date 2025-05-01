@@ -1,9 +1,13 @@
 package com.yanolja.common.config;
 
+import com.yanolja.areas.user.service.OAuth2UserService;
 import com.yanolja.common.jwt.JwtAccessDeniedHandler;
 import com.yanolja.common.jwt.JwtAuthenticationEntryPoint;
 import com.yanolja.common.jwt.JwtAuthenticationFilter;
 import com.yanolja.common.jwt.JwtTokenProvider;
+import com.yanolja.common.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.yanolja.common.oauth2.OAuth2AuthenticationFailureHandler;
+import com.yanolja.common.oauth2.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +39,14 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
+    private final OAuth2UserService oAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
+    @Bean
+    public HttpCookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -68,10 +80,25 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/users/register").permitAll()
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Swagger UI 접근 허용
+                .requestMatchers("/login/**", "/oauth2/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .authenticationProvider(authenticationProvider()) // 명시적으로 authenticationProvider 등록
+            .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(authorization -> authorization
+                    .baseUri("/oauth2/authorize")
+                    .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository())
+                )
+                .redirectionEndpoint(redirection -> redirection
+                    .baseUri("/login/oauth2/code/*")
+                )
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(oAuth2UserService)
+                )
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler(oAuth2AuthenticationFailureHandler)
+            )
+            .authenticationProvider(authenticationProvider())
             .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -85,6 +112,9 @@ public class SecurityConfig {
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
         configuration.addExposedHeader("Authorization");
+        configuration.addExposedHeader("Set-Cookie");
+        configuration.addExposedHeader("access_token");
+        configuration.addExposedHeader("refresh_token");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
