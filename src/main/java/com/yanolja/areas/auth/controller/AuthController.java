@@ -6,7 +6,7 @@ import com.yanolja.areas.auth.dto.LogoutRequest;
 import com.yanolja.areas.auth.dto.RegisterRequest;
 import com.yanolja.areas.auth.dto.TokenRefreshRequest;
 import com.yanolja.areas.auth.dto.TokenResponse;
-import com.yanolja.areas.auth.service.UserService;
+import com.yanolja.areas.auth.service.AuthService;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +26,7 @@ import java.util.Map;
 @Tag(name = "인증", description = "인증 관련 API")
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService userService;
 
     @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest], responseDto[User]", tags = {"인증"})
     @PostMapping("/register")
