@@ -1,8 +1,8 @@
-package com.yanolja.areas.auth.dto;
+package com.yanolja.areas.user.dto;
 
-import com.yanolja.areas.auth.domain.SocialProvider;
-import com.yanolja.areas.auth.domain.User;
-import com.yanolja.areas.auth.domain.UserRole;
+import com.yanolja.areas.user.domain.SocialProvider;
+import com.yanolja.areas.user.domain.User;
+import com.yanolja.areas.user.domain.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,8 +44,8 @@ public class UserInfoResponse {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole())
-                .socialProvider(user.getSocialProvider())
-                .profileImageUrl(user.getProfileImageUrl())
+                .socialProvider(user.getSocialProvider() != null ? user.getSocialProvider() : null)
+                .profileImageUrl(user.getProfileImageUrl() != null ? user.getProfileImageUrl() : null)
                 .build();
     }
 } 

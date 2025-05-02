@@ -1,17 +1,19 @@
-package com.yanolja.areas.auth.domain;
+package com.yanolja.areas.user.domain;
 
+import com.yanolja.common.auditing.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+import org.springframework.util.StringUtils;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("사용자 ID")
@@ -37,23 +39,27 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Comment("사용자 역할")
     private UserRole role = UserRole.USER;
-    
+
     @Column
     @Comment("소셜 로그인 제공자")
     @Enumerated(EnumType.STRING)
     private SocialProvider socialProvider;
-    
+
     @Column
     @Comment("소셜 로그인 제공자 ID")
     private String socialId;
-    
+
     @Column
     @Comment("프로필 이미지 URL")
     private String profileImageUrl;
 
+    @Column(nullable = false)
+    @Comment("탈퇴 여부")
+    private String withdrawalYn = "N";
+
     @Builder
-    private User(String name, String email, String password, String phone, UserRole role, 
-                SocialProvider socialProvider, String socialId, String profileImageUrl) {
+    private User(String name, String email, String password, String phone, UserRole role,
+                SocialProvider socialProvider, String socialId, String profileImageUrl, String withdrawalYn) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -62,8 +68,9 @@ public class User {
         this.socialProvider = socialProvider;
         this.socialId = socialId;
         this.profileImageUrl = profileImageUrl;
+        this.withdrawalYn = withdrawalYn;
     }
-    
+
     /**
      * 회원가입을 위한 사용자 생성
      * @param name 사용자 이름
@@ -79,9 +86,10 @@ public class User {
                 .password(encodedPassword)
                 .phone(phone)
                 .role(UserRole.USER)
+                .withdrawalYn("N")
                 .build();
     }
-    
+
     /**
      * 소셜 로그인을 위한 사용자 생성
      * @param name 사용자 이름
@@ -91,7 +99,7 @@ public class User {
      * @param profileImageUrl 프로필 이미지 URL
      * @return 생성된 User 객체
      */
-    public static User createSocialUser(String name, String email, SocialProvider socialProvider, 
+    public static User createSocialUser(String name, String email, SocialProvider socialProvider,
                                        String socialId, String profileImageUrl) {
         return User.builder()
                 .name(name)
@@ -100,9 +108,10 @@ public class User {
                 .socialId(socialId)
                 .profileImageUrl(profileImageUrl)
                 .role(UserRole.USER)
+                .withdrawalYn("N")
                 .build();
     }
-    
+
     /**
      * 관리자 사용자 생성
      * @param name 사용자 이름
@@ -118,6 +127,7 @@ public class User {
                 .password(encodedPassword)
                 .phone(phone)
                 .role(UserRole.ADMIN)
+                .withdrawalYn("N")
                 .build();
     }
 
@@ -128,7 +138,7 @@ public class User {
     public void changePassword(String password) {
         this.password = password;
     }
-    
+
     /**
      * 소셜 로그인 정보 업데이트
      * @param socialProvider 소셜 로그인 제공자
@@ -139,4 +149,27 @@ public class User {
         this.socialId = socialId;
         this.profileImageUrl = profileImageUrl;
     }
+
+    /**
+     * 사용자 정보 업데이트
+     * @param name 사용자 이름 (null이면 변경하지 않음)
+     * @param phone 이메일 (null이면 변경하지 않음)
+     * @param password 전화번호 (null이면 변경하지 않음)
+     */
+    public void updateUserInfo(String name, String phone, String password) {
+        if (StringUtils.hasText(name)) this.name = name;
+        if (StringUtils.hasText(phone)) this.phone = phone;
+        if (StringUtils.hasText(password)) this.password = password;
+    }
+
+    /**
+     * 사용자 탈퇴
+     */
+    public void withdraw() {
+        this.withdrawalYn = "Y";
+        this.email = "withdrawn_" + this.email + "@anonymized.local";
+        this.name = "탈퇴회원";
+        this.password = null;
+    }
+
 }
