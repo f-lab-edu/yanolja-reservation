@@ -1,9 +1,9 @@
 package com.yanolja.areas.auth.service;
 
 
-import com.yanolja.areas.auth.domain.User;
-import com.yanolja.areas.auth.domain.UserDetail;
-import com.yanolja.areas.auth.repository.UserRepository;
+import com.yanolja.areas.user.domain.User;
+import com.yanolja.areas.user.domain.UserDetail;
+import com.yanolja.areas.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,7 +19,7 @@ public class UserDetailService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findActiveUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         
         return UserDetail.create(user);

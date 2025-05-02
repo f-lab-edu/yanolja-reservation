@@ -1,6 +1,6 @@
 package com.yanolja.common.oauth2;
 
-import com.yanolja.areas.auth.domain.SocialProvider;
+import com.yanolja.areas.user.domain.SocialProvider;
 import com.yanolja.common.exception.ErrorCode;
 import com.yanolja.common.exception.UserException;
 

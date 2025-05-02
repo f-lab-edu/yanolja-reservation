@@ -1,12 +1,12 @@
 package com.yanolja.areas.auth.service;
 
-import com.yanolja.areas.auth.domain.User;
+import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.auth.dto.LoginRequest;
 import com.yanolja.areas.auth.dto.LogoutRequest;
 import com.yanolja.areas.auth.dto.RegisterRequest;
 import com.yanolja.areas.auth.dto.TokenRefreshRequest;
 import com.yanolja.areas.auth.dto.TokenResponse;
-import com.yanolja.areas.auth.repository.UserRepository;
+import com.yanolja.areas.user.repository.UserRepository;
 import com.yanolja.common.jwt.JwtTokenProvider;
 import com.yanolja.common.jwt.TokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public class AuthService {
     public User registerUser(RegisterRequest request) {
 
         // 이메일 중복 확인
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userRepository.findActiveUserByEmail(request.getEmail()).isPresent()) {
             log.warn("이미 사용 중인 이메일: {}", request.getEmail());
             throw new RuntimeException("이미 사용 중인 이메일입니다.");
         }
@@ -150,7 +150,7 @@ public class AuthService {
             }
             
             // 사용자 정보로 인증 객체 생성
-            User user = userRepository.findByEmail(username)
+            User user = userRepository.findActiveUserByEmail(username)
                     .orElseThrow(() -> {
                         log.warn("사용자를 찾을 수 없음: {}", username);
                         return new RuntimeException("사용자를 찾을 수 없습니다.");
