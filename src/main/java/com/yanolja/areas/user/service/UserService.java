@@ -1,5 +1,6 @@
 package com.yanolja.areas.user.service;
 
+import com.yanolja.areas.auth.dto.RegisterRequest;
 import com.yanolja.areas.user.dto.UserInfoResponse;
 import com.yanolja.areas.user.repository.UserRepository;
 import com.yanolja.areas.user.dto.UserUpdateRequest;
@@ -25,6 +26,39 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * 사용자 회원가입 처리
+     * @param request 회원가입 요청 정보
+     * @return 등록된 사용자
+     */
+    @Transactional
+    public User registerUser(RegisterRequest request) {
+
+        // 이메일 중복 확인
+        if (userRepository.findActiveUserByEmail(request.getEmail()).isPresent()) {
+            log.warn("이미 사용 중인 이메일: {}", request.getEmail());
+            throw new RuntimeException("이미 사용 중인 이메일입니다.");
+        }
+
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+        // 사용자 엔티티 생성
+        User user = User.createUser(
+                request.getName(),
+                request.getEmail(),
+                encodedPassword,
+                request.getPhone()
+        );
+
+        // 사용자 저장
+        User savedUser = userRepository.save(user);
+        log.info("회원가입 완료: {}", savedUser.getEmail());
+
+        return savedUser;
+    }
+
 
     /** 사용자 단건 조회 */
     @Transactional(readOnly = true)

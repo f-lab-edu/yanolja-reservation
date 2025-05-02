@@ -3,7 +3,6 @@ package com.yanolja.areas.auth.service;
 import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.auth.dto.LoginRequest;
 import com.yanolja.areas.auth.dto.LogoutRequest;
-import com.yanolja.areas.auth.dto.RegisterRequest;
 import com.yanolja.areas.auth.dto.TokenRefreshRequest;
 import com.yanolja.areas.auth.dto.TokenResponse;
 import com.yanolja.areas.user.repository.UserRepository;
@@ -33,38 +32,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TokenRepository tokenRepository;
 
-
-    /**
-     * 사용자 회원가입 처리
-     * @param request 회원가입 요청 정보
-     * @return 등록된 사용자
-     */
-    @Transactional
-    public User registerUser(RegisterRequest request) {
-
-        // 이메일 중복 확인
-        if (userRepository.findActiveUserByEmail(request.getEmail()).isPresent()) {
-            log.warn("이미 사용 중인 이메일: {}", request.getEmail());
-            throw new RuntimeException("이미 사용 중인 이메일입니다.");
-        }
-
-        // 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
-        
-        // 사용자 엔티티 생성
-        User user = User.createUser(
-            request.getName(),
-            request.getEmail(),
-            encodedPassword,
-            request.getPhone()
-        );
-
-        // 사용자 저장
-        User savedUser = userRepository.save(user);
-        log.info("회원가입 완료: {}", savedUser.getEmail());
-
-        return savedUser;
-    }
 
     /**
      * 사용자 로그인 처리 및 토큰 발급

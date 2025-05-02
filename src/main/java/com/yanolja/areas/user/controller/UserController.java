@@ -1,5 +1,7 @@
 package com.yanolja.areas.user.controller;
 
+import com.yanolja.areas.auth.dto.RegisterRequest;
+import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.user.dto.UserInfoResponse;
 import com.yanolja.areas.user.dto.UserUpdateRequest;
 import com.yanolja.areas.user.dto.UserSearchCondition;
@@ -18,6 +20,13 @@ import java.util.List;
 @Tag(name = "사용자", description = "사용자 정보 관리 API")
 public class UserController {
     private final UserService userService;
+
+    @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest], responseDto[User]", tags = {"인증"})
+    @PostMapping("/register")
+    public ApiResponse<User> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        User user = userService.registerUser(registerRequest);
+        return ApiResponse.success(user, "회원가입이 성공적으로 완료되었습니다.");
+    }
 
     @Operation(summary = "사용자 단건 조회", description = "userId로 사용자 정보 조회")
     @GetMapping("/{id}")

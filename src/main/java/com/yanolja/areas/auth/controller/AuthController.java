@@ -28,13 +28,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "사용자 회원가입", description = "requestDto[RegisterRequest], responseDto[User]", tags = {"인증"})
-    @PostMapping("/register")
-    public ApiResponse<User> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        User user = authService.registerUser(registerRequest);
-        return ApiResponse.success(user, "회원가입이 성공적으로 완료되었습니다.");
-    }
-
     @Operation(summary = "사용자 로그인", description = "requestDto[LoginRequest], responseDto[TokenResponse]", tags = {"인증"})
     @PostMapping("/login")
     public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
