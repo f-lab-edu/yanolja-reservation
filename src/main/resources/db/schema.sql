@@ -13,6 +13,7 @@ CREATE TABLE users (
     profile_image_url VARCHAR(255),
     social_provider VARCHAR(20),
     social_id VARCHAR(255),
+    withdrawal_yn CHAR(1) DEFAULT 'N',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),

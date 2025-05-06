@@ -1,4 +1,4 @@
-package com.yanolja.areas.user.service;
+package com.yanolja.areas.auth.service;
 
 import com.yanolja.areas.user.domain.SocialProvider;
 import com.yanolja.areas.user.domain.User;
@@ -55,7 +55,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             throw new UserException(ErrorCode.MISSING_EMAIL);
         }
 
-        Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
+        Optional<User> userOptional = userRepository.findActiveUserByEmail(oAuth2UserInfo.getEmail());
         User user;
 
         if (userOptional.isPresent()) {

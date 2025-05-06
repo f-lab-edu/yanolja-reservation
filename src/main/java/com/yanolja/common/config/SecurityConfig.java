@@ -1,6 +1,6 @@
 package com.yanolja.common.config;
 
-import com.yanolja.areas.user.service.OAuth2UserService;
+import com.yanolja.areas.auth.service.OAuth2UserService;
 import com.yanolja.common.jwt.JwtAccessDeniedHandler;
 import com.yanolja.common.jwt.JwtAuthenticationEntryPoint;
 import com.yanolja.common.jwt.JwtAuthenticationFilter;
@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

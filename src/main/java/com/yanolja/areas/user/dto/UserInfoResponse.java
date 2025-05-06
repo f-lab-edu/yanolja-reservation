@@ -44,8 +44,8 @@ public class UserInfoResponse {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole())
-                .socialProvider(user.getSocialProvider())
-                .profileImageUrl(user.getProfileImageUrl())
+                .socialProvider(user.getSocialProvider() != null ? user.getSocialProvider() : null)
+                .profileImageUrl(user.getProfileImageUrl() != null ? user.getProfileImageUrl() : null)
                 .build();
     }
 } 

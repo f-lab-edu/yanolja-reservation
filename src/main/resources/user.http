@@ -1,0 +1,30 @@
+### 사용자 단건 조회
+GET http://localhost:8080/api/users/5
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0NEBleGFtcGxlLmNvbSIsImlhdCI6MTc0NjE5MzUzNSwiZXhwIjoxNzQ2MTk0NDM1fQ.Y5aMhd3DDxeKDHBZnT2cJPd-_3Yade3AZEtGoIMOWRc
+
+### 사용자 전체 목록 조회
+GET http://localhost:8080/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0NEBleGFtcGxlLmNvbSIsImlhdCI6MTc0NjE5MzUzNSwiZXhwIjoxNzQ2MTk0NDM1fQ.Y5aMhd3DDxeKDHBZnT2cJPd-_3Yade3AZEtGoIMOWRc
+
+### 사용자 검색 조건 사용
+GET http://localhost:8080/api/users?name=테스트&email=test@example.com
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0NEBleGFtcGxlLmNvbSIsImlhdCI6MTc0NjE5MzUzNSwiZXhwIjoxNzQ2MTk0NDM1fQ.Y5aMhd3DDxeKDHBZnT2cJPd-_3Yade3AZEtGoIMOWRc
+
+### 사용자 정보 수정
+PUT http://localhost:8080/api/users/6
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0NEBleGFtcGxlLmNvbSIsImlhdCI6MTc0NjE5MzUzNSwiZXhwIjoxNzQ2MTk0NDM1fQ.Y5aMhd3DDxeKDHBZnT2cJPd-_3Yade3AZEtGoIMOWRc
+
+{
+  "name": "수정된 이름",
+  "phone": "010-9876-5432",
+  "password": "NewPassword1!"
+}
+
+### 회원 탈퇴
+POST http://localhost:8080/api/users/7/withdraw
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0NEBleGFtcGxlLmNvbSIsImlhdCI6MTc0NjE5MzUzNSwiZXhwIjoxNzQ2MTk0NDM1fQ.Y5aMhd3DDxeKDHBZnT2cJPd-_3Yade3AZEtGoIMOWRc

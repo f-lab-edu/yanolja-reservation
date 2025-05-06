@@ -1,4 +1,4 @@
-package com.yanolja.areas.user.service;
+package com.yanolja.areas.auth.service;
 
 
 import com.yanolja.areas.user.domain.User;
@@ -19,7 +19,7 @@ public class UserDetailService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findActiveUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         
         return UserDetail.create(user);

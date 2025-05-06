@@ -1,4 +1,4 @@
-package com.yanolja.areas.user.controller;
+package com.yanolja.areas.auth.controller;
 
 import com.yanolja.areas.user.domain.SocialProvider;
 import io.swagger.v3.oas.annotations.Operation;
