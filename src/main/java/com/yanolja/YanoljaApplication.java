@@ -3,6 +3,7 @@ package com.yanolja;
 import com.yanolja.common.auditing.AuditorAwareImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -15,6 +16,7 @@ public class YanoljaApplication {
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "auditorProvider")
     public AuditorAware<String> auditorProvider() {
         return new AuditorAwareImpl();
     }
