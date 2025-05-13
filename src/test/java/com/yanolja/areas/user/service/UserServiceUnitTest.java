@@ -45,7 +45,7 @@ class UserServiceUnitTest {
             "테스트유저", 
             "test@example.com", 
             "encodedPassword", 
-            "01012345678"
+            "010-1234-5678"
         );
     }
 
@@ -53,7 +53,7 @@ class UserServiceUnitTest {
     @DisplayName("정상적인 회원가입 테스트")
     void registerUser_Success() {
         // given
-        RegisterRequest request = new RegisterRequest("테스트유저", "test@example.com", "Test1234!", "01012345678");
+        RegisterRequest request = new RegisterRequest("테스트유저", "test@example.com", "Test1234!", "010-1234-5678");
         
         when(userRepository.findActiveUserByEmail("test@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("Test1234!")).thenReturn("encodedPassword");
@@ -75,7 +75,7 @@ class UserServiceUnitTest {
     @DisplayName("중복 이메일로 회원가입 시도시 실패")
     void registerUser_DuplicateEmail_Fail() {
         // given
-        RegisterRequest request = new RegisterRequest("테스트유저", "test@example.com", "Test1234!", "01012345678");
+        RegisterRequest request = new RegisterRequest("테스트유저", "test@example.com", "Test1234!", "010-1234-5678");
         
         when(userRepository.findActiveUserByEmail("test@example.com")).thenReturn(Optional.of(mockUser));
 
@@ -187,7 +187,7 @@ class UserServiceUnitTest {
         
         List<User> userList = Arrays.asList(
             mockUser,
-            User.createUser("테스트유저2", "test2@example.com", "encodedPassword2", "01087654321")
+            User.createUser("테스트유저2", "test2@example.com", "encodedPassword2", "010-8765-4321")
         );
         
         when(userRepository.searchUsers(any(UserSearchCondition.class))).thenReturn(userList);

@@ -43,7 +43,7 @@ class UserServiceTest {
                 .name("테스트유저")
                 .email("test@example.com")
                 .password("Test1234!")
-                .phone("01012345678")
+                .phone("010-1234-5678")
                 .build();
     }
 
@@ -103,7 +103,7 @@ class UserServiceTest {
         User registeredUser = userService.registerUser(validRegisterRequest);
         UserUpdateRequest updateRequest = new UserUpdateRequest();
         updateRequest.setName("수정된이름");
-        updateRequest.setPhone("01098765432");
+        updateRequest.setPhone("010-9876-5432");
         updateRequest.setPassword("NewPass123!");
 
         // when

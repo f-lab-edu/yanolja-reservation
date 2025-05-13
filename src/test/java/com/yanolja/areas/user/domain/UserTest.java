@@ -14,7 +14,7 @@ class UserTest {
         String name = "테스트유저";
         String email = "test@example.com";
         String encodedPassword = "encodedPassword";
-        String phone = "01012345678";
+        String phone = "010-1234-5678";
 
         // when
         User user = User.createUser(name, email, encodedPassword, phone);
@@ -61,7 +61,7 @@ class UserTest {
         String name = "관리자";
         String email = "admin@example.com";
         String encodedPassword = "encodedPassword";
-        String phone = "01098765432";
+        String phone = "010-9876-5432";
 
         // when
         User user = User.createAdmin(name, email, encodedPassword, phone);
@@ -80,7 +80,7 @@ class UserTest {
     @DisplayName("비밀번호 변경 테스트")
     void changePassword() {
         // given
-        User user = User.createUser("테스트유저", "test@example.com", "oldPassword", "01012345678");
+        User user = User.createUser("테스트유저", "test@example.com", "oldPassword", "010-1234-5678");
         String newPassword = "newPassword";
 
         // when
@@ -94,7 +94,7 @@ class UserTest {
     @DisplayName("소셜 로그인 정보 업데이트 테스트")
     void updateSocialInfo() {
         // given
-        User user = User.createUser("테스트유저", "test@example.com", "password", "01012345678");
+        User user = User.createUser("테스트유저", "test@example.com", "password", "010-1234-5678");
         SocialProvider socialProvider = SocialProvider.KAKAO;
         String socialId = "kakao123";
         String profileImageUrl = "https://example.com/new-profile.jpg";
@@ -112,9 +112,9 @@ class UserTest {
     @DisplayName("사용자 정보 부분 업데이트 테스트 - 모든 필드")
     void updateUserInfoAllFields() {
         // given
-        User user = User.createUser("테스트유저", "test@example.com", "password", "01012345678");
+        User user = User.createUser("테스트유저", "test@example.com", "password", "010-1234-5678");
         String newName = "업데이트유저";
-        String newPhone = "01087654321";
+        String newPhone = "010-8765-4321";
         String newPassword = "newPassword";
 
         // when
@@ -130,7 +130,7 @@ class UserTest {
     @DisplayName("사용자 정보 부분 업데이트 테스트 - 이름만")
     void updateUserInfoNameOnly() {
         // given
-        User user = User.createUser("테스트유저", "test@example.com", "password", "01012345678");
+        User user = User.createUser("테스트유저", "test@example.com", "password", "010-1234-5678");
         String oldPhone = user.getPhone();
         String oldPassword = user.getPassword();
         String newName = "업데이트유저";
@@ -148,7 +148,7 @@ class UserTest {
     @DisplayName("사용자 탈퇴 테스트")
     void withdraw() {
         // given
-        User user = User.createUser("테스트유저", "test@example.com", "password", "01012345678");
+        User user = User.createUser("테스트유저", "test@example.com", "password", "010-1234-5678");
         String originalEmail = user.getEmail();
 
         // when
