@@ -1,20 +1,8 @@
 package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.AccommodationDto;
-import com.yanolja.areas.accommodation.dto.AccommodationImageDto;
-import com.yanolja.areas.accommodation.dto.RoomDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
-import com.yanolja.areas.accommodation.entity.AccommodationImage;
-import com.yanolja.areas.accommodation.entity.Amenity;
-import com.yanolja.areas.accommodation.entity.Room;
-import com.yanolja.areas.accommodation.entity.RoomImage;
-import com.yanolja.areas.accommodation.entity.RoomOption;
-import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
-import com.yanolja.areas.accommodation.repository.AmenityRepository;
-import com.yanolja.areas.accommodation.repository.RoomImageRepository;
-import com.yanolja.areas.accommodation.repository.RoomOptionRepository;
-import com.yanolja.areas.accommodation.repository.RoomRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,10 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -40,19 +28,11 @@ public class AccommodationServiceTest {
     @Mock
     private AccommodationRepository accommodationRepository;
 
-    @Mock
-    private AmenityRepository amenityRepository;
-
-    @Mock
-    private RoomOptionRepository roomOptionRepository;
-
     @InjectMocks
     private AccommodationService accommodationService;
 
     private AccommodationDto.Request accommodationRequest;
     private Accommodation accommodation;
-    private List<Amenity> amenities;
-    private List<RoomOption> roomOptions;
 
     @BeforeEach
     void setUp() {
@@ -75,7 +55,7 @@ public class AccommodationServiceTest {
                 new BigDecimal("126.9780"),
                 new BigDecimal("100000")
         );
-
+        ReflectionTestUtils.setField(accommodation, "id", 1L);
     }
 
     @Test
@@ -83,8 +63,6 @@ public class AccommodationServiceTest {
     void createAccommodationSuccess() {
         // Given
         when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
-        when(amenityRepository.findAllByIdIn(anyList())).thenReturn(amenities);
-        when(roomOptionRepository.findAllByIdIn(anyList())).thenReturn(roomOptions);
 
         // When
         AccommodationDto.Response response = accommodationService.createAccommodation(accommodationRequest);
@@ -98,8 +76,7 @@ public class AccommodationServiceTest {
         assertEquals(new BigDecimal("126.9780"), response.getLongitude());
         assertEquals(new BigDecimal("100000"), response.getPricePerNight());
         
-        verify(accommodationRepository, times(2)).save(any(Accommodation.class));
-        verify(amenityRepository, times(1)).findAllByIdIn(anyList());
+        verify(accommodationRepository, times(1)).save(any(Accommodation.class));
     }
 
     @Test
@@ -160,8 +137,6 @@ public class AccommodationServiceTest {
         // Given
         when(accommodationRepository.findById(1L)).thenReturn(Optional.of(accommodation));
         when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
-        when(amenityRepository.findAllByIdIn(anyList())).thenReturn(amenities);
-        when(roomOptionRepository.findAllByIdIn(anyList())).thenReturn(roomOptions);
 
         // 수정할 숙소 정보
         AccommodationDto.Request updateRequest = AccommodationDto.Request.builder()
@@ -171,9 +146,6 @@ public class AccommodationServiceTest {
                 .latitude(new BigDecimal("37.5665"))
                 .longitude(new BigDecimal("126.9780"))
                 .pricePerNight(new BigDecimal("120000"))
-                .images(new ArrayList<>())
-                .rooms(new ArrayList<>())
-                .amenityIds(Arrays.asList(1L, 2L))
                 .build();
 
         // When
@@ -188,7 +160,6 @@ public class AccommodationServiceTest {
         
         verify(accommodationRepository, times(1)).findById(1L);
         verify(accommodationRepository, times(1)).save(any(Accommodation.class));
-        verify(amenityRepository, times(1)).findAllByIdIn(anyList());
     }
 
     @Test

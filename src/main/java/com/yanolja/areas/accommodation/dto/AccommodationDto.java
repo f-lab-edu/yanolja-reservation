@@ -131,12 +131,6 @@ public class AccommodationDto {
         private String mainImageUrl;
 
         public static ListResponse fromEntity(Accommodation accommodation) {
-            String mainImageUrl = accommodation.getImages().stream()
-                    .filter(image -> Boolean.TRUE.equals(image.getIsMain()))
-                    .findFirst()
-                    .map(image -> image.getImageUrl())
-                    .orElse(null);
-
             return ListResponse.builder()
                     .id(accommodation.getId())
                     .name(accommodation.getName())
@@ -144,7 +138,7 @@ public class AccommodationDto {
                     .pricePerNight(accommodation.getPricePerNight())
                     .rating(accommodation.getRating())
                     .reviewCount(accommodation.getReviewCount())
-                    .mainImageUrl(mainImageUrl)
+                    .mainImageUrl(null)  // Temporarily set to null
                     .build();
         }
     }

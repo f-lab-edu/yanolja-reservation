@@ -61,20 +61,20 @@ public class Accommodation extends BaseEntity {
     @Comment("삭제 여부 (Y, N)")
     private String deletedYn;
 
-    @OneToMany(mappedBy = "accommodation")
-    private List<AccommodationImage> images = new ArrayList<>();
+    @Builder
+    public Accommodation(String name, String description, String address, BigDecimal latitude, BigDecimal longitude, BigDecimal pricePerNight, BigDecimal rating, Integer reviewCount, String status, String deletedYn) {
+        this.name = name;
+        this.description = description;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.pricePerNight = pricePerNight;
+        this.rating = rating;
+        this.reviewCount = reviewCount;
+        this.status = status;
+        this.deletedYn = deletedYn;
+    }
 
-    @OneToMany(mappedBy = "accommodation")
-    private List<Room> rooms = new ArrayList<>();
-
-    @ManyToMany
-    @JoinTable(
-        name = "accommodation_amenities",
-        joinColumns = @JoinColumn(name = "accommodation_id"),
-        inverseJoinColumns = @JoinColumn(name = "amenity_id")
-    )
-    private List<Amenity> amenities = new ArrayList<>();
-    
     /**
      * 숙소 생성
      * @param name 숙소 이름
@@ -99,33 +99,7 @@ public class Accommodation extends BaseEntity {
                 .deletedYn("N")
                 .build();
     }
-    
-    /**
-     * 이미지 추가
-     * @param images 추가할 이미지 리스트
-     */
-    public void addImages(List<AccommodationImage> images) {
-        this.images.addAll(images);
-        images.forEach(image -> image.setAccommodation(this));
-    }
-    
-    /**
-     * 객실 추가
-     * @param rooms 추가할 객실 리스트
-     */
-    public void addRooms(List<Room> rooms) {
-        this.rooms.addAll(rooms);
-        rooms.forEach(room -> room.setAccommodation(this));
-    }
-    
-    /**
-     * 편의시설 설정
-     * @param amenities 설정할 편의시설 리스트
-     */
-    public void setAmenitiesList(List<Amenity> amenities) {
-        this.amenities.clear();
-        this.amenities.addAll(amenities);
-    }
+
     
     /**
      * 숙소 정보 업데이트
