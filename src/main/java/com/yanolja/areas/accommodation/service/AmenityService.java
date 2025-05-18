@@ -11,8 +11,7 @@ import com.yanolja.areas.accommodation.repository.AccommodationAmenityRepository
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import com.yanolja.areas.accommodation.repository.AmenityRepository;
 import com.yanolja.common.exception.ErrorCode;
-import com.yanolja.common.exception.UserException;
-
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ public class AmenityService {
     public AmenityDto.Response createAmenity(AmenityDto.Request requestDto) {
         // 중복 이름 검사
         if (amenityRepository.existsByName(requestDto.getName())) {
-            throw new UserException(ErrorCode.INVALID_INPUT_VALUE, "이미 존재하는 편의시설 이름입니다: " + requestDto.getName());
+            throw new EntityExistsException("이미 존재하는 편의시설 이름입니다: " + requestDto.getName());
         }
         
         // 새 편의시설 생성 및 저장
@@ -154,8 +153,7 @@ public class AmenityService {
         // 다른 편의시설과 이름 중복 체크 (자기 자신 제외)
         if (!amenity.getName().equals(requestDto.getName()) && 
             amenityRepository.existsByName(requestDto.getName())) {
-            throw new UserException(ErrorCode.INVALID_INPUT_VALUE, 
-                    "이미 존재하는 편의시설 이름입니다: " + requestDto.getName());
+            throw new EntityExistsException("이미 존재하는 편의시설 이름입니다: " + requestDto.getName());
         }
         
         // 편의시설 정보 업데이트

@@ -7,7 +7,8 @@ import com.yanolja.areas.accommodation.entity.Amenity;
 import com.yanolja.areas.accommodation.repository.AccommodationAmenityRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import com.yanolja.areas.accommodation.repository.AmenityRepository;
-import com.yanolja.common.exception.UserException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
@@ -114,7 +114,7 @@ public class AmenityServiceTest {
         when(amenityRepository.existsByName(anyString())).thenReturn(true);
         
         // When & Then
-        assertThrows(UserException.class, () -> amenityService.createAmenity(requestDto));
+        assertThrows(EntityExistsException.class, () -> amenityService.createAmenity(requestDto));
         
         verify(amenityRepository, times(1)).existsByName("와이파이");
         verify(amenityRepository, never()).save(any(Amenity.class));
@@ -365,7 +365,7 @@ public class AmenityServiceTest {
         when(amenityRepository.existsByName("중복된 이름")).thenReturn(true);
         
         // When & Then
-        assertThrows(UserException.class, () -> amenityService.updateAmenity(amenityId, requestDto));
+        assertThrows(EntityExistsException.class, () -> amenityService.updateAmenity(amenityId, requestDto));
         
         verify(amenityRepository, times(1)).findById(amenityId);
         verify(amenityRepository, times(1)).existsByName("중복된 이름");
