@@ -39,12 +39,21 @@ public class AccommodationImage extends BaseEntity {
         this.isMain = isMain != null ? isMain : false;
     }
 
+    
     /**
-     * 대표 이미지 설정
-     * @param isMain 대표 이미지 여부
+     * 이미지를 대표 이미지로 설정
+     * 호출 시 이 메소드는 다른 모든 해당 숙소의 이미지의 isMain 값을 false로 설정할 수 있도록
+     * 서비스 레이어에서 다른 이미지들을 모두 처리해야 합니다.
      */
-    public void setAsMain(Boolean isMain) {
-        this.isMain = isMain;
+    public void makeMainImage() {
+        this.isMain = true;
+    }
+    
+    /**
+     * 대표 이미지 해제
+     */
+    public void unsetAsMain() {
+        this.isMain = false;
     }
 
     /**
