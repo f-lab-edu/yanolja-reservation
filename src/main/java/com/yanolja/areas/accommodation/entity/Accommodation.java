@@ -57,43 +57,20 @@ public class Accommodation extends BaseEntity {
     @Comment("상태 (ACTIVE, INACTIVE)")
     private String status;
 
-    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "accommodation")
     private List<AccommodationImage> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "accommodation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "accommodation")
     private List<Room> rooms = new ArrayList<>();
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany
     @JoinTable(
         name = "accommodation_amenities",
         joinColumns = @JoinColumn(name = "accommodation_id"),
         inverseJoinColumns = @JoinColumn(name = "amenity_id")
     )
     private List<Amenity> amenities = new ArrayList<>();
-
-    @PrePersist
-    protected void onCreate() {
-        if (status == null) {
-            status = "ACTIVE";
-        }
-        if (reviewCount == null) {
-            reviewCount = 0;
-        }
-    }
-
-    @Builder
-    public Accommodation(String name, String description, String address, BigDecimal latitude, BigDecimal longitude, BigDecimal pricePerNight, BigDecimal rating, Integer reviewCount, String status) {
-        this.name = name;
-        this.description = description;
-        this.address = address;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.pricePerNight = pricePerNight;
-        this.rating = rating;
-        this.reviewCount = reviewCount;
-        this.status = status;
-    }
-
+    
     /**
      * 숙소 생성
      * @param name 숙소 이름
