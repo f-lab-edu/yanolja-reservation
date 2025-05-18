@@ -2,6 +2,8 @@ package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.AccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationImage;
+import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,9 +12,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,12 +33,22 @@ public class AccommodationServiceTest {
 
     @Mock
     private AccommodationRepository accommodationRepository;
+    
+    @Mock
+    private AccommodationImageRepository accommodationImageRepository;
+    
+    @Mock
+    private AccommodationImageService accommodationImageService;
 
     @InjectMocks
     private AccommodationService accommodationService;
 
     private AccommodationDto.Request accommodationRequest;
     private Accommodation accommodation;
+    private AccommodationImage accommodationMainImage;
+    private AccommodationImage accommodationImage;
+    private MockMultipartFile mockImage1;
+    private MockMultipartFile mockImage2;
 
     @BeforeEach
     void setUp() {
@@ -56,6 +72,36 @@ public class AccommodationServiceTest {
                 new BigDecimal("100000")
         );
         ReflectionTestUtils.setField(accommodation, "id", 1L);
+        
+        // 테스트용 이미지 엔티티 생성
+        accommodationMainImage = AccommodationImage.builder()
+                .accommodation(accommodation)
+                .imageUrl("/images/accommodations/1/main.jpg")
+                .isMain(true)
+                .build();
+        ReflectionTestUtils.setField(accommodationMainImage, "id", 1L);
+        
+        accommodationImage = AccommodationImage.builder()
+                .accommodation(accommodation)
+                .imageUrl("/images/accommodations/1/room.jpg")
+                .isMain(false)
+                .build();
+        ReflectionTestUtils.setField(accommodationImage, "id", 2L);
+        
+        // 테스트용 이미지 파일 생성
+        mockImage1 = new MockMultipartFile(
+                "image1",
+                "test1.jpg",
+                "image/jpeg",
+                "test image content 1".getBytes()
+        );
+
+        mockImage2 = new MockMultipartFile(
+                "image2",
+                "test2.jpg",
+                "image/jpeg",
+                "test image content 2".getBytes()
+        );
     }
 
     @Test
@@ -80,11 +126,12 @@ public class AccommodationServiceTest {
     }
 
     @Test
-    @DisplayName("숙소 목록 조회 성공 테스트")
-    void getAllAccommodationsSuccess() {
+    @DisplayName("숙소 목록 조회 성공 테스트 - 메인 이미지 포함")
+    void getAllAccommodationsSuccessWithMainImage() {
         // Given
         List<Accommodation> accommodations = Arrays.asList(accommodation);
         when(accommodationRepository.findAllActive()).thenReturn(accommodations);
+        when(accommodationImageService.getMainImageUrl(1L)).thenReturn("/images/accommodations/1/main.jpg");
 
         // When
         List<AccommodationDto.ListResponse> responses = accommodationService.getAllAccommodations();
@@ -95,15 +142,20 @@ public class AccommodationServiceTest {
         assertEquals("호텔 테스트", responses.get(0).getName());
         assertEquals("서울시 강남구 테헤란로 123", responses.get(0).getAddress());
         assertEquals(new BigDecimal("100000"), responses.get(0).getPricePerNight());
+        assertEquals("/images/accommodations/1/main.jpg", responses.get(0).getMainImageUrl());
         
         verify(accommodationRepository, times(1)).findAllActive();
+        verify(accommodationImageService, times(1)).getMainImageUrl(1L);
     }
 
     @Test
-    @DisplayName("숙소 상세 조회 성공 테스트")
-    void getAccommodationByIdSuccess() {
+    @DisplayName("숙소 상세 조회 성공 테스트 - 이미지 목록 포함")
+    void getAccommodationByIdSuccessWithImages() {
         // Given
         when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
+        when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
+                Arrays.asList(accommodationMainImage, accommodationImage)
+        );
 
         // When
         AccommodationDto.Response response = accommodationService.getAccommodationById(1L);
@@ -114,7 +166,20 @@ public class AccommodationServiceTest {
         assertEquals("테스트용 호텔입니다.", response.getDescription());
         assertEquals("서울시 강남구 테헤란로 123", response.getAddress());
         
+        // 이미지 검증
+        assertNotNull(response.getImages());
+        assertEquals(2, response.getImages().size());
+        
+        // 첫 번째 이미지가 메인 이미지인지 확인
+        assertTrue(response.getImages().get(0).getIsMain());
+        assertEquals("/images/accommodations/1/main.jpg", response.getImages().get(0).getImageUrl());
+        
+        // 두 번째 이미지 확인
+        assertFalse(response.getImages().get(1).getIsMain());
+        assertEquals("/images/accommodations/1/room.jpg", response.getImages().get(1).getImageUrl());
+        
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
     }
 
     @Test
@@ -132,11 +197,14 @@ public class AccommodationServiceTest {
     }
 
     @Test
-    @DisplayName("숙소 수정 성공 테스트")
+    @DisplayName("숙소 수정 성공 테스트 - 이미지 포함")
     void updateAccommodationSuccess() {
         // Given
         when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
         when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
+        when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
+                Arrays.asList(accommodationMainImage, accommodationImage)
+        );
 
         // 수정할 숙소 정보
         AccommodationDto.Request updateRequest = AccommodationDto.Request.builder()
@@ -158,8 +226,13 @@ public class AccommodationServiceTest {
         assertEquals("서울시 강남구 테헤란로 456", response.getAddress());
         assertEquals(new BigDecimal("120000"), response.getPricePerNight());
         
+        // 이미지 검증
+        assertNotNull(response.getImages());
+        assertEquals(2, response.getImages().size());
+        
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
         verify(accommodationRepository, times(1)).save(any(Accommodation.class));
+        verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
     }
 
     @Test
