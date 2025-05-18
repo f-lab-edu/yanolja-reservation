@@ -32,6 +32,7 @@ CREATE TABLE accommodations (
     rating DECIMAL(3, 2),
     review_count INT DEFAULT 0,
     status VARCHAR(20) DEFAULT 'ACTIVE',
+    deleted_yn CHAR(1) DEFAULT 'N',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),

@@ -57,6 +57,10 @@ public class Accommodation extends BaseEntity {
     @Comment("상태 (ACTIVE, INACTIVE)")
     private String status;
 
+    @Column(name = "deleted_yn")
+    @Comment("삭제 여부 (Y, N)")
+    private String deletedYn;
+
     @OneToMany(mappedBy = "accommodation")
     private List<AccommodationImage> images = new ArrayList<>();
 
