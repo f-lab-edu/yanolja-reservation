@@ -96,6 +96,7 @@ public class Accommodation extends BaseEntity {
                 .pricePerNight(pricePerNight)
                 .status("ACTIVE")
                 .reviewCount(0)
+                .deletedYn("N")
                 .build();
     }
     
@@ -175,5 +176,12 @@ public class Accommodation extends BaseEntity {
         if (this.reviewCount != null && this.reviewCount > 0) {
             this.reviewCount -= 1;
         }
+    }
+    
+    /**
+     * 소프트 삭제 처리
+     */
+    public void markAsDeleted() {
+        this.deletedYn = "Y";
     }
 } 
