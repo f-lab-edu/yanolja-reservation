@@ -37,9 +37,12 @@
 - 찜 목록 조회 및 정렬, 공유 기능
 
 ---
-ERD : https://www.erdcloud.com/d/oTxP6FzFZtCwx4NYt
 
 ### 관리자 기능
 - 숙소 등록/수정/삭제 및 객실·가격 관리
 - 예약 현황 조회 및 승인/취소 관리, 매출 통계
 - 회원 관리 (회원 정보 수정, 정지/해제, 회원 통계)
+
+---
+
+ERD : https://www.erdcloud.com/d/oTxP6FzFZtCwx4NYt
