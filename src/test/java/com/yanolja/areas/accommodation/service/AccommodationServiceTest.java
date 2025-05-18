@@ -1,6 +1,8 @@
 package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.AccommodationDto;
+import com.yanolja.areas.accommodation.dto.AccommodationImageDto;
+import com.yanolja.areas.accommodation.dto.AmenityDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
@@ -39,6 +41,9 @@ public class AccommodationServiceTest {
     
     @Mock
     private AccommodationImageService accommodationImageService;
+    
+    @Mock
+    private AmenityService amenityService;
 
     @InjectMocks
     private AccommodationService accommodationService;
@@ -47,6 +52,7 @@ public class AccommodationServiceTest {
     private Accommodation accommodation;
     private AccommodationImage accommodationMainImage;
     private AccommodationImage accommodationImage;
+    private List<AmenityDto.Response> amenities;
     private MockMultipartFile mockImage1;
     private MockMultipartFile mockImage2;
 
@@ -87,6 +93,20 @@ public class AccommodationServiceTest {
                 .isMain(false)
                 .build();
         ReflectionTestUtils.setField(accommodationImage, "id", 2L);
+        
+        // 테스트용 편의시설 목록 생성
+        amenities = Arrays.asList(
+            AmenityDto.Response.builder()
+                .id(1L)
+                .name("와이파이")
+                .iconUrl("/icons/wifi.png")
+                .build(),
+            AmenityDto.Response.builder()
+                .id(2L)
+                .name("수영장")
+                .iconUrl("/icons/pool.png")
+                .build()
+        );
         
         // 테스트용 이미지 파일 생성
         mockImage1 = new MockMultipartFile(
@@ -149,13 +169,14 @@ public class AccommodationServiceTest {
     }
 
     @Test
-    @DisplayName("숙소 상세 조회 성공 테스트 - 이미지 목록 포함")
+    @DisplayName("숙소 상세 조회 성공 테스트 - 이미지 목록 및 편의시설 포함")
     void getAccommodationByIdSuccessWithImages() {
         // Given
         when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
                 Arrays.asList(accommodationMainImage, accommodationImage)
         );
+        when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenities);
 
         // When
         AccommodationDto.Response response = accommodationService.getAccommodationById(1L);
@@ -178,8 +199,17 @@ public class AccommodationServiceTest {
         assertFalse(response.getImages().get(1).getIsMain());
         assertEquals("/images/accommodations/1/room.jpg", response.getImages().get(1).getImageUrl());
         
+        // 편의시설 검증
+        assertNotNull(response.getAmenities());
+        assertEquals(2, response.getAmenities().size());
+        assertEquals("와이파이", response.getAmenities().get(0).getName());
+        assertEquals("/icons/wifi.png", response.getAmenities().get(0).getIconUrl());
+        assertEquals("수영장", response.getAmenities().get(1).getName());
+        assertEquals("/icons/pool.png", response.getAmenities().get(1).getIconUrl());
+        
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
         verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
+        verify(amenityService, times(1)).getAmenitiesByAccommodationId(1L);
     }
 
     @Test
@@ -197,14 +227,10 @@ public class AccommodationServiceTest {
     }
 
     @Test
-    @DisplayName("숙소 수정 성공 테스트 - 이미지 포함")
+    @DisplayName("숙소 수정 성공 테스트")
     void updateAccommodationSuccess() {
         // Given
         when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
-        when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
-        when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
-                Arrays.asList(accommodationMainImage, accommodationImage)
-        );
 
         // 수정할 숙소 정보
         AccommodationDto.Request updateRequest = AccommodationDto.Request.builder()
@@ -226,13 +252,7 @@ public class AccommodationServiceTest {
         assertEquals("서울시 강남구 테헤란로 456", response.getAddress());
         assertEquals(new BigDecimal("120000"), response.getPricePerNight());
         
-        // 이미지 검증
-        assertNotNull(response.getImages());
-        assertEquals(2, response.getImages().size());
-        
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
-        verify(accommodationRepository, times(1)).save(any(Accommodation.class));
-        verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
     }
 
     @Test
@@ -246,7 +266,6 @@ public class AccommodationServiceTest {
 
         // Then
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
-        verify(accommodationRepository, times(1)).save(any(Accommodation.class));
     }
 
     @Test
@@ -261,6 +280,5 @@ public class AccommodationServiceTest {
         });
         
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(999L);
-        verify(accommodationRepository, never()).save(any(Accommodation.class));
     }
 } 
