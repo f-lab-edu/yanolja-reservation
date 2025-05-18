@@ -1,6 +1,7 @@
 package com.yanolja.areas.accommodation.dto;
 
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -84,6 +85,9 @@ public class AccommodationDto {
       
         @Schema(description = "숙소 상태")
         private String status;
+        
+        @Schema(description = "숙소 이미지 목록")
+        private List<AccommodationImageDto.Response> images;
       
 
         public static Response fromEntity(Accommodation accommodation) {
@@ -98,6 +102,26 @@ public class AccommodationDto {
                     .rating(accommodation.getRating())
                     .reviewCount(accommodation.getReviewCount())
                     .status(accommodation.getStatus())
+                    .build();
+        }
+        
+        public static Response fromEntityWithImages(Accommodation accommodation, List<AccommodationImage> images) {
+            List<AccommodationImageDto.Response> imageResponses = images.stream()
+                    .map(AccommodationImageDto.Response::fromEntity)
+                    .collect(Collectors.toList());
+                    
+            return Response.builder()
+                    .id(accommodation.getId())
+                    .name(accommodation.getName())
+                    .description(accommodation.getDescription())
+                    .address(accommodation.getAddress())
+                    .latitude(accommodation.getLatitude())
+                    .longitude(accommodation.getLongitude())
+                    .pricePerNight(accommodation.getPricePerNight())
+                    .rating(accommodation.getRating())
+                    .reviewCount(accommodation.getReviewCount())
+                    .status(accommodation.getStatus())
+                    .images(imageResponses)
                     .build();
         }
     }
@@ -138,7 +162,18 @@ public class AccommodationDto {
                     .pricePerNight(accommodation.getPricePerNight())
                     .rating(accommodation.getRating())
                     .reviewCount(accommodation.getReviewCount())
-                    .mainImageUrl(null)  // Temporarily set to null
+                    .build();
+        }
+        
+        public static ListResponse fromEntityWithMainImage(Accommodation accommodation, String mainImageUrl) {
+            return ListResponse.builder()
+                    .id(accommodation.getId())
+                    .name(accommodation.getName())
+                    .address(accommodation.getAddress())
+                    .pricePerNight(accommodation.getPricePerNight())
+                    .rating(accommodation.getRating())
+                    .reviewCount(accommodation.getReviewCount())
+                    .mainImageUrl(mainImageUrl)
                     .build();
         }
     }

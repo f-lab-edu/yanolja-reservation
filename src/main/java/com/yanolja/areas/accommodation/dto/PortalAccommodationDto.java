@@ -1,6 +1,7 @@
 package com.yanolja.areas.accommodation.dto;
 
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import com.yanolja.common.dto.PageRequestDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PortalAccommodationDto {
 
@@ -92,7 +94,18 @@ public class PortalAccommodationDto {
                     .pricePerNight(accommodation.getPricePerNight())
                     .rating(accommodation.getRating())
                     .reviewCount(accommodation.getReviewCount())
-                    .mainImageUrl(null) // 실제 이미지 URL 로직 구현 필요
+                    .build();
+        }
+        
+        public static ListResponse fromEntityWithMainImage(Accommodation accommodation, String mainImageUrl) {
+            return ListResponse.builder()
+                    .id(accommodation.getId())
+                    .name(accommodation.getName())
+                    .address(accommodation.getAddress())
+                    .pricePerNight(accommodation.getPricePerNight())
+                    .rating(accommodation.getRating())
+                    .reviewCount(accommodation.getReviewCount())
+                    .mainImageUrl(mainImageUrl)
                     .build();
         }
     }
@@ -148,7 +161,27 @@ public class PortalAccommodationDto {
                     .pricePerNight(accommodation.getPricePerNight())
                     .rating(accommodation.getRating())
                     .reviewCount(accommodation.getReviewCount())
-                    .imageUrls(List.of()) // 실제 이미지 URL 로직 구현 필요
+                    .imageUrls(List.of()) // 이미지가 없는 상태로 생성
+                    .amenities(List.of()) // 실제 편의시설 정보 로직 구현 필요
+                    .build();
+        }
+        
+        public static DetailResponse fromEntityWithImages(Accommodation accommodation, List<AccommodationImage> images) {
+            List<String> imageUrls = images.stream()
+                    .map(AccommodationImage::getImageUrl)
+                    .collect(Collectors.toList());
+                    
+            return DetailResponse.builder()
+                    .id(accommodation.getId())
+                    .name(accommodation.getName())
+                    .description(accommodation.getDescription())
+                    .address(accommodation.getAddress())
+                    .latitude(accommodation.getLatitude())
+                    .longitude(accommodation.getLongitude())
+                    .pricePerNight(accommodation.getPricePerNight())
+                    .rating(accommodation.getRating())
+                    .reviewCount(accommodation.getReviewCount())
+                    .imageUrls(imageUrls)
                     .amenities(List.of()) // 실제 편의시설 정보 로직 구현 필요
                     .build();
         }
