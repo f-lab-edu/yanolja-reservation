@@ -68,6 +68,27 @@ public class Room extends BaseEntity {
         this.status = status;
         this.deletedYn = "N";
     }
+    
+    /**
+     * 객실 생성
+     * @param accommodationId 숙소 ID
+     * @param name 객실 이름
+     * @param description 객실 설명
+     * @param capacity 수용 인원
+     * @param pricePerNight 1박 가격
+     * @return 생성된 Room 객체
+     */
+    public static Room createRoom(Long accommodationId, String name, String description, 
+                              Integer capacity, BigDecimal pricePerNight) {
+        return Room.builder()
+                .accommodationId(accommodationId)
+                .name(name)
+                .description(description)
+                .capacity(capacity)
+                .pricePerNight(pricePerNight)
+                .status("AVAILABLE")
+                .build();
+    }
 
     /**
      * 객실 정보 업데이트
