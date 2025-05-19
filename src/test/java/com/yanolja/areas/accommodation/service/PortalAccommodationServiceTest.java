@@ -6,6 +6,8 @@ import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
+import com.yanolja.areas.room.dto.PortalRoomDto;
+import com.yanolja.areas.room.service.PortalRoomService;
 import com.yanolja.common.dto.PageRequestDto;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +49,9 @@ class PortalAccommodationServiceTest {
     
     @Mock
     private AmenityService amenityService;
+    
+    @Mock
+    private PortalRoomService portalRoomService;
 
     @InjectMocks
     private PortalAccommodationService portalAccommodationService;
@@ -59,6 +64,7 @@ class PortalAccommodationServiceTest {
     private AccommodationImage subImage;
     private List<AccommodationImage> imageList;
     private List<AmenityDto.Response> amenityList;
+    private List<PortalRoomDto.ListResponse> roomList;
     private String mainImageUrl;
     private String subImageUrl;
     
@@ -100,6 +106,30 @@ class PortalAccommodationServiceTest {
                 .build()
         );
         
+        // 객실 데이터 설정
+        roomList = Arrays.asList(
+            PortalRoomDto.ListResponse.builder()
+                .id(1L)
+                .accommodationId(1L)
+                .name("디럭스 더블룸")
+                .description("편안한 더블룸입니다.")
+                .capacity(2)
+                .pricePerNight(new BigDecimal("120000"))
+                .status("AVAILABLE")
+                .mainImageUrl("/images/rooms/1/main.jpg")
+                .build(),
+            PortalRoomDto.ListResponse.builder()
+                .id(2L)
+                .accommodationId(1L)
+                .name("스위트룸")
+                .description("넓은 스위트룸입니다.")
+                .capacity(4)
+                .pricePerNight(new BigDecimal("200000"))
+                .status("AVAILABLE")
+                .mainImageUrl("/images/rooms/2/main.jpg")
+                .build()
+        );
+        
         // 기본 모킹 설정 - lenient() 추가하여 불필요한 stubbing 경고 방지
         lenient().when(accommodationImageService.getMainImageUrl(1L)).thenReturn(mainImageUrl);
         lenient().when(accommodationImageService.getMainImageUrl(2L)).thenReturn("/images/accommodations/2/main.jpg");
@@ -107,6 +137,7 @@ class PortalAccommodationServiceTest {
         lenient().when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailAccommodation));
         lenient().when(accommodationRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
         lenient().when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenityList);
+        lenient().when(portalRoomService.getRoomsByAccommodation(1L)).thenReturn(roomList);
     }
 
     @Test
@@ -213,13 +244,14 @@ class PortalAccommodationServiceTest {
     }
     
     @Test
-    @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID (이미지와 편의시설 포함)")
+    @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID (이미지, 편의시설, 객실 포함)")
     void getAccommodationDetail_WithExistingId_ShouldReturnAccommodationDetail() {
         // When
         // Setup specific image list for this test
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
         when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailAccommodation));
         when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenityList);
+        when(portalRoomService.getRoomsByAccommodation(1L)).thenReturn(roomList);
         
         PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(1L);
         
@@ -244,10 +276,19 @@ class PortalAccommodationServiceTest {
         assertThat(result.getAmenities().get(1).getName()).isEqualTo("수영장");
         assertThat(result.getAmenities().get(1).getIconUrl()).isEqualTo("/icons/pool.png");
         
+        // 객실 목록 검증
+        assertThat(result.getRooms()).isNotNull();
+        assertThat(result.getRooms()).hasSize(2);
+        assertThat(result.getRooms().get(0).getName()).isEqualTo("디럭스 더블룸");
+        assertThat(result.getRooms().get(0).getPricePerNight()).isEqualTo(new BigDecimal("120000"));
+        assertThat(result.getRooms().get(1).getName()).isEqualTo("스위트룸");
+        assertThat(result.getRooms().get(1).getPricePerNight()).isEqualTo(new BigDecimal("200000"));
+        
         // 호출 검증
         verify(accommodationRepository).findByIdAndNotDeleted(1L);
         verify(accommodationImageRepository).findByAccommodationId(1L);
         verify(amenityService).getAmenitiesByAccommodationId(1L);
+        verify(portalRoomService).getRoomsByAccommodation(1L);
     }
     
     @Test

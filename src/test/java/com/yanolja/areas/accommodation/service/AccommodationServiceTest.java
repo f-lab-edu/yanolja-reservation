@@ -7,6 +7,8 @@ import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
+import com.yanolja.areas.room.dto.RoomDto;
+import com.yanolja.areas.room.service.RoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,9 @@ public class AccommodationServiceTest {
     
     @Mock
     private AmenityService amenityService;
+    
+    @Mock
+    private RoomService roomService;
 
     @InjectMocks
     private AccommodationService accommodationService;
@@ -53,6 +58,7 @@ public class AccommodationServiceTest {
     private AccommodationImage accommodationMainImage;
     private AccommodationImage accommodationImage;
     private List<AmenityDto.Response> amenities;
+    private List<RoomDto.ListResponse> rooms;
     private MockMultipartFile mockImage1;
     private MockMultipartFile mockImage2;
 
@@ -105,6 +111,30 @@ public class AccommodationServiceTest {
                 .id(2L)
                 .name("수영장")
                 .iconUrl("/icons/pool.png")
+                .build()
+        );
+        
+        // 테스트용 객실 목록 생성
+        rooms = Arrays.asList(
+            RoomDto.ListResponse.builder()
+                .id(1L)
+                .accommodationId(1L)
+                .name("디럭스 더블룸")
+                .description("편안한 더블룸입니다.")
+                .capacity(2)
+                .pricePerNight(new BigDecimal("120000"))
+                .status("AVAILABLE")
+                .mainImageUrl("/images/rooms/1/main.jpg")
+                .build(),
+            RoomDto.ListResponse.builder()
+                .id(2L)
+                .accommodationId(1L)
+                .name("스위트룸")
+                .description("넓은 스위트룸입니다.")
+                .capacity(4)
+                .pricePerNight(new BigDecimal("200000"))
+                .status("AVAILABLE")
+                .mainImageUrl("/images/rooms/2/main.jpg")
                 .build()
         );
         
@@ -169,14 +199,15 @@ public class AccommodationServiceTest {
     }
 
     @Test
-    @DisplayName("숙소 상세 조회 성공 테스트 - 이미지 목록 및 편의시설 포함")
-    void getAccommodationByIdSuccessWithImages() {
+    @DisplayName("숙소 상세 조회 성공 테스트 - 이미지 목록, 편의시설, 객실 포함")
+    void getAccommodationByIdSuccessWithImagesAndRooms() {
         // Given
         when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
                 Arrays.asList(accommodationMainImage, accommodationImage)
         );
         when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenities);
+        when(roomService.getRoomsByAccommodationId(1L)).thenReturn(rooms);
 
         // When
         AccommodationDto.Response response = accommodationService.getAccommodationById(1L);
@@ -207,9 +238,18 @@ public class AccommodationServiceTest {
         assertEquals("수영장", response.getAmenities().get(1).getName());
         assertEquals("/icons/pool.png", response.getAmenities().get(1).getIconUrl());
         
+        // 객실 검증
+        assertNotNull(response.getRooms());
+        assertEquals(2, response.getRooms().size());
+        assertEquals("디럭스 더블룸", response.getRooms().get(0).getName());
+        assertEquals(new BigDecimal("120000"), response.getRooms().get(0).getPricePerNight());
+        assertEquals("스위트룸", response.getRooms().get(1).getName());
+        assertEquals(new BigDecimal("200000"), response.getRooms().get(1).getPricePerNight());
+        
         verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
         verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
         verify(amenityService, times(1)).getAmenitiesByAccommodationId(1L);
+        verify(roomService, times(1)).getRoomsByAccommodationId(1L);
     }
 
     @Test
