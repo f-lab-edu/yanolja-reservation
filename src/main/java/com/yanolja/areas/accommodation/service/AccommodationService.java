@@ -5,6 +5,8 @@ import com.yanolja.areas.accommodation.dto.AccommodationImageDto;
 import com.yanolja.areas.accommodation.dto.AmenityDto;
 import com.yanolja.areas.accommodation.entity.*;
 import com.yanolja.areas.accommodation.repository.*;
+import com.yanolja.areas.room.dto.RoomDto;
+import com.yanolja.areas.room.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ public class AccommodationService {
     private final AccommodationImageRepository accommodationImageRepository;
     private final AccommodationImageService accommodationImageService;
     private final AmenityService amenityService;
+    private final RoomService roomService;
 
     @Transactional
     public AccommodationDto.Response createAccommodation(AccommodationDto.Request request) {
@@ -63,6 +66,9 @@ public class AccommodationService {
         // 편의시설 목록 조회
         List<AmenityDto.Response> amenities = amenityService.getAmenitiesByAccommodationId(id);
         
+        // 객실 목록 조회
+        List<RoomDto.ListResponse> rooms = roomService.getRoomsByAccommodationId(id);
+        
         // DTO 변환 및 반환
         AccommodationDto.Response responseDto = AccommodationDto.Response.fromEntity(accommodation);
         
@@ -74,6 +80,9 @@ public class AccommodationService {
         );
         
         responseDto.setAmenities(amenities);
+        
+        // 객실 목록 설정
+        responseDto.setRooms(rooms);
         
         return responseDto;
     }
