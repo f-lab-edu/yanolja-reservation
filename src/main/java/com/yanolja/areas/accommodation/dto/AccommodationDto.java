@@ -2,6 +2,7 @@ package com.yanolja.areas.accommodation.dto;
 
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
+import com.yanolja.areas.room.dto.RoomDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -93,6 +94,9 @@ public class AccommodationDto {
         
         @Schema(description = "편의시설 목록")
         private List<AmenityDto.Response> amenities;
+        
+        @Schema(description = "객실 목록")
+        private List<RoomDto.ListResponse> rooms;
 
         public static Response fromEntity(Accommodation accommodation) {
             return Response.builder()
@@ -108,6 +112,7 @@ public class AccommodationDto {
                     .status(accommodation.getStatus())
                     .images(new ArrayList<>())
                     .amenities(new ArrayList<>())
+                    .rooms(new ArrayList<>())
                     .build();
         }
     }
