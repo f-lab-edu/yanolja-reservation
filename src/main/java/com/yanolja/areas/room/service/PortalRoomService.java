@@ -1,7 +1,10 @@
 package com.yanolja.areas.room.service;
 
 import com.yanolja.areas.room.dto.PortalRoomDto;
+import com.yanolja.areas.room.dto.RoomImageDto;
 import com.yanolja.areas.room.entity.Room;
+import com.yanolja.areas.room.entity.RoomImage;
+import com.yanolja.areas.room.repository.RoomImageRepository;
 import com.yanolja.areas.room.repository.RoomRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,8 @@ import java.util.stream.Collectors;
 public class PortalRoomService {
     
     private final RoomRepository roomRepository;
+    private final RoomImageRepository roomImageRepository;
+    private final RoomImageService roomImageService;
     
     /**
      * 객실 검색
@@ -42,7 +47,10 @@ public class PortalRoomService {
                 pageable
         );
         
-        return rooms.map(PortalRoomDto.ListResponse::fromEntity);
+        return rooms.map(room -> {
+            String mainImageUrl = roomImageService.getMainImageUrl(room.getId());
+            return PortalRoomDto.ListResponse.fromEntityWithMainImage(room, mainImageUrl);
+        });
     }
     
     /**
@@ -54,7 +62,16 @@ public class PortalRoomService {
         Room room = roomRepository.findByIdAndNotDeleted(id)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 객실을 찾을 수 없습니다."));
         
-        return PortalRoomDto.DetailResponse.fromEntity(room);
+        // 이미지 정보 조회
+        List<RoomImage> roomImages = roomImageRepository.findByRoomId(id);
+        List<String> imageUrls = roomImages.stream()
+                .map(RoomImage::getImageUrl)
+                .collect(Collectors.toList());
+        
+        PortalRoomDto.DetailResponse response = PortalRoomDto.DetailResponse.fromEntity(room);
+        response.setImageUrls(imageUrls);
+        
+        return response;
     }
     
     /**
@@ -66,7 +83,10 @@ public class PortalRoomService {
         List<Room> rooms = roomRepository.findByAccommodationIdAndNotDeleted(accommodationId);
         
         return rooms.stream()
-                .map(PortalRoomDto.ListResponse::fromEntity)
+                .map(room -> {
+                    String mainImageUrl = roomImageService.getMainImageUrl(room.getId());
+                    return PortalRoomDto.ListResponse.fromEntityWithMainImage(room, mainImageUrl);
+                })
                 .collect(Collectors.toList());
     }
     
