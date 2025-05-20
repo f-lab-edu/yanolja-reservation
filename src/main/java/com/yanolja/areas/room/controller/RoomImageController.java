@@ -2,7 +2,6 @@ package com.yanolja.areas.room.controller;
 
 import com.yanolja.areas.room.dto.RoomImageDto;
 import com.yanolja.areas.room.service.RoomImageService;
-import com.yanolja.areas.room.service.RoomService;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,7 +22,6 @@ import java.util.List;
 @Tag(name = "객실 이미지 API", description = "객실 이미지 관련 API 모음")
 public class RoomImageController {
 
-    private final RoomService roomService;
     private final RoomImageService roomImageService;
 
     @Operation(summary = "객실 이미지 업로드", description = "객실에 이미지를 업로드합니다.")
@@ -34,7 +32,7 @@ public class RoomImageController {
             @Parameter(description = "대표 이미지 인덱스 (첫 번째 이미지 = 0)") @RequestParam(required = false) Integer mainImageIndex
     ) throws IOException {
         log.info("Uploading {} images for room ID: {}", files.length, roomId);
-        List<RoomImageDto.Response> results = roomService.uploadRoomImages(roomId, files, mainImageIndex);
+        List<RoomImageDto.Response> results = roomImageService.saveImages(roomId, files, mainImageIndex);
         return ApiResponse.success(results);
     }
 
@@ -54,7 +52,7 @@ public class RoomImageController {
             @Parameter(description = "이미지 ID", required = true) @PathVariable Long imageId
     ) {
         log.info("Setting image ID: {} as main", imageId);
-        RoomImageDto.Response result = roomService.setMainImage(imageId);
+        RoomImageDto.Response result = roomImageService.setAsMainImage(imageId);
         return ApiResponse.success(result);
     }
 
@@ -64,7 +62,7 @@ public class RoomImageController {
             @Parameter(description = "이미지 ID", required = true) @PathVariable Long imageId
     ) {
         log.info("Deleting image ID: {}", imageId);
-        roomService.deleteRoomImage(imageId);
+        roomImageService.deleteImage(imageId);
         return ApiResponse.success("객실 이미지 삭제 성공");
     }
 } 
