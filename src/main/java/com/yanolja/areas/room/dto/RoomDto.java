@@ -79,8 +79,8 @@ public class RoomDto {
         @Schema(description = "객실 상태", example = "AVAILABLE")
         private String status;
 
-        @Schema(description = "객실 이미지 URL 목록")
-        private List<String> imageUrls;
+        @Schema(description = "객실 이미지 목록")
+        private List<RoomImageDto.Response> images;
 
         @Schema(description = "객실 옵션 목록")
         private List<RoomOptionDto> options;
@@ -102,7 +102,7 @@ public class RoomDto {
                     .capacity(room.getCapacity())
                     .pricePerNight(room.getPricePerNight())
                     .status(room.getStatus())
-                    .imageUrls(new ArrayList<>())
+                    .images(new ArrayList<>())
                     .options(new ArrayList<>())
                     .createdAt(room.getCreatedAt())
                     .updatedAt(room.getUpdatedAt())
