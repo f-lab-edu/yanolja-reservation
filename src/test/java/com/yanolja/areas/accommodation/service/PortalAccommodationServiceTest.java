@@ -86,8 +86,8 @@ class PortalAccommodationServiceTest {
         lenient().when(accommodationImageService.getMainImageUrl(1L)).thenReturn(mainImageUrl);
         lenient().when(accommodationImageService.getMainImageUrl(2L)).thenReturn("/images/accommodations/2/main.jpg");
         lenient().when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
-        lenient().when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailAccommodation));
-        lenient().when(accommodationRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        lenient().when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
+        lenient().when(accommodationRepository.findByIdAndDeletedYn(999L,"N")).thenReturn(Optional.empty());
     }
 
     @Test
@@ -198,7 +198,7 @@ class PortalAccommodationServiceTest {
         // When
         // Setup specific image list for this test
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
-        when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailAccommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
 
         PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(1L);
         
@@ -214,7 +214,7 @@ class PortalAccommodationServiceTest {
         assertThat(result.getImageUrls()).contains(mainImageUrl, subImageUrl);
 
         // 호출 검증
-        verify(accommodationRepository).findByIdAndNotDeleted(1L);
+        verify(accommodationRepository).findByIdAndDeletedYn(1L,"N");
         verify(accommodationImageRepository).findByAccommodationId(1L);
     }
     
@@ -227,7 +227,7 @@ class PortalAccommodationServiceTest {
         });
         
         assertThat(exception.getMessage()).contains("999");
-        verify(accommodationRepository).findByIdAndNotDeleted(999L);
+        verify(accommodationRepository).findByIdAndDeletedYn(999L,"N");
     }
     
     // 테스트 데이터 생성을 위한 도우미 메서드
