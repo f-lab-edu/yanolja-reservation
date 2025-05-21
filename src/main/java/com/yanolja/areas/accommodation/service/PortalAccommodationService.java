@@ -5,6 +5,7 @@ import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,23 +39,14 @@ public class PortalAccommodationService {
         }
         // 페이징 정보 변환
         Pageable pageable = request.getPageRequest() != null ? 
-                request.getPageRequest().toPageable(PortalAccommodationDto::mapSortColumn) : 
-                org.springframework.data.domain.PageRequest.of(0, 10);
-        
-        // 정렬 방향과 컬럼명을 기준으로 sortBy 생성
-        String sortBy = null;
-        if (request.getPageRequest() != null && 
-            request.getPageRequest().getSortColumn() != null && 
-            request.getPageRequest().getSortDirection() != null) {
-            sortBy = request.getPageRequest().getSortColumn() + "_" + request.getPageRequest().getSortDirection();
-        }
+                request.getPageRequest().toPageable(PortalAccommodationDto::mapSortColumn) : PageRequest.of(0, 10);
         
         // Repository 호출
         Page<Accommodation> accommodations = accommodationRepository.searchAccommodations(
                 keyword,
                 minPrice,
                 maxPrice,
-                sortBy,
+                request.getPageRequest(),
                 pageable
         );
         

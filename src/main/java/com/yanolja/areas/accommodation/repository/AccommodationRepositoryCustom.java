@@ -1,6 +1,7 @@
 package com.yanolja.areas.accommodation.repository;
 
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.common.dto.PageRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -19,6 +20,6 @@ public interface AccommodationRepositoryCustom {
             String keyword, 
             BigDecimal minPrice, 
             BigDecimal maxPrice, 
-            String sortBy,
+            PageRequestDto pageRequestDto,
             Pageable pageable);
 } 
