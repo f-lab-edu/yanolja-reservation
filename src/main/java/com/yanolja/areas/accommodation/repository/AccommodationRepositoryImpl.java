@@ -26,16 +26,6 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
     private final JPAQueryFactory queryFactory;
     
     @Override
-    public List<Accommodation> findAllActive() {
-        QAccommodation accommodation = QAccommodation.accommodation;
-        
-        return queryFactory
-                .selectFrom(accommodation)
-                .where(accommodation.deletedYn.eq("N"))
-                .fetch();
-    }
-    
-    @Override
     public Optional<Accommodation> findByIdAndNotDeleted(Long id) {
         QAccommodation accommodation = QAccommodation.accommodation;
         

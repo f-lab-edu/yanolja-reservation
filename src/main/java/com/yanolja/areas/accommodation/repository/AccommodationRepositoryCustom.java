@@ -10,8 +10,6 @@ import java.util.Optional;
 
 public interface AccommodationRepositoryCustom {
     
-    List<Accommodation> findAllActive();
-    
     Optional<Accommodation> findByIdAndNotDeleted(Long id);
     
     /**

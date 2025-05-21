@@ -36,7 +36,7 @@ public class AccommodationService {
 
     @Transactional(readOnly = true)
     public List<AccommodationDto.ListResponse> getAllAccommodations() {
-        List<Accommodation> accommodations = accommodationRepository.findAllActive();
+        List<Accommodation> accommodations = accommodationRepository.findByDeletedYn("N");
         return accommodations.stream()
                 .map(AccommodationDto.ListResponse::fromEntity)
                 .collect(Collectors.toList());

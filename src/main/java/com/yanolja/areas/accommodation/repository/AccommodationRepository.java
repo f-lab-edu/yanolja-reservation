@@ -8,5 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AccommodationRepository extends JpaRepository<Accommodation, Long>, AccommodationRepositoryCustom {
-    
+    List<Accommodation> findByDeletedYn(String deletedYn);
+    Optional<Accommodation> findByIdAndDeletedYn(Long id, String deletedYn);
 }
