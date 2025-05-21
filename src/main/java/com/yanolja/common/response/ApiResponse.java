@@ -33,7 +33,7 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    // 성공 응답 생성 (메시지 없이 데이터만)
+    // 성공 응답 생성
     public static <T> ApiResponse<T> success() {
         return ApiResponse.<T>builder()
                 .success(true)
