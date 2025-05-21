@@ -33,6 +33,14 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    // 성공 응답 생성 (메시지 없이 데이터만)
+    public static <T> ApiResponse<T> success() {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .code(ResponseCode.SUCCESS)
+                .build();
+    }
+
     // 성공 응답 생성 (데이터 있음, 메시지 포함)
     public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()

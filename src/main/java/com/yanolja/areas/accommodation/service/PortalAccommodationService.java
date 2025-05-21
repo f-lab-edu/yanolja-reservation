@@ -7,6 +7,7 @@ import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,29 +33,25 @@ public class PortalAccommodationService {
         
         // 검색 조건 추출
         PortalAccommodationDto.SearchCondition condition = request.getCondition();
-        String keyword = condition != null ? condition.getKeyword() : null;
-        BigDecimal minPrice = condition != null ? condition.getMinPrice() : null;
-        BigDecimal maxPrice = condition != null ? condition.getMaxPrice() : null;
+        String keyword = null;
+        BigDecimal minPrice = null;
+        BigDecimal maxPrice = null;
         
+        if (condition != null) {
+            keyword = condition.getKeyword();
+            minPrice = condition.getMinPrice();
+            maxPrice = condition.getMaxPrice();
+        }
         // 페이징 정보 변환
         Pageable pageable = request.getPageRequest() != null ? 
-                request.getPageRequest().toPageable(PortalAccommodationDto::mapSortColumn) : 
-                org.springframework.data.domain.PageRequest.of(0, 10);
-        
-        // 정렬 방향과 컬럼명을 기준으로 sortBy 생성
-        String sortBy = null;
-        if (request.getPageRequest() != null && 
-            request.getPageRequest().getSortColumn() != null && 
-            request.getPageRequest().getSortDirection() != null) {
-            sortBy = request.getPageRequest().getSortColumn() + "_" + request.getPageRequest().getSortDirection();
-        }
+                request.getPageRequest().toPageable(PortalAccommodationDto::mapSortColumn) : PageRequest.of(0, 10);
         
         // Repository 호출
         Page<Accommodation> accommodations = accommodationRepository.searchAccommodations(
                 keyword,
                 minPrice,
                 maxPrice,
-                sortBy,
+                request.getPageRequest(),
                 pageable
         );
         
@@ -70,7 +67,7 @@ public class PortalAccommodationService {
      */
     @Transactional(readOnly = true)
     public PortalAccommodationDto.DetailResponse getAccommodationDetail(Long id) {
-        Accommodation accommodation = accommodationRepository.findByIdAndNotDeleted(id)
+        Accommodation accommodation = accommodationRepository.findByIdAndDeletedYn(id,"N")
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 숙소를 찾을 수 없습니다."));
         
         // 이미지 목록을 조회하여 상세 DTO 생성

@@ -8,6 +8,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.QAccommodation;
+import com.yanolja.common.dto.PageRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -26,36 +27,11 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
     private final JPAQueryFactory queryFactory;
     
     @Override
-    public List<Accommodation> findAllActive() {
-        QAccommodation accommodation = QAccommodation.accommodation;
-        
-        return queryFactory
-                .selectFrom(accommodation)
-                .where(accommodation.deletedYn.eq("N"))
-                .fetch();
-    }
-    
-    @Override
-    public Optional<Accommodation> findByIdAndNotDeleted(Long id) {
-        QAccommodation accommodation = QAccommodation.accommodation;
-        
-        return Optional.ofNullable(
-                queryFactory
-                        .selectFrom(accommodation)
-                        .where(
-                                accommodation.id.eq(id),
-                                accommodation.deletedYn.eq("N")
-                        )
-                        .fetchOne()
-        );
-    }
-    
-    @Override
     public Page<Accommodation> searchAccommodations(
             String keyword, 
             BigDecimal minPrice, 
             BigDecimal maxPrice, 
-            String sortBy,
+            PageRequestDto pageRequestDto,
             Pageable pageable) {
         
         QAccommodation accommodation = QAccommodation.accommodation;
@@ -90,26 +66,29 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
                 .where(whereBuilder);
         
         // 정렬 적용
-        if (StringUtils.hasText(sortBy)) {
-            switch (sortBy) {
-                case "price_asc":
-                    query.orderBy(accommodation.pricePerNight.asc());
-                    break;
-                case "price_desc":
-                    query.orderBy(accommodation.pricePerNight.desc());
-                    break;
-                case "rating_desc":
-                    query.orderBy(accommodation.rating.desc().nullsLast());
-                    break;
-                case "review_desc":
-                    query.orderBy(accommodation.reviewCount.desc().nullsLast());
-                    break;
-                default:
-                    // 기본 ID 기준 정렬
-                    query.orderBy(accommodation.id.desc());
-            }
+        OrderSpecifier<?>[] orderSpecifiers = pageRequestDto.toOrderSpecifier(column -> {
+                boolean isAsc = !"desc".equalsIgnoreCase(pageRequestDto.getSortDirection());
+                
+                switch (column) {
+                    case "price":
+                        return isAsc ? accommodation.pricePerNight.asc() : accommodation.pricePerNight.desc();
+                    case "rating":
+                        return isAsc 
+                            ? accommodation.rating.asc().nullsLast() 
+                            : accommodation.rating.desc().nullsLast();
+                    case "review":
+                        return isAsc 
+                            ? accommodation.reviewCount.asc().nullsLast() 
+                            : accommodation.reviewCount.desc().nullsLast();
+                    default:
+                        return accommodation.id.desc(); // 기본값
+                }
+            });
+
+        if (orderSpecifiers.length > 0) {
+            query.orderBy(orderSpecifiers);
         } else {
-            // 기본 ID 기준 정렬
+            // 기본 정렬 (ID 내림차순)
             query.orderBy(accommodation.id.desc());
         }
         
@@ -124,4 +103,5 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
         
         return new PageImpl<>(results, pageable, total);
     }
+    
 } 

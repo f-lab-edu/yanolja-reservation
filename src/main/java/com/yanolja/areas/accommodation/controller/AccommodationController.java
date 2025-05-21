@@ -24,21 +24,21 @@ public class AccommodationController {
     public ApiResponse<AccommodationDto.Response> createAccommodation(
             @Valid @RequestBody AccommodationDto.Request request) {
         AccommodationDto.Response response = accommodationService.createAccommodation(request);
-        return ApiResponse.success(response, "숙소 등록이 성공적으로 완료되었습니다.");
+        return ApiResponse.success(response);
     }
 
     @GetMapping
     @Operation(summary = "숙소 목록 조회", description = "등록된 모든 숙소의 목록을 조회합니다.")
     public ApiResponse<List<AccommodationDto.ListResponse>> getAllAccommodations() {
         List<AccommodationDto.ListResponse> responses = accommodationService.getAllAccommodations();
-        return ApiResponse.success(responses, "숙소 목록 조회 성공");
+        return ApiResponse.success(responses);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "숙소 상세 조회", description = "특정 숙소의 상세 정보를 조회합니다.")
     public ApiResponse<AccommodationDto.Response> getAccommodation(@PathVariable Long id) {
         AccommodationDto.Response response = accommodationService.getAccommodationById(id);
-        return ApiResponse.success(response, "숙소 조회 성공");
+        return ApiResponse.success(response);
     }
 
     @PutMapping("/{id}")
@@ -47,13 +47,13 @@ public class AccommodationController {
             @PathVariable Long id,
             @Valid @RequestBody AccommodationDto.Request request) {
         AccommodationDto.Response response = accommodationService.updateAccommodation(id, request);
-        return ApiResponse.success(response, "숙소 정보 수정 성공");
+        return ApiResponse.success(response);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "숙소 삭제", description = "특정 숙소를 소프트 삭제 처리합니다.")
     public ApiResponse<Void> deleteAccommodation(@PathVariable Long id) {
         accommodationService.deleteAccommodation(id);
-        return ApiResponse.success("숙소 소프트 삭제 성공");
+        return ApiResponse.success();
     }
 } 

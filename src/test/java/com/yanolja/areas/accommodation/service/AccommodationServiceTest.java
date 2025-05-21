@@ -130,8 +130,9 @@ public class AccommodationServiceTest {
     void getAllAccommodationsSuccessWithMainImage() {
         // Given
         List<Accommodation> accommodations = Arrays.asList(accommodation);
-        when(accommodationRepository.findAllActive()).thenReturn(accommodations);
+        when(accommodationRepository.findByDeletedYn("N")).thenReturn(accommodations);
         when(accommodationImageService.getMainImageUrl(1L)).thenReturn("/images/accommodations/1/main.jpg");
+
 
         // When
         List<AccommodationDto.ListResponse> responses = accommodationService.getAllAccommodations();
@@ -144,7 +145,7 @@ public class AccommodationServiceTest {
         assertEquals(new BigDecimal("100000"), responses.get(0).getPricePerNight());
         assertEquals("/images/accommodations/1/main.jpg", responses.get(0).getMainImageUrl());
         
-        verify(accommodationRepository, times(1)).findAllActive();
+        verify(accommodationRepository, times(1)).findByDeletedYn("N");
         verify(accommodationImageService, times(1)).getMainImageUrl(1L);
     }
 
@@ -152,7 +153,7 @@ public class AccommodationServiceTest {
     @DisplayName("숙소 상세 조회 성공 테스트 - 이미지 목록 포함")
     void getAccommodationByIdSuccessWithImages() {
         // Given
-        when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(accommodation));
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
                 Arrays.asList(accommodationMainImage, accommodationImage)
         );
@@ -178,7 +179,7 @@ public class AccommodationServiceTest {
         assertFalse(response.getImages().get(1).getIsMain());
         assertEquals("/images/accommodations/1/room.jpg", response.getImages().get(1).getImageUrl());
         
-        verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(accommodationRepository, times(1)).findByIdAndDeletedYn(1L,"N");
         verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
     }
 
@@ -186,21 +187,21 @@ public class AccommodationServiceTest {
     @DisplayName("숙소 상세 조회 실패 테스트 - 존재하지 않는 ID")
     void getAccommodationByIdFailNotFound() {
         // Given
-        when(accommodationRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        when(accommodationRepository.findByIdAndDeletedYn(999L,"N")).thenReturn(Optional.empty());
 
         // When & Then
         assertThrows(EntityNotFoundException.class, () -> {
             accommodationService.getAccommodationById(999L);
         });
         
-        verify(accommodationRepository, times(1)).findByIdAndNotDeleted(999L);
+        verify(accommodationRepository, times(1)).findByIdAndDeletedYn(999L,"N");
     }
 
     @Test
     @DisplayName("숙소 수정 성공 테스트 - 이미지 포함")
     void updateAccommodationSuccess() {
         // Given
-        when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(accommodation));
         when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
                 Arrays.asList(accommodationMainImage, accommodationImage)
@@ -230,7 +231,7 @@ public class AccommodationServiceTest {
         assertNotNull(response.getImages());
         assertEquals(2, response.getImages().size());
         
-        verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(accommodationRepository, times(1)).findByIdAndDeletedYn(1L,"N");
         verify(accommodationRepository, times(1)).save(any(Accommodation.class));
         verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
     }
@@ -239,13 +240,13 @@ public class AccommodationServiceTest {
     @DisplayName("숙소 삭제 성공 테스트")
     void deleteAccommodationSuccess() {
         // Given
-        when(accommodationRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(accommodation));
         
         // When
         accommodationService.deleteAccommodation(1L);
 
         // Then
-        verify(accommodationRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(accommodationRepository, times(1)).findByIdAndDeletedYn(1L,"N");
         verify(accommodationRepository, times(1)).save(any(Accommodation.class));
     }
 
@@ -253,14 +254,14 @@ public class AccommodationServiceTest {
     @DisplayName("숙소 삭제 실패 테스트 - 존재하지 않는 ID")
     void deleteAccommodationFailNotFound() {
         // Given
-        when(accommodationRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        when(accommodationRepository.findByIdAndDeletedYn(999L,"N")).thenReturn(Optional.empty());
 
         // When & Then
         assertThrows(EntityNotFoundException.class, () -> {
             accommodationService.deleteAccommodation(999L);
         });
         
-        verify(accommodationRepository, times(1)).findByIdAndNotDeleted(999L);
+        verify(accommodationRepository, times(1)).findByIdAndDeletedYn(999L,"N");
         verify(accommodationRepository, never()).save(any(Accommodation.class));
     }
 } 

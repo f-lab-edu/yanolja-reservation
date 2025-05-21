@@ -1,5 +1,6 @@
 package com.yanolja.common.dto;
 
+import com.querydsl.core.types.OrderSpecifier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+
+import java.util.function.Function;
 
 @Getter
 @NoArgsConstructor
@@ -69,4 +72,19 @@ public class PageRequestDto {
             ? PageRequest.of(page != null ? page : 0, size != null ? size : 10, sort)
             : PageRequest.of(page != null ? page : 0, size != null ? size : 10);
     }
+
+    /**
+     * 엔티티 별 정렬 표현식 생성 (컬럼별 커스텀 정렬 로직 적용)
+     * @param pathResolver 컬럼명에 따른 경로 표현식 리졸버 함수
+     * @return OrderSpecifier 배열
+     */
+    public <T> OrderSpecifier<?>[] toOrderSpecifier(Function<String, OrderSpecifier<?>> pathResolver) {
+        if (sortColumn == null || sortColumn.isEmpty()) {
+            return new OrderSpecifier[0];
+        }
+        
+        return new OrderSpecifier[] { pathResolver.apply(sortColumn) };
+    }
+
+
 } 
