@@ -27,10 +27,15 @@ public class PortalAccommodationService {
         
         // 검색 조건 추출
         PortalAccommodationDto.SearchCondition condition = request.getCondition();
-        String keyword = condition != null ? condition.getKeyword() : null;
-        BigDecimal minPrice = condition != null ? condition.getMinPrice() : null;
-        BigDecimal maxPrice = condition != null ? condition.getMaxPrice() : null;
+        String keyword = null;
+        BigDecimal minPrice = null;
+        BigDecimal maxPrice = null;
         
+        if (condition != null) {
+            keyword = condition.getKeyword();
+            minPrice = condition.getMinPrice();
+            maxPrice = condition.getMaxPrice();
+        }
         // 페이징 정보 변환
         Pageable pageable = request.getPageRequest() != null ? 
                 request.getPageRequest().toPageable(PortalAccommodationDto::mapSortColumn) : 
