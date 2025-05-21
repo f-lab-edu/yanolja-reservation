@@ -63,7 +63,6 @@ class PortalAccommodationServiceTest {
                 .build();
         
         Pageable pageable = pageRequest.toPageable(PortalAccommodationDto::mapSortColumn);
-        String sortBy = "price_asc";
                 
         Accommodation accommodation1 = createMockAccommodation(1L, "서울 호텔", "서울시 중구", new BigDecimal("100000"));
         Accommodation accommodation2 = createMockAccommodation(2L, "서울 리조트", "서울시 강남구", new BigDecimal("120000"));
@@ -78,7 +77,7 @@ class PortalAccommodationServiceTest {
                 eq(keyword), 
                 eq(minPrice), 
                 eq(maxPrice), 
-                eq(sortBy), 
+                eq(pageRequest), 
                 any(Pageable.class)
         )).thenReturn(mockPage);
         
@@ -119,7 +118,7 @@ class PortalAccommodationServiceTest {
                 eq(keyword), 
                 any(), 
                 any(), 
-                any(), 
+                eq(pageRequest), 
                 any(Pageable.class)
         )).thenReturn(emptyPage);
         
@@ -144,7 +143,7 @@ class PortalAccommodationServiceTest {
                 new BigDecimal("150000")
         );
         
-        when(accommodationRepository.findByIdAndNotDeleted(id)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(id,"N")).thenReturn(Optional.of(accommodation));
         
         // When
         PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(id);
@@ -161,7 +160,7 @@ class PortalAccommodationServiceTest {
     void getAccommodationDetail_WithNonExistingId_ShouldThrowException() {
         // Given
         Long id = 999L;
-        when(accommodationRepository.findByIdAndNotDeleted(id)).thenReturn(Optional.empty());
+        when(accommodationRepository.findByIdAndDeletedYn(id,"N")).thenReturn(Optional.empty());
         
         // When & Then
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
