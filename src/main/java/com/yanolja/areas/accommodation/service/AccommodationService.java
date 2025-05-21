@@ -74,7 +74,7 @@ public class AccommodationService {
     }
     
     private Accommodation findAccommodationById(Long id) {
-        return accommodationRepository.findByIdAndNotDeleted(id)
+        return accommodationRepository.findByIdAndDeletedYn(id,"N")
             .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 숙소를 찾을 수 없습니다."));
     }
 } 

@@ -27,21 +27,6 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
     private final JPAQueryFactory queryFactory;
     
     @Override
-    public Optional<Accommodation> findByIdAndNotDeleted(Long id) {
-        QAccommodation accommodation = QAccommodation.accommodation;
-        
-        return Optional.ofNullable(
-                queryFactory
-                        .selectFrom(accommodation)
-                        .where(
-                                accommodation.id.eq(id),
-                                accommodation.deletedYn.eq("N")
-                        )
-                        .fetchOne()
-        );
-    }
-    
-    @Override
     public Page<Accommodation> searchAccommodations(
             String keyword, 
             BigDecimal minPrice, 

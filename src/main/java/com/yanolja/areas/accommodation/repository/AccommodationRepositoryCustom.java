@@ -10,9 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AccommodationRepositoryCustom {
-    
-    Optional<Accommodation> findByIdAndNotDeleted(Long id);
-    
+        
     /**
      * 사용자 숙소 검색
      */
