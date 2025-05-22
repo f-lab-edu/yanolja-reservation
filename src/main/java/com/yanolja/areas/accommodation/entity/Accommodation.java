@@ -9,11 +9,13 @@ import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Where;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@DynamicUpdate
 @Entity
 @Table(name = "accommodations")
 @Getter
