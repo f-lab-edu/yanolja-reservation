@@ -1,6 +1,7 @@
 package com.yanolja.areas.accommodation.dto;
 
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -83,7 +84,7 @@ public class AccommodationDto {
         private Integer reviewCount;
       
         @Schema(description = "숙소 상태")
-        private String status;
+        private AccommodationStatus status;
       
 
         public static Response fromEntity(Accommodation accommodation) {
