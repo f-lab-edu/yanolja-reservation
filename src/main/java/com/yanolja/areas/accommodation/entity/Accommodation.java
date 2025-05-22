@@ -139,14 +139,14 @@ public class Accommodation extends BaseEntity {
     /**
      * 리뷰 수 증가
      */
-    public void incrementReviewCount() {
+    public synchronized void incrementReviewCount() {
         this.reviewCount = (this.reviewCount != null ? this.reviewCount : 0) + 1;
     }
 
     /**
      * 리뷰 수 감소
      */
-    public void decrementReviewCount() {
+    public synchronized void decrementReviewCount() {
         if (this.reviewCount != null && this.reviewCount > 0) {
             this.reviewCount -= 1;
         }
