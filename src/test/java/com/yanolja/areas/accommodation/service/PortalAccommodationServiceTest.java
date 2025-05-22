@@ -2,6 +2,7 @@ package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.PortalAccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationStatus;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import com.yanolja.common.dto.PageRequestDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -178,8 +179,8 @@ class PortalAccommodationServiceTest {
                 .pricePerNight(price)
                 .rating(new BigDecimal("4.5"))
                 .reviewCount(10)
-                .status("ACTIVE")
-                .deletedYn("N")
+                .status(AccommodationStatus.ACTIVE)
+                .deletedYn(false)
                 .build();
                 
         // JPA에서 일반적으로 설정하는 ID를 리플렉션을 통해 설정
@@ -204,8 +205,8 @@ class PortalAccommodationServiceTest {
                 .longitude(new BigDecimal("126.9780"))
                 .rating(new BigDecimal("4.5"))
                 .reviewCount(10)
-                .status("ACTIVE")
-                .deletedYn("N")
+                .status(AccommodationStatus.ACTIVE)
+                .deletedYn(false)
                 .build();
                 
         // JPA에서 일반적으로 설정하는 ID를 리플렉션을 통해 설정
