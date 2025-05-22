@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "accommodations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Where(clause = "deleted_yn = 'N'")
+@Where(clause = "deleted_yn = 0")
 public class Accommodation extends BaseEntity {
 
     @Id
@@ -55,16 +55,17 @@ public class Accommodation extends BaseEntity {
     @Comment("리뷰 수")
     private Integer reviewCount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Comment("상태 (ACTIVE, INACTIVE)")
-    private String status;
+    private AccommodationStatus status;
 
-    @Column(name = "deleted_yn")
-    @Comment("삭제 여부 (Y, N)")
-    private String deletedYn;
+    @Column(name = "deleted_yn", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Comment("삭제 여부 (1: 삭제, 0: 미삭제)")
+    private Boolean deletedYn;
 
     @Builder
-    public Accommodation(String name, String description, String address, BigDecimal latitude, BigDecimal longitude, BigDecimal pricePerNight, BigDecimal rating, Integer reviewCount, String status, String deletedYn) {
+    public Accommodation(String name, String description, String address, BigDecimal latitude, BigDecimal longitude, BigDecimal pricePerNight, BigDecimal rating, Integer reviewCount, AccommodationStatus status, Boolean deletedYn) {
         this.name = name;
         this.description = description;
         this.address = address;
@@ -96,9 +97,9 @@ public class Accommodation extends BaseEntity {
                 .latitude(latitude)
                 .longitude(longitude)
                 .pricePerNight(pricePerNight)
-                .status("ACTIVE")
+                .status(AccommodationStatus.ACTIVE)
                 .reviewCount(0)
-                .deletedYn("N")
+                .deletedYn(false)
                 .build();
     }
 
@@ -126,7 +127,7 @@ public class Accommodation extends BaseEntity {
      * 상태 변경
      * @param status 변경할 상태
      */
-    public void changeStatus(String status) {
+    public void changeStatus(AccommodationStatus status) {
         this.status = status;
     }
 
@@ -158,6 +159,6 @@ public class Accommodation extends BaseEntity {
      * 소프트 삭제 처리
      */
     public void markAsDeleted() {
-        this.deletedYn = "Y";
+        this.deletedYn = true;
     }
 } 
