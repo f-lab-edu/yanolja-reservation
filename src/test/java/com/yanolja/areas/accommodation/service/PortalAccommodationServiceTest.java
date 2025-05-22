@@ -143,7 +143,7 @@ class PortalAccommodationServiceTest {
                 new BigDecimal("150000")
         );
         
-        when(accommodationRepository.findByIdAndDeletedYn(id,"N")).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findById(id)).thenReturn(Optional.of(accommodation));
         
         // When
         PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(id);
@@ -160,7 +160,7 @@ class PortalAccommodationServiceTest {
     void getAccommodationDetail_WithNonExistingId_ShouldThrowException() {
         // Given
         Long id = 999L;
-        when(accommodationRepository.findByIdAndDeletedYn(id,"N")).thenReturn(Optional.empty());
+        when(accommodationRepository.findById(id)).thenReturn(Optional.empty());
         
         // When & Then
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
