@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.Where;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
 @Table(name = "accommodations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Where(clause = "deleted_yn = 'N'")
 public class Accommodation extends BaseEntity {
 
     @Id
