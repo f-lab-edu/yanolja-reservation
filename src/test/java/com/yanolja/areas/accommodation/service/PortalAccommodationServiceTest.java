@@ -4,6 +4,7 @@ import com.yanolja.areas.accommodation.dto.PortalAccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
+import com.yanolja.areas.accommodation.entity.AccommodationStatus;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import com.yanolja.common.dto.PageRequestDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -195,6 +196,7 @@ class PortalAccommodationServiceTest {
     @Test
     @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID (이미지 포함)")
     void getAccommodationDetail_WithExistingId_ShouldReturnAccommodationDetail() {
+      
         // When
         // Setup specific image list for this test
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
@@ -221,6 +223,7 @@ class PortalAccommodationServiceTest {
     @Test
     @DisplayName("숙소 상세 조회 - 존재하지 않는 숙소 ID")
     void getAccommodationDetail_WithNonExistingId_ShouldThrowException() {
+
         // When & Then
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
             portalAccommodationService.getAccommodationDetail(999L);
@@ -238,8 +241,8 @@ class PortalAccommodationServiceTest {
                 .pricePerNight(price)
                 .rating(new BigDecimal("4.5"))
                 .reviewCount(10)
-                .status("ACTIVE")
-                .deletedYn("N")
+                .status(AccommodationStatus.ACTIVE)
+                .deletedYn(false)
                 .build();
                 
         // JPA에서 일반적으로 설정하는 ID를 리플렉션을 통해 설정
@@ -264,8 +267,8 @@ class PortalAccommodationServiceTest {
                 .longitude(new BigDecimal("126.9780"))
                 .rating(new BigDecimal("4.5"))
                 .reviewCount(10)
-                .status("ACTIVE")
-                .deletedYn("N")
+                .status(AccommodationStatus.ACTIVE)
+                .deletedYn(false)
                 .build();
                 
         // JPA에서 일반적으로 설정하는 ID를 리플렉션을 통해 설정

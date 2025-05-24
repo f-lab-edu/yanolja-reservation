@@ -67,7 +67,7 @@ public class PortalAccommodationService {
      */
     @Transactional(readOnly = true)
     public PortalAccommodationDto.DetailResponse getAccommodationDetail(Long id) {
-        Accommodation accommodation = accommodationRepository.findByIdAndDeletedYn(id,"N")
+        Accommodation accommodation = accommodationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 숙소를 찾을 수 없습니다."));
         
         // 이미지 목록을 조회하여 상세 DTO 생성

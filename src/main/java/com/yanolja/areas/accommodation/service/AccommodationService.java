@@ -40,7 +40,7 @@ public class AccommodationService {
 
     @Transactional(readOnly = true)
     public List<AccommodationDto.ListResponse> getAllAccommodations() {
-        List<Accommodation> accommodations = accommodationRepository.findByDeletedYn("N");
+        List<Accommodation> accommodations = accommodationRepository.findAll();
         return accommodations.stream()
                 .map(accommodation -> {
                     String mainImageUrl = accommodationImageService.getMainImageUrl(accommodation.getId());
@@ -84,7 +84,7 @@ public class AccommodationService {
     }
     
     private Accommodation findAccommodationById(Long id) {
-        return accommodationRepository.findByIdAndDeletedYn(id,"N")
+        return accommodationRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 숙소를 찾을 수 없습니다."));
     }
 } 

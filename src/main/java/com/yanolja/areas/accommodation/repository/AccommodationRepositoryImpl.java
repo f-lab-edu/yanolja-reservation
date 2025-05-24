@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationStatus;
 import com.yanolja.areas.accommodation.entity.QAccommodation;
 import com.yanolja.common.dto.PageRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +41,8 @@ public class AccommodationRepositoryImpl implements AccommodationRepositoryCusto
         BooleanBuilder whereBuilder = new BooleanBuilder();
         
         // 활성 상태이고 삭제되지 않은 숙소만 포함
-        whereBuilder.and(accommodation.status.eq("ACTIVE"));
-        whereBuilder.and(accommodation.deletedYn.eq("N"));
+        whereBuilder.and(accommodation.status.eq(AccommodationStatus.ACTIVE));
+        whereBuilder.and(accommodation.deletedYn.eq(false));
         
         // 키워드 검색 조건 추가
         if (StringUtils.hasText(keyword)) {
