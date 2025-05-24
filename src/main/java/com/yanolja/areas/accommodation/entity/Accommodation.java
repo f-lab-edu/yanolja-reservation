@@ -9,20 +9,28 @@ import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Where;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@DynamicUpdate
 @Entity
 @Table(name = "accommodations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Where(clause = "deleted_yn = 0")
 public class Accommodation extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("숙소 ID")
     private Long id;
+
+    @Version
+    @Comment("낙관적 락킹을 위한 버전")
+    private Long version;
 
     @Column(nullable = false)
     @Comment("숙소 이름")
@@ -53,16 +61,17 @@ public class Accommodation extends BaseEntity {
     @Comment("리뷰 수")
     private Integer reviewCount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Comment("상태 (ACTIVE, INACTIVE)")
-    private String status;
+    private AccommodationStatus status;
 
-    @Column(name = "deleted_yn")
-    @Comment("삭제 여부 (Y, N)")
-    private String deletedYn;
+    @Column(name = "deleted_yn", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Comment("삭제 여부 (1: 삭제, 0: 미삭제)")
+    private Boolean deletedYn;
 
     @Builder
-    public Accommodation(String name, String description, String address, BigDecimal latitude, BigDecimal longitude, BigDecimal pricePerNight, BigDecimal rating, Integer reviewCount, String status, String deletedYn) {
+    public Accommodation(String name, String description, String address, BigDecimal latitude, BigDecimal longitude, BigDecimal pricePerNight, BigDecimal rating, Integer reviewCount, AccommodationStatus status, Boolean deletedYn) {
         this.name = name;
         this.description = description;
         this.address = address;
@@ -94,9 +103,9 @@ public class Accommodation extends BaseEntity {
                 .latitude(latitude)
                 .longitude(longitude)
                 .pricePerNight(pricePerNight)
-                .status("ACTIVE")
+                .status(AccommodationStatus.ACTIVE)
                 .reviewCount(0)
-                .deletedYn("N")
+                .deletedYn(false)
                 .build();
     }
 
@@ -124,7 +133,7 @@ public class Accommodation extends BaseEntity {
      * 상태 변경
      * @param status 변경할 상태
      */
-    public void changeStatus(String status) {
+    public void changeStatus(AccommodationStatus status) {
         this.status = status;
     }
 
@@ -139,14 +148,14 @@ public class Accommodation extends BaseEntity {
     /**
      * 리뷰 수 증가
      */
-    public void incrementReviewCount() {
+    public synchronized void incrementReviewCount() {
         this.reviewCount = (this.reviewCount != null ? this.reviewCount : 0) + 1;
     }
 
     /**
      * 리뷰 수 감소
      */
-    public void decrementReviewCount() {
+    public synchronized void decrementReviewCount() {
         if (this.reviewCount != null && this.reviewCount > 0) {
             this.reviewCount -= 1;
         }
@@ -156,6 +165,6 @@ public class Accommodation extends BaseEntity {
      * 소프트 삭제 처리
      */
     public void markAsDeleted() {
-        this.deletedYn = "Y";
+        this.deletedYn = true;
     }
 } 

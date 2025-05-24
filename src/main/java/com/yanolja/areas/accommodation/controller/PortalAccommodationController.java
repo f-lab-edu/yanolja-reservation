@@ -25,13 +25,13 @@ public class PortalAccommodationController {
         Page<PortalAccommodationDto.ListResponse> responses = 
                 portalAccommodationService.searchAccommodations(searchRequest);
                 
-        return ApiResponse.success(responses, "숙소 검색 결과입니다.");
+        return ApiResponse.success(responses);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "숙소 상세 조회", description = "숙소의 상세 정보를 조회합니다.")
     public ApiResponse<PortalAccommodationDto.DetailResponse> getAccommodationDetail(@PathVariable Long id) {
         PortalAccommodationDto.DetailResponse response = portalAccommodationService.getAccommodationDetail(id);
-        return ApiResponse.success(response, "숙소 상세 정보입니다.");
+        return ApiResponse.success(response);
     }
 } 
