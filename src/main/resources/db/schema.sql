@@ -23,6 +23,7 @@ CREATE TABLE users (
 -- 숙소 테이블
 CREATE TABLE accommodations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     address VARCHAR(255) NOT NULL,

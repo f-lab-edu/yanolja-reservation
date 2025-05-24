@@ -28,6 +28,10 @@ public class Accommodation extends BaseEntity {
     @Comment("숙소 ID")
     private Long id;
 
+    @Version
+    @Comment("낙관적 락킹을 위한 버전")
+    private Long version;
+
     @Column(nullable = false)
     @Comment("숙소 이름")
     private String name;
