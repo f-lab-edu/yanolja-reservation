@@ -1,12 +1,11 @@
 package com.yanolja.areas.user.service;
 
 import com.yanolja.areas.auth.dto.RegisterRequest;
-import com.yanolja.areas.user.config.TestAuditorAwareConfig;
+import com.yanolja.common.config.TestAuditorAwareConfig;
 import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.user.dto.UserInfoResponse;
 import com.yanolja.areas.user.dto.UserSearchCondition;
 import com.yanolja.areas.user.dto.UserUpdateRequest;
-import com.yanolja.areas.user.repository.UserRepository;
 import com.yanolja.common.exception.UserException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;

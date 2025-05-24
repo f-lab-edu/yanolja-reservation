@@ -49,6 +49,6 @@ public class AccommodationImageController {
     @DeleteMapping("/images/{imageId}")
     public ApiResponse<Void> deleteAccommodationImage(@PathVariable Long imageId) {
         accommodationImageService.deleteImage(imageId);
-        return ApiResponse.success("숙소 이미지 삭제 성공");
+        return ApiResponse.success();
     }
 } 

@@ -23,6 +23,7 @@ CREATE TABLE users (
 -- 숙소 테이블
 CREATE TABLE accommodations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     address VARCHAR(255) NOT NULL,
@@ -32,7 +33,7 @@ CREATE TABLE accommodations (
     rating DECIMAL(3, 2),
     review_count INT DEFAULT 0,
     status VARCHAR(20) DEFAULT 'ACTIVE',
-    deleted_yn CHAR(1) DEFAULT 'N',
+    deleted_yn TINYINT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),

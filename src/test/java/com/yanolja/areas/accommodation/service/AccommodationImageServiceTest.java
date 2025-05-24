@@ -90,7 +90,7 @@ public class AccommodationImageServiceTest {
         MultipartFile[] files = {mockImage1, mockImage2};
         Integer mainImageIndex = 1; // 두 번째 이미지를 대표 이미지로 설정
         
-        when(accommodationRepository.findByIdAndNotDeleted(ACCOMMODATION_ID)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(ACCOMMODATION_ID,"N")).thenReturn(Optional.of(accommodation));
         
         doAnswer(invocation -> {
             AccommodationImage image = invocation.getArgument(0);
@@ -124,7 +124,7 @@ public class AccommodationImageServiceTest {
         assertFalse(results.get(0).getIsMain());
         assertTrue(results.get(1).getIsMain());
         
-        verify(accommodationRepository).findByIdAndNotDeleted(ACCOMMODATION_ID);
+        verify(accommodationRepository).findByIdAndDeletedYn(ACCOMMODATION_ID,"N");
         // resetMainImageFlag는 더 이상 호출되지 않고 accommodation.resetAllMainImageFlags()가 호출됨
         verify(accommodationImageRepository, times(2)).save(any(AccommodationImage.class));
     }
@@ -139,7 +139,7 @@ public class AccommodationImageServiceTest {
                 "oversize content".getBytes()
         );
         
-        when(accommodationRepository.findByIdAndNotDeleted(ACCOMMODATION_ID)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.findByIdAndDeletedYn(ACCOMMODATION_ID,"N")).thenReturn(Optional.of(accommodation));
         // 파일 사이즈 검사를 위한 설정 (실제 설정은 10MB보다 작은 크기로 설정)
         when(fileStorageProperties.getMaxSize()).thenReturn(10L); // 10바이트로 제한
         
@@ -154,14 +154,14 @@ public class AccommodationImageServiceTest {
     void saveImages_WithNonExistingAccommodation_ShouldThrowEntityNotFoundException() {
         // given
         MultipartFile[] files = {mockImage1, mockImage2};
-        when(accommodationRepository.findByIdAndNotDeleted(ACCOMMODATION_ID)).thenReturn(Optional.empty());
+        when(accommodationRepository.findByIdAndDeletedYn(ACCOMMODATION_ID,"N")).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(EntityNotFoundException.class, () -> {
             accommodationImageService.saveImages(ACCOMMODATION_ID, files, 0);
         });
         
-        verify(accommodationRepository).findByIdAndNotDeleted(ACCOMMODATION_ID);
+        verify(accommodationRepository).findByIdAndDeletedYn(ACCOMMODATION_ID,"N");
         verify(accommodationImageRepository, never()).save(any(AccommodationImage.class));
     }
 
