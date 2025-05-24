@@ -1,6 +1,6 @@
 package com.yanolja.areas.user.repository;
 
-import com.yanolja.areas.user.config.TestAuditorAwareConfig;
+import com.yanolja.common.config.TestAuditorAwareConfig;
 import com.yanolja.areas.user.domain.SocialProvider;
 import com.yanolja.areas.user.domain.User;
 import com.yanolja.areas.user.domain.UserRole;
@@ -12,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

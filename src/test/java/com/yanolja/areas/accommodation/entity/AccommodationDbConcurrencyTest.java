@@ -1,7 +1,7 @@
 package com.yanolja.areas.accommodation.entity;
 
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
-import com.yanolja.areas.user.config.TestAuditorAwareConfig;
+import com.yanolja.common.config.TestAuditorAwareConfig;
 import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
