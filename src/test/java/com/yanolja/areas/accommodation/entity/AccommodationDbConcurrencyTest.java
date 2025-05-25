@@ -1,6 +1,7 @@
 package com.yanolja.areas.accommodation.entity;
 
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
+import com.yanolja.areas.accommodation.service.AccommodationService;
 import com.yanolja.common.config.TestAuditorAwareConfig;
 import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.concurrent.CountDownLatch;
@@ -31,6 +31,9 @@ class AccommodationDbConcurrencyTest {
 
     @Autowired
     private AccommodationRepository accommodationRepository;
+    
+    @Autowired
+    private AccommodationService accommodationService;
 
     private Accommodation testAccommodation;
 
@@ -63,12 +66,8 @@ class AccommodationDbConcurrencyTest {
                 try {
                     startLatch.await();
                     
-                    // 각 스레드가 독립적으로 DB에서 조회 → 수정 → 저장
-                    Accommodation accommodation = accommodationRepository.findById(testAccommodation.getId())
-                            .orElseThrow(() -> new RuntimeException("숙소를 찾을 수 없습니다."));
-                    
-                    accommodation.incrementReviewCount();
-                    accommodationRepository.save(accommodation);
+                    // 실제 서비스 메소드 호출
+                    accommodationService.incrementReviewCount(testAccommodation.getId());
                     successCount.incrementAndGet();
                     
                 } catch (Exception e) {
@@ -117,7 +116,8 @@ class AccommodationDbConcurrencyTest {
             executorService.submit(() -> {
                 try {
                     startLatch.await();
-                    updateWithOptimisticLocking(threadId);
+                    // 실제 서비스 메소드 호출
+                    accommodationService.incrementReviewCount(testAccommodation.getId());
                     successCount.incrementAndGet();
                     
                 } catch (OptimisticLockingFailureException | OptimisticLockException e) {
@@ -161,7 +161,6 @@ class AccommodationDbConcurrencyTest {
         CountDownLatch endLatch = new CountDownLatch(THREAD_COUNT);
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
         AtomicInteger totalSuccessCount = new AtomicInteger(0);
-        AtomicInteger totalRetryCount = new AtomicInteger(0);
 
         for (int i = 0; i < THREAD_COUNT; i++) {
             final int threadId = i;
@@ -169,11 +168,10 @@ class AccommodationDbConcurrencyTest {
                 try {
                     startLatch.await();
                     
-                    RetryResult result = updateWithRetryLogic(threadId, 10); // 최대 10회 재시도
-                    if (result.success) {
-                        totalSuccessCount.incrementAndGet();
-                    }
-                    totalRetryCount.addAndGet(result.retryCount);
+                    // 실제 서비스의 재시도 로직 메소드 호출
+                    accommodationService.incrementReviewCountWithRetry(testAccommodation.getId(), 10);
+                    totalSuccessCount.incrementAndGet();
+                    System.out.println("스레드 " + threadId + " - 최종 성공");
                     
                 } catch (Exception e) {
                     System.err.println("스레드 " + threadId + " - 최종 실패: " + e.getMessage());
@@ -191,7 +189,6 @@ class AccommodationDbConcurrencyTest {
 
         System.out.println("=== 재시도 로직 완전 해결 결과 ===");
         System.out.println("최종 성공 수: " + totalSuccessCount.get());
-        System.out.println("총 재시도 횟수: " + totalRetryCount.get());
         System.out.println("최종 리뷰 수: " + result.getReviewCount());
 
         // 재시도 로직으로 모든 업데이트가 성공했는지 검증
@@ -199,103 +196,5 @@ class AccommodationDbConcurrencyTest {
         assertEquals(THREAD_COUNT, result.getReviewCount().intValue(), 
                 "최종 리뷰 수는 스레드 수와 정확히 일치해야 함");
         
-    }
-
-    @Transactional
-    private void updateWithOptimisticLocking(int threadId) {
-        try {
-            Accommodation accommodation = accommodationRepository.findById(testAccommodation.getId())
-                    .orElseThrow(() -> new RuntimeException("숙소를 찾을 수 없습니다."));
-
-            System.out.println("스레드 " + threadId + " - 조회 시점 버전: " + accommodation.getVersion());
-            
-            accommodation.incrementReviewCount();
-            Thread.sleep(50); // 동시성 상황 시뮬레이션
-            
-            accommodationRepository.save(accommodation); // 여기서 OptimisticLockException 발생 가능
-            
-            System.out.println("스레드 " + threadId + " - 업데이트 성공!");
-            
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("스레드 중단", e);
-        }
-    }
-
-    // 재시도 결과를 담는 내부 클래스
-    private static class RetryResult {
-        boolean success;
-        int retryCount;
-        
-        RetryResult(boolean success, int retryCount) {
-            this.success = success;
-            this.retryCount = retryCount;
-        }
-    }
-
-    // @Transactional 제거 - 각 재시도마다 새로운 트랜잭션 사용
-    private RetryResult updateWithRetryLogic(int threadId, int maxRetries) {
-        int retryCount = 0;
-        
-        while (retryCount < maxRetries) {
-            try {
-                // 각 시도마다 새로운 트랜잭션에서 실행
-                boolean success = performSingleUpdate(threadId, retryCount);
-                if (success) {
-                    return new RetryResult(true, retryCount);
-                }
-                
-            } catch (OptimisticLockingFailureException | OptimisticLockException e) {
-                retryCount++;
-                System.out.println("스레드 " + threadId + " - 재시도 " + retryCount + "/" + maxRetries);
-                
-                if (retryCount >= maxRetries) {
-                    System.err.println("스레드 " + threadId + " - 최대 재시도 횟수 초과");
-                    return new RetryResult(false, retryCount);
-                }
-                
-                try {
-                    // 백오프 전략: 지수 백오프 + 랜덤 지터
-                    long baseDelay = 50L; // 기본 50ms
-                    long exponentialDelay = (long) (baseDelay * Math.pow(2, Math.min(retryCount - 1, 4))); // 최대 800ms
-                    long jitter = (long) (Math.random() * exponentialDelay * 0.1); // 10% 지터
-                    long totalDelay = exponentialDelay + jitter;
-                    
-                    System.out.println("스레드 " + threadId + " - " + totalDelay + "ms 대기");
-                    Thread.sleep(totalDelay);
-                    
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    return new RetryResult(false, retryCount);
-                }
-            } catch (Exception e) {
-                System.err.println("스레드 " + threadId + " - 예상치 못한 오류: " + e.getMessage());
-                return new RetryResult(false, retryCount);
-            }
-        }
-        
-        return new RetryResult(false, retryCount);
-    }
-
-    @Transactional
-    private boolean performSingleUpdate(int threadId, int attemptNumber) {
-        try {
-            Accommodation accommodation = accommodationRepository.findById(testAccommodation.getId())
-                    .orElseThrow(() -> new RuntimeException("숙소를 찾을 수 없습니다."));
-
-            System.out.println("스레드 " + threadId + " - 시도 " + (attemptNumber + 1) + 
-                             ", 조회 시점 버전: " + accommodation.getVersion() + 
-                             ", 현재 리뷰 수: " + accommodation.getReviewCount());
-
-            accommodation.incrementReviewCount();
-            accommodationRepository.save(accommodation);
-            
-            System.out.println("스레드 " + threadId + " - 성공 (시도 " + (attemptNumber + 1) + "회)");
-            return true;
-            
-        } catch (OptimisticLockingFailureException | OptimisticLockException e) {
-            // 이 예외들은 상위 메소드에서 처리하도록 다시 던짐
-            throw e;
-        }
     }
 } 
