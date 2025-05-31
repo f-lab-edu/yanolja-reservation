@@ -1,5 +1,6 @@
 package com.yanolja.areas.accommodation.service;
 
+import com.yanolja.areas.accommodation.dto.AmenityDto;
 import com.yanolja.areas.accommodation.dto.PortalAccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class PortalAccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AccommodationImageRepository accommodationImageRepository;
     private final AccommodationImageService accommodationImageService;
+    private final AmenityService amenityService;
 
     /**
      * 검색 조건에 따른 숙소 목록 조회
@@ -70,8 +73,25 @@ public class PortalAccommodationService {
         Accommodation accommodation = accommodationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 숙소를 찾을 수 없습니다."));
         
-        // 이미지 목록을 조회하여 상세 DTO 생성
+        // 이미지 목록 조회
         List<AccommodationImage> images = accommodationImageRepository.findByAccommodationId(id);
-        return PortalAccommodationDto.DetailResponse.fromEntityWithImages(accommodation, images);
+        
+        // 편의시설 목록 조회
+        List<AmenityDto.Response> amenities = amenityService.getAmenitiesByAccommodationId(id);
+        
+        // DTO 생성
+        PortalAccommodationDto.DetailResponse response = PortalAccommodationDto.DetailResponse.fromEntityWithImages(accommodation, images);
+        
+        // 편의시설 정보 목록 설정 (이름과 아이콘 URL 포함)
+        List<PortalAccommodationDto.AmenityInfo> amenityInfos = amenities.stream()
+                .map(amenity -> PortalAccommodationDto.AmenityInfo.builder()
+                        .name(amenity.getName())
+                        .iconUrl(amenity.getIconUrl())
+                        .build())
+                .collect(Collectors.toList());
+        
+        response.setAmenityInfos(amenityInfos);
+        
+        return response;
     }
 } 

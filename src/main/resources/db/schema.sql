@@ -198,11 +198,11 @@ CREATE TABLE amenities (
 
 -- 숙소-편의시설 매핑 테이블
 CREATE TABLE accommodation_amenities (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     accommodation_id BIGINT NOT NULL,
     amenity_id BIGINT NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
-    PRIMARY KEY (accommodation_id, amenity_id),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id) ON DELETE CASCADE,
     FOREIGN KEY (amenity_id) REFERENCES amenities(id) ON DELETE CASCADE
 );
@@ -219,11 +219,11 @@ CREATE TABLE room_options (
 
 -- 객실-옵션 매핑 테이블
 CREATE TABLE room_option_mappings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     room_id BIGINT NOT NULL,
     option_id BIGINT NOT NULL,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
-    PRIMARY KEY (room_id, option_id),
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     FOREIGN KEY (option_id) REFERENCES room_options(id) ON DELETE CASCADE
 );

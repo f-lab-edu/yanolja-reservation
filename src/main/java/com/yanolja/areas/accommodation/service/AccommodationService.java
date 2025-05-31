@@ -1,6 +1,8 @@
 package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.AccommodationDto;
+import com.yanolja.areas.accommodation.dto.AccommodationImageDto;
+import com.yanolja.areas.accommodation.dto.AmenityDto;
 import com.yanolja.areas.accommodation.entity.*;
 import com.yanolja.areas.accommodation.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class AccommodationService {
     private final AccommodationRepository accommodationRepository;
     private final AccommodationImageRepository accommodationImageRepository;
     private final AccommodationImageService accommodationImageService;
+    private final AmenityService amenityService;
     
     @Value("${app.retry.base-delay:50}")
     private long baseDelay;
@@ -52,25 +55,42 @@ public class AccommodationService {
     public List<AccommodationDto.ListResponse> getAllAccommodations() {
         List<Accommodation> accommodations = accommodationRepository.findAll();
         return accommodations.stream()
-                .map(accommodation -> {
-                    String mainImageUrl = accommodationImageService.getMainImageUrl(accommodation.getId());
-                    return AccommodationDto.ListResponse.fromEntityWithMainImage(accommodation, mainImageUrl);
-                })
-                .collect(Collectors.toList());
+            .map(accommodation -> {
+                String mainImageUrl = accommodationImageService.getMainImageUrl(accommodation.getId());
+                return AccommodationDto.ListResponse.fromEntityWithMainImage(accommodation, mainImageUrl);
+            })
+            .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public AccommodationDto.Response getAccommodationById(Long id) {
         Accommodation accommodation = findAccommodationById(id);
+        
+        // 숙소 이미지 목록 조회
         List<AccommodationImage> images = accommodationImageRepository.findByAccommodationId(id);
         
-        return AccommodationDto.Response.fromEntityWithImages(accommodation, images);
+        // 편의시설 목록 조회
+        List<AmenityDto.Response> amenities = amenityService.getAmenitiesByAccommodationId(id);
+        
+        // DTO 변환 및 반환
+        AccommodationDto.Response responseDto = AccommodationDto.Response.fromEntity(accommodation);
+        
+        // 이미지와 편의시설 목록 설정
+        responseDto.setImages(
+            images.stream()
+                .map(AccommodationImageDto.Response::fromEntity)
+                .collect(Collectors.toList())
+        );
+        
+        responseDto.setAmenities(amenities);
+        
+        return responseDto;
     }
-
+    
     @Transactional
     public AccommodationDto.Response updateAccommodation(Long id, AccommodationDto.Request request) {
         Accommodation accommodation = findAccommodationById(id);
-
+        
         accommodation.updateInfo(
             request.getName(),
             request.getDescription(),
@@ -79,18 +99,14 @@ public class AccommodationService {
             request.getLongitude(),
             request.getPricePerNight()
         );
-
-        accommodation = accommodationRepository.save(accommodation);
-        List<AccommodationImage> images = accommodationImageRepository.findByAccommodationId(id);
         
-        return AccommodationDto.Response.fromEntityWithImages(accommodation, images);
+        return AccommodationDto.Response.fromEntity(accommodation);
     }
-
+    
     @Transactional
     public void deleteAccommodation(Long id) {
         Accommodation accommodation = findAccommodationById(id);
         accommodation.markAsDeleted();
-        accommodationRepository.save(accommodation);
     }
 
     /**

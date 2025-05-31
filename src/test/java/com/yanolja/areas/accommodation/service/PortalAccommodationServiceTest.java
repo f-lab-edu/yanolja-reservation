@@ -1,5 +1,6 @@
 package com.yanolja.areas.accommodation.service;
 
+import com.yanolja.areas.accommodation.dto.AmenityDto;
 import com.yanolja.areas.accommodation.dto.PortalAccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
@@ -45,6 +46,9 @@ class PortalAccommodationServiceTest {
 
     @Mock
     private AccommodationImageService accommodationImageService;
+    
+    @Mock
+    private AmenityService amenityService;
 
     @InjectMocks
     private PortalAccommodationService portalAccommodationService;
@@ -56,6 +60,7 @@ class PortalAccommodationServiceTest {
     private AccommodationImage mainImage;
     private AccommodationImage subImage;
     private List<AccommodationImage> imageList;
+    private List<AmenityDto.Response> amenityList;
     private String mainImageUrl;
     private String subImageUrl;
 
@@ -82,6 +87,21 @@ class PortalAccommodationServiceTest {
         mainImage = createMockAccommodationImage(1L, detailAccommodation, mainImageUrl, true);
         subImage = createMockAccommodationImage(2L, detailAccommodation, subImageUrl, false);
         imageList = Arrays.asList(mainImage, subImage);
+        
+        // 편의시설 데이터 설정
+        amenityList = Arrays.asList(
+            AmenityDto.Response.builder()
+                .id(1L)
+                .name("와이파이")
+                .iconUrl("/icons/wifi.png")
+                .build(),
+            AmenityDto.Response.builder()
+                .id(2L)
+                .name("수영장")
+                .iconUrl("/icons/pool.png")
+                .build()
+        );
+        
 
         // 기본 모킹 설정 - lenient() 추가하여 불필요한 stubbing 경고 방지
         lenient().when(accommodationImageService.getMainImageUrl(1L)).thenReturn(mainImageUrl);
@@ -89,6 +109,8 @@ class PortalAccommodationServiceTest {
         lenient().when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
         lenient().when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
         lenient().when(accommodationRepository.findByIdAndDeletedYn(999L,"N")).thenReturn(Optional.empty());
+        lenient().when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenityList);
+
     }
 
     @Test
@@ -194,14 +216,15 @@ class PortalAccommodationServiceTest {
     }
     
     @Test
-    @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID (이미지 포함)")
+    @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID (이미지와 편의시설 포함)")
     void getAccommodationDetail_WithExistingId_ShouldReturnAccommodationDetail() {
       
         // When
         // Setup specific image list for this test
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
         when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
-
+        when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenityList);
+        
         PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(1L);
         
         // Then
@@ -214,10 +237,21 @@ class PortalAccommodationServiceTest {
         assertThat(result.getImageUrls()).isNotNull();
         assertThat(result.getImageUrls()).hasSize(2);
         assertThat(result.getImageUrls()).contains(mainImageUrl, subImageUrl);
-
+        
+        // 편의시설 목록 검증
+        assertThat(result.getAmenities()).isNotNull();
+        assertThat(result.getAmenities()).hasSize(2);
+        
+        // 편의시설 정보 상세 검증 (이름과 아이콘 URL)
+        assertThat(result.getAmenities().get(0).getName()).isEqualTo("와이파이");
+        assertThat(result.getAmenities().get(0).getIconUrl()).isEqualTo("/icons/wifi.png");
+        assertThat(result.getAmenities().get(1).getName()).isEqualTo("수영장");
+        assertThat(result.getAmenities().get(1).getIconUrl()).isEqualTo("/icons/pool.png");
+        
         // 호출 검증
         verify(accommodationRepository).findByIdAndDeletedYn(1L,"N");
         verify(accommodationImageRepository).findByAccommodationId(1L);
+        verify(amenityService).getAmenitiesByAccommodationId(1L);
     }
     
     @Test

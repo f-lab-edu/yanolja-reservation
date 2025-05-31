@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -110,7 +111,25 @@ public class PortalAccommodationDto {
         }
     }
     
+    /**
+     * 편의시설 정보 DTO
+     */
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Schema(description = "편의시설 정보 DTO")
+    public static class AmenityInfo {
+        
+        @Schema(description = "편의시설 이름")
+        private String name;
+        
+        @Schema(description = "아이콘 URL")
+        private String iconUrl;
+    }
+    
+    @Getter
+    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
@@ -148,7 +167,15 @@ public class PortalAccommodationDto {
         private List<String> imageUrls;
         
         @Schema(description = "편의 시설 정보")
-        private List<String> amenities;
+        private List<AmenityInfo> amenities;
+
+        /**
+         * 편의시설 정보 목록 설정 메서드
+         * @param amenityInfos 편의시설 정보 목록
+         */
+        public void setAmenityInfos(List<AmenityInfo> amenityInfos) {
+            this.amenities = amenityInfos;
+        }
         
         public static DetailResponse fromEntity(Accommodation accommodation) {
             return DetailResponse.builder()

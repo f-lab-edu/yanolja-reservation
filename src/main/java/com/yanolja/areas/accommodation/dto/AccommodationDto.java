@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -51,6 +52,7 @@ public class AccommodationDto {
     }
 
     @Getter
+    @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
@@ -89,7 +91,9 @@ public class AccommodationDto {
         
         @Schema(description = "숙소 이미지 목록")
         private List<AccommodationImageDto.Response> images;
-      
+        
+        @Schema(description = "편의시설 목록")
+        private List<AmenityDto.Response> amenities;
 
         public static Response fromEntity(Accommodation accommodation) {
             return Response.builder()
@@ -103,26 +107,8 @@ public class AccommodationDto {
                     .rating(accommodation.getRating())
                     .reviewCount(accommodation.getReviewCount())
                     .status(accommodation.getStatus())
-                    .build();
-        }
-        
-        public static Response fromEntityWithImages(Accommodation accommodation, List<AccommodationImage> images) {
-            List<AccommodationImageDto.Response> imageResponses = images.stream()
-                    .map(AccommodationImageDto.Response::fromEntity)
-                    .collect(Collectors.toList());
-                    
-            return Response.builder()
-                    .id(accommodation.getId())
-                    .name(accommodation.getName())
-                    .description(accommodation.getDescription())
-                    .address(accommodation.getAddress())
-                    .latitude(accommodation.getLatitude())
-                    .longitude(accommodation.getLongitude())
-                    .pricePerNight(accommodation.getPricePerNight())
-                    .rating(accommodation.getRating())
-                    .reviewCount(accommodation.getReviewCount())
-                    .status(accommodation.getStatus())
-                    .images(imageResponses)
+                    .images(new ArrayList<>())
+                    .amenities(new ArrayList<>())
                     .build();
         }
     }
