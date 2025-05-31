@@ -2,6 +2,7 @@ package com.yanolja.areas.accommodation.dto;
 
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
+import com.yanolja.areas.room.dto.PortalRoomDto;
 import com.yanolja.common.dto.PageRequestDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -168,6 +169,9 @@ public class PortalAccommodationDto {
         
         @Schema(description = "편의 시설 정보")
         private List<AmenityInfo> amenities;
+        
+        @Schema(description = "객실 목록")
+        private List<PortalRoomDto.ListResponse> rooms;
 
         /**
          * 편의시설 정보 목록 설정 메서드
@@ -190,6 +194,7 @@ public class PortalAccommodationDto {
                     .reviewCount(accommodation.getReviewCount())
                     .imageUrls(List.of()) // 이미지가 없는 상태로 생성
                     .amenities(List.of()) // 실제 편의시설 정보 로직 구현 필요
+                    .rooms(List.of()) // 객실 목록 없는 상태로 생성
                     .build();
         }
         
@@ -210,6 +215,7 @@ public class PortalAccommodationDto {
                     .reviewCount(accommodation.getReviewCount())
                     .imageUrls(imageUrls)
                     .amenities(List.of()) // 실제 편의시설 정보 로직 구현 필요
+                    .rooms(List.of()) // 객실 목록 없는 상태로 생성
                     .build();
         }
     }

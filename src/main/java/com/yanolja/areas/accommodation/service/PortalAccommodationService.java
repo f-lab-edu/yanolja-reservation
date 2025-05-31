@@ -6,6 +6,8 @@ import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
 import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
+import com.yanolja.areas.room.dto.PortalRoomDto;
+import com.yanolja.areas.room.service.PortalRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,7 @@ public class PortalAccommodationService {
     private final AccommodationImageRepository accommodationImageRepository;
     private final AccommodationImageService accommodationImageService;
     private final AmenityService amenityService;
+    private final PortalRoomService portalRoomService;
 
     /**
      * 검색 조건에 따른 숙소 목록 조회
@@ -79,6 +82,9 @@ public class PortalAccommodationService {
         // 편의시설 목록 조회
         List<AmenityDto.Response> amenities = amenityService.getAmenitiesByAccommodationId(id);
         
+        // 객실 목록 조회
+        List<PortalRoomDto.ListResponse> rooms = portalRoomService.getRoomsByAccommodation(id);
+        
         // DTO 생성
         PortalAccommodationDto.DetailResponse response = PortalAccommodationDto.DetailResponse.fromEntityWithImages(accommodation, images);
         
@@ -91,6 +97,9 @@ public class PortalAccommodationService {
                 .collect(Collectors.toList());
         
         response.setAmenityInfos(amenityInfos);
+        
+        // 객실 목록 설정
+        response.setRooms(rooms);
         
         return response;
     }
