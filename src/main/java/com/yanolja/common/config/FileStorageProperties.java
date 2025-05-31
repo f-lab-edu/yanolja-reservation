@@ -17,6 +17,11 @@ public class FileStorageProperties {
     private String accommodationImageDir = "uploads/accommodations";
     
     /**
+     * 객실 이미지 업로드 경로
+     */
+    private String roomImageDir = "uploads/rooms";
+    
+    /**
      * 최대 파일 크기 (바이트 단위)
      */
     private long maxSize = 10485760; // 10MB

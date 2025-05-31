@@ -1,7 +1,9 @@
 package com.yanolja.areas.room.service;
 
 import com.yanolja.areas.room.dto.RoomDto;
+import com.yanolja.areas.room.dto.RoomImageDto;
 import com.yanolja.areas.room.entity.Room;
+import com.yanolja.areas.room.entity.RoomImage;
 import com.yanolja.areas.room.repository.RoomRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,10 +13,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -28,12 +34,19 @@ public class RoomServiceTest {
 
     @Mock
     private RoomRepository roomRepository;
+    
+    @Mock
+    private RoomImageService roomImageService;
 
     @InjectMocks
     private RoomService roomService;
 
     private RoomDto.Request roomRequest;
     private Room room;
+    private RoomImage roomImage;
+    private MockMultipartFile mockImage1;
+    private MockMultipartFile mockImage2;
+    private List<RoomImageDto.Response> roomImageResponses;
 
     @BeforeEach
     void setUp() {
@@ -58,6 +71,53 @@ public class RoomServiceTest {
         ReflectionTestUtils.setField(room, "updatedAt", LocalDateTime.now());
         ReflectionTestUtils.setField(room, "createdBy", "test");
         ReflectionTestUtils.setField(room, "updatedBy", "test");
+        
+        // 테스트용 객실 이미지 생성
+        roomImage = RoomImage.builder()
+                .room(room)
+                .imageUrl("/api/rooms/images/1/main.jpg")
+                .isMain(true)
+                .build();
+        ReflectionTestUtils.setField(roomImage, "id", 1L);
+        
+        // 테스트용 이미지 파일
+        mockImage1 = new MockMultipartFile(
+                "image1", 
+                "test1.jpg", 
+                "image/jpeg", 
+                "test image content 1".getBytes()
+        );
+        
+        mockImage2 = new MockMultipartFile(
+                "image2", 
+                "test2.jpg", 
+                "image/jpeg", 
+                "test image content 2".getBytes()
+        );
+        
+        // 테스트용 이미지 응답 목록
+        RoomImageDto.Response imageResponse1 = RoomImageDto.Response.builder()
+                .id(1L)
+                .roomId(1L)
+                .imageUrl("/api/rooms/images/1/test1.jpg")
+                .isMain(true)
+                .build();
+        
+        RoomImageDto.Response imageResponse2 = RoomImageDto.Response.builder()
+                .id(2L)
+                .roomId(1L)
+                .imageUrl("/api/rooms/images/1/test2.jpg")
+                .isMain(false)
+                .build();
+        
+        roomImageResponses = Arrays.asList(imageResponse1, imageResponse2);
+        
+        // RoomImageService의 기본 모킹 설정
+        RoomImageDto.ListResponse listResponse = RoomImageDto.ListResponse.builder()
+                .images(roomImageResponses)
+                .build();
+        lenient().when(roomImageService.getImagesByRoomId(1L)).thenReturn(listResponse);
+        lenient().when(roomImageService.getMainImageUrl(1L)).thenReturn("/api/rooms/images/1/main.jpg");
     }
 
     @Test
@@ -81,7 +141,7 @@ public class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("객실 목록 조회 성공 테스트")
+    @DisplayName("객실 목록 조회 성공 테스트 - 이미지 포함")
     void getAllRoomsSuccess() {
         // Given
         List<Room> rooms = Arrays.asList(room);
@@ -98,12 +158,14 @@ public class RoomServiceTest {
         assertEquals(2, responses.get(0).getCapacity());
         assertEquals(new BigDecimal("120000"), responses.get(0).getPricePerNight());
         assertEquals("AVAILABLE", responses.get(0).getStatus());
+        assertEquals("/api/rooms/images/1/main.jpg", responses.get(0).getMainImageUrl());
         
         verify(roomRepository, times(1)).findAllNotDeleted();
+        verify(roomImageService, times(1)).getMainImageUrl(1L);
     }
 
     @Test
-    @DisplayName("객실 상세 조회 성공 테스트")
+    @DisplayName("객실 상세 조회 성공 테스트 - 이미지 포함")
     void getRoomByIdSuccess() {
         // Given
         when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
@@ -119,7 +181,14 @@ public class RoomServiceTest {
         assertEquals(new BigDecimal("120000"), response.getPricePerNight());
         assertEquals("AVAILABLE", response.getStatus());
         
+        // 이미지 목록 검증
+        assertNotNull(response.getImages());
+        assertEquals(2, response.getImages().size());
+        assertEquals("/api/rooms/images/1/test1.jpg", response.getImages().get(0).getImageUrl());
+        assertEquals("/api/rooms/images/1/test2.jpg", response.getImages().get(1).getImageUrl());
+        
         verify(roomRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(roomImageService, times(1)).getImagesByRoomId(1L);
     }
 
     @Test
@@ -137,7 +206,7 @@ public class RoomServiceTest {
     }
 
     @Test
-    @DisplayName("숙소별 객실 목록 조회 성공 테스트")
+    @DisplayName("숙소별 객실 목록 조회 성공 테스트 - 이미지 포함")
     void getRoomsByAccommodationIdSuccess() {
         // Given
         List<Room> rooms = Arrays.asList(room);
@@ -152,8 +221,10 @@ public class RoomServiceTest {
         assertEquals("디럭스 더블룸", responses.get(0).getName());
         assertEquals("편안한 디럭스 더블룸입니다.", responses.get(0).getDescription());
         assertEquals(1L, responses.get(0).getAccommodationId());
+        assertEquals("/api/rooms/images/1/main.jpg", responses.get(0).getMainImageUrl());
         
         verify(roomRepository, times(1)).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomImageService, times(1)).getMainImageUrl(1L);
     }
 
     @Test
@@ -210,4 +281,5 @@ public class RoomServiceTest {
         
         verify(roomRepository, times(1)).findByIdAndNotDeleted(999L);
     }
+
 } 

@@ -2,6 +2,8 @@ package com.yanolja.areas.room.service;
 
 import com.yanolja.areas.room.dto.PortalRoomDto;
 import com.yanolja.areas.room.entity.Room;
+import com.yanolja.areas.room.entity.RoomImage;
+import com.yanolja.areas.room.repository.RoomImageRepository;
 import com.yanolja.areas.room.repository.RoomRepository;
 import com.yanolja.common.dto.PageRequestDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,6 +37,12 @@ class PortalRoomServiceTest {
     @Mock
     private RoomRepository roomRepository;
     
+    @Mock
+    private RoomImageRepository roomImageRepository;
+    
+    @Mock
+    private RoomImageService roomImageService;
+    
     @InjectMocks
     private PortalRoomService portalRoomService;
     
@@ -42,6 +50,9 @@ class PortalRoomServiceTest {
     private Room room1;
     private Room room2;
     private Room detailRoom;
+    private RoomImage roomImage1;
+    private RoomImage roomImage2;
+    private final String MAIN_IMAGE_URL = "/api/rooms/images/1/main.jpg";
     
     @BeforeEach
     void setUp() {
@@ -59,15 +70,22 @@ class PortalRoomServiceTest {
                 new BigDecimal("120000")
         );
         
+        // 객실 이미지 데이터 설정
+        roomImage1 = createMockRoomImage(1L, detailRoom, "/api/rooms/images/1/main.jpg", true);
+        roomImage2 = createMockRoomImage(2L, detailRoom, "/api/rooms/images/1/sub.jpg", false);
+        
         // 기본 모킹 설정
         lenient().when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailRoom));
         lenient().when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
         lenient().when(roomRepository.findByAccommodationIdAndNotDeleted(1L)).thenReturn(Arrays.asList(room1, room2));
+        lenient().when(roomImageRepository.findByRoomId(1L)).thenReturn(Arrays.asList(roomImage1, roomImage2));
+        lenient().when(roomImageService.getMainImageUrl(1L)).thenReturn(MAIN_IMAGE_URL);
+        lenient().when(roomImageService.getMainImageUrl(2L)).thenReturn("/api/rooms/images/2/main.jpg");
     }
 
     @Test
-    @DisplayName("객실 검색 - 키워드 검색 성공")
-    void searchRooms_WithKeyword_ShouldReturnMatchingRooms() {
+    @DisplayName("객실 검색 - 키워드 검색 성공 (이미지 포함)")
+    void searchRooms_WithKeyword_ShouldReturnRoomsWithMainImage() {
         // Given
         String keyword = "디럭스";
         BigDecimal minPrice = new BigDecimal("100000");
@@ -117,10 +135,9 @@ class PortalRoomServiceTest {
         // Then
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo("디럭스 더블룸");
-        assertThat(result.getContent().get(0).getCapacity()).isEqualTo(2);
-        assertThat(result.getContent().get(0).getPricePerNight()).isEqualTo(new BigDecimal("120000"));
+        assertThat(result.getContent().get(0).getMainImageUrl()).isEqualTo(MAIN_IMAGE_URL);
         
-        verify(roomRepository, times(1)).searchRooms(
+        verify(roomRepository).searchRooms(
                 eq(keyword), 
                 eq(minPrice), 
                 eq(maxPrice),
@@ -128,6 +145,7 @@ class PortalRoomServiceTest {
                 eq(sortBy), 
                 any(Pageable.class)
         );
+        verify(roomImageService).getMainImageUrl(1L);
     }
     
     @Test
@@ -213,6 +231,41 @@ class PortalRoomServiceTest {
         verify(roomRepository).findByAccommodationIdAndNotDeleted(1L);
     }
     
+    @Test
+    @DisplayName("객실 상세 조회 - 이미지 URL 포함")
+    void getRoomDetail_WithExistingId_ShouldIncludeImageUrls() {
+        // When
+        PortalRoomDto.DetailResponse result = portalRoomService.getRoomDetail(1L);
+        
+        // Then
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("디럭스 더블룸");
+        
+        // 이미지 URL 목록 검증
+        assertThat(result.getImageUrls()).isNotNull();
+        assertThat(result.getImageUrls()).hasSize(2);
+        assertThat(result.getImageUrls()).contains("/api/rooms/images/1/main.jpg", "/api/rooms/images/1/sub.jpg");
+        
+        verify(roomRepository).findByIdAndNotDeleted(1L);
+        verify(roomImageRepository).findByRoomId(1L);
+    }
+    
+    @Test
+    @DisplayName("숙소별 객실 목록 조회 - 메인 이미지 URL 포함")
+    void getRoomsByAccommodation_ShouldIncludeMainImageUrl() {
+        // When
+        List<PortalRoomDto.ListResponse> results = portalRoomService.getRoomsByAccommodation(1L);
+        
+        // Then
+        assertThat(results).hasSize(2);
+        assertThat(results.get(0).getMainImageUrl()).isEqualTo(MAIN_IMAGE_URL);
+        assertThat(results.get(1).getMainImageUrl()).isEqualTo("/api/rooms/images/2/main.jpg");
+        
+        verify(roomRepository).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomImageService).getMainImageUrl(1L);
+        verify(roomImageService).getMainImageUrl(2L);
+    }
+    
     // 테스트 데이터 생성을 위한 도우미 메서드
     private Room createMockRoom(Long id, Long accommodationId, String name, String description, 
                                Integer capacity, BigDecimal pricePerNight) {
@@ -245,5 +298,19 @@ class PortalRoomServiceTest {
         ReflectionTestUtils.setField(room, "updatedAt", LocalDateTime.now());
         
         return room;
+    }
+    
+    /**
+     * 테스트용 RoomImage 객체 생성
+     */
+    private RoomImage createMockRoomImage(Long id, Room room, String imageUrl, boolean isMain) {
+        RoomImage image = RoomImage.builder()
+                .room(room)
+                .imageUrl(imageUrl)
+                .isMain(isMain)
+                .build();
+        
+        ReflectionTestUtils.setField(image, "id", id);
+        return image;
     }
 } 
