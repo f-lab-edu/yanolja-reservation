@@ -2,10 +2,13 @@ package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.PortalAccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationImage;
+import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.entity.AccommodationStatus;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import com.yanolja.common.dto.PageRequestDto;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,8 +19,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,8 +30,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PortalAccommodationServiceTest {
@@ -34,11 +40,59 @@ class PortalAccommodationServiceTest {
     @Mock
     private AccommodationRepository accommodationRepository;
 
+    @Mock
+    private AccommodationImageRepository accommodationImageRepository;
+
+    @Mock
+    private AccommodationImageService accommodationImageService;
+
     @InjectMocks
     private PortalAccommodationService portalAccommodationService;
 
+    // 테스트 데이터
+    private Accommodation accommodation1;
+    private Accommodation accommodation2;
+    private Accommodation detailAccommodation;
+    private AccommodationImage mainImage;
+    private AccommodationImage subImage;
+    private List<AccommodationImage> imageList;
+    private String mainImageUrl;
+    private String subImageUrl;
+
+    @BeforeEach
+    void setUp() {
+        // 기본 숙소 데이터 설정
+        accommodation1 = createMockAccommodation(1L, "서울 호텔", "서울시 중구", new BigDecimal("100000"));
+        accommodation2 = createMockAccommodation(2L, "서울 리조트", "서울시 강남구", new BigDecimal("120000"));
+
+        // 상세 조회용 숙소 데이터
+        detailAccommodation = createDetailMockAccommodation(
+                1L,
+                "서울 그랜드 호텔",
+                "서울시 중구 명동",
+                "서울 중심부에 위치한 5성급 호텔",
+                new BigDecimal("150000")
+        );
+
+        // 이미지 URL 설정
+        mainImageUrl = "/images/accommodations/1/main.jpg";
+        subImageUrl = "/images/accommodations/1/room.jpg";
+
+        // 이미지 데이터 설정
+        mainImage = createMockAccommodationImage(1L, detailAccommodation, mainImageUrl, true);
+        subImage = createMockAccommodationImage(2L, detailAccommodation, subImageUrl, false);
+        imageList = Arrays.asList(mainImage, subImage);
+
+        // 기본 모킹 설정 - lenient() 추가하여 불필요한 stubbing 경고 방지
+        lenient().when(accommodationImageService.getMainImageUrl(1L)).thenReturn(mainImageUrl);
+        lenient().when(accommodationImageService.getMainImageUrl(2L)).thenReturn("/images/accommodations/2/main.jpg");
+        lenient().when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
+        lenient().when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
+        lenient().when(accommodationRepository.findByIdAndDeletedYn(999L,"N")).thenReturn(Optional.empty());
+    }
+
     @Test
-    @DisplayName("숙소 검색 - 키워드 검색 성공")
+    @DisplayName("숙소 검색 - 키워드 검색 성공 (이미지 포함)")
     void searchAccommodations_WithKeyword_ShouldReturnMatchingAccommodations() {
         // Given
         String keyword = "서울";
@@ -64,10 +118,7 @@ class PortalAccommodationServiceTest {
                 .build();
         
         Pageable pageable = pageRequest.toPageable(PortalAccommodationDto::mapSortColumn);
-                
-        Accommodation accommodation1 = createMockAccommodation(1L, "서울 호텔", "서울시 중구", new BigDecimal("100000"));
-        Accommodation accommodation2 = createMockAccommodation(2L, "서울 리조트", "서울시 강남구", new BigDecimal("120000"));
-        
+
         Page<Accommodation> mockPage = new PageImpl<>(
                 List.of(accommodation1, accommodation2), 
                 pageable, 
@@ -78,10 +129,13 @@ class PortalAccommodationServiceTest {
                 eq(keyword), 
                 eq(minPrice), 
                 eq(maxPrice), 
-                eq(pageRequest), 
+                eq(pageRequest),
                 any(Pageable.class)
         )).thenReturn(mockPage);
         
+        // AccommodationImageService mock setup for verification
+        when(accommodationImageService.getMainImageUrl(anyLong())).thenReturn(mainImageUrl);
+
         // When
         Page<PortalAccommodationDto.ListResponse> result = portalAccommodationService.searchAccommodations(request);
         
@@ -89,6 +143,14 @@ class PortalAccommodationServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent().get(0).getName()).isEqualTo("서울 호텔");
         assertThat(result.getContent().get(1).getName()).isEqualTo("서울 리조트");
+
+        // 메인 이미지 검증
+        assertThat(result.getContent().get(0).getMainImageUrl()).isEqualTo(mainImageUrl);
+        assertThat(result.getContent().get(1).getMainImageUrl()).isEqualTo(mainImageUrl);
+
+        // AccommodationImageService 호출 검증
+        verify(accommodationImageService, times(1)).getMainImageUrl(1L);
+        verify(accommodationImageService, times(1)).getMainImageUrl(2L);
     }
     
     @Test
@@ -119,7 +181,7 @@ class PortalAccommodationServiceTest {
                 eq(keyword), 
                 any(), 
                 any(), 
-                eq(pageRequest), 
+                eq(pageRequest),
                 any(Pageable.class)
         )).thenReturn(emptyPage);
         
@@ -132,43 +194,43 @@ class PortalAccommodationServiceTest {
     }
     
     @Test
-    @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID")
+    @DisplayName("숙소 상세 조회 - 존재하는 숙소 ID (이미지 포함)")
     void getAccommodationDetail_WithExistingId_ShouldReturnAccommodationDetail() {
-        // Given
-        Long id = 1L;
-        Accommodation accommodation = createDetailMockAccommodation(
-                id, 
-                "서울 그랜드 호텔", 
-                "서울시 중구 명동", 
-                "서울 중심부에 위치한 5성급 호텔", 
-                new BigDecimal("150000")
-        );
-        
-        when(accommodationRepository.findById(id)).thenReturn(Optional.of(accommodation));
-        
+      
         // When
-        PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(id);
+        // Setup specific image list for this test
+        when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
+        when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
+
+        PortalAccommodationDto.DetailResponse result = portalAccommodationService.getAccommodationDetail(1L);
         
         // Then
-        assertThat(result.getId()).isEqualTo(id);
+        assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("서울 그랜드 호텔");
         assertThat(result.getDescription()).isEqualTo("서울 중심부에 위치한 5성급 호텔");
         assertThat(result.getPricePerNight()).isEqualTo(new BigDecimal("150000"));
+
+        // 이미지 URL 목록 검증
+        assertThat(result.getImageUrls()).isNotNull();
+        assertThat(result.getImageUrls()).hasSize(2);
+        assertThat(result.getImageUrls()).contains(mainImageUrl, subImageUrl);
+
+        // 호출 검증
+        verify(accommodationRepository).findByIdAndDeletedYn(1L,"N");
+        verify(accommodationImageRepository).findByAccommodationId(1L);
     }
     
     @Test
     @DisplayName("숙소 상세 조회 - 존재하지 않는 숙소 ID")
     void getAccommodationDetail_WithNonExistingId_ShouldThrowException() {
-        // Given
-        Long id = 999L;
-        when(accommodationRepository.findById(id)).thenReturn(Optional.empty());
-        
+
         // When & Then
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
-            portalAccommodationService.getAccommodationDetail(id);
+            portalAccommodationService.getAccommodationDetail(999L);
         });
         
-        assertThat(exception.getMessage()).contains(id.toString());
+        assertThat(exception.getMessage()).contains("999");
+        verify(accommodationRepository).findByIdAndDeletedYn(999L,"N");
     }
     
     // 테스트 데이터 생성을 위한 도우미 메서드
@@ -220,4 +282,18 @@ class PortalAccommodationServiceTest {
         
         return accommodation;
     }
-} 
+
+    /**
+     * 테스트용 AccommodationImage 객체 생성
+     */
+    private AccommodationImage createMockAccommodationImage(Long id, Accommodation accommodation, String imageUrl, boolean isMain) {
+        AccommodationImage image = AccommodationImage.builder()
+                .accommodation(accommodation)
+                .imageUrl(imageUrl)
+                .isMain(isMain)
+                .build();
+
+        ReflectionTestUtils.setField(image, "id", id);
+        return image;
+    }
+}

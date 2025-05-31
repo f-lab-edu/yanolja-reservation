@@ -2,6 +2,8 @@ package com.yanolja.areas.accommodation.service;
 
 import com.yanolja.areas.accommodation.dto.PortalAccommodationDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
+import com.yanolja.areas.accommodation.entity.AccommodationImage;
+import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,12 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class PortalAccommodationService {
 
     private final AccommodationRepository accommodationRepository;
+    private final AccommodationImageRepository accommodationImageRepository;
+    private final AccommodationImageService accommodationImageService;
 
     /**
      * 검색 조건에 따른 숙소 목록 조회
@@ -50,7 +55,11 @@ public class PortalAccommodationService {
                 pageable
         );
         
-        return accommodations.map(PortalAccommodationDto.ListResponse::fromEntity);
+        // 각 숙소에 대한 메인 이미지 URL을 조회하여 DTO로 변환
+        return accommodations.map(accommodation -> {
+            String mainImageUrl = accommodationImageService.getMainImageUrl(accommodation.getId());
+            return PortalAccommodationDto.ListResponse.fromEntityWithMainImage(accommodation, mainImageUrl);
+        });
     }
 
     /**
@@ -61,6 +70,8 @@ public class PortalAccommodationService {
         Accommodation accommodation = accommodationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 숙소를 찾을 수 없습니다."));
         
-        return PortalAccommodationDto.DetailResponse.fromEntity(accommodation);
+        // 이미지 목록을 조회하여 상세 DTO 생성
+        List<AccommodationImage> images = accommodationImageRepository.findByAccommodationId(id);
+        return PortalAccommodationDto.DetailResponse.fromEntityWithImages(accommodation, images);
     }
 } 

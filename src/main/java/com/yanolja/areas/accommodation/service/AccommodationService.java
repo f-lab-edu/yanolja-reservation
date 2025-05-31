@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.dao.OptimisticLockingFailureException;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 public class AccommodationService {
 
     private final AccommodationRepository accommodationRepository;
+    private final AccommodationImageRepository accommodationImageRepository;
+    private final AccommodationImageService accommodationImageService;
     
     @Value("${app.retry.base-delay:50}")
     private long baseDelay;
@@ -48,14 +52,19 @@ public class AccommodationService {
     public List<AccommodationDto.ListResponse> getAllAccommodations() {
         List<Accommodation> accommodations = accommodationRepository.findAll();
         return accommodations.stream()
-                .map(AccommodationDto.ListResponse::fromEntity)
+                .map(accommodation -> {
+                    String mainImageUrl = accommodationImageService.getMainImageUrl(accommodation.getId());
+                    return AccommodationDto.ListResponse.fromEntityWithMainImage(accommodation, mainImageUrl);
+                })
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public AccommodationDto.Response getAccommodationById(Long id) {
         Accommodation accommodation = findAccommodationById(id);
-        return AccommodationDto.Response.fromEntity(accommodation);
+        List<AccommodationImage> images = accommodationImageRepository.findByAccommodationId(id);
+        
+        return AccommodationDto.Response.fromEntityWithImages(accommodation, images);
     }
 
     @Transactional
@@ -72,8 +81,9 @@ public class AccommodationService {
         );
 
         accommodation = accommodationRepository.save(accommodation);
+        List<AccommodationImage> images = accommodationImageRepository.findByAccommodationId(id);
         
-        return AccommodationDto.Response.fromEntity(accommodation);
+        return AccommodationDto.Response.fromEntityWithImages(accommodation, images);
     }
 
     @Transactional
