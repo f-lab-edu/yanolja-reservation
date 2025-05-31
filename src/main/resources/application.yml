@@ -72,3 +72,10 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# 애플리케이션 설정
+app:
+  retry:
+    base-delay: 100 # 기본 재시도 대기 시간 (ms)
+    max-delay: 2000 # 최대 재시도 대기 시간 (ms)
+    max-attempts: 5 # 기본 최대 재시도 횟수
