@@ -1,7 +1,9 @@
 package com.yanolja.areas.room.controller;
 
 import com.yanolja.areas.room.dto.PortalRoomDto;
+import com.yanolja.areas.room.dto.RoomOptionDto;
 import com.yanolja.areas.room.service.PortalRoomService;
+import com.yanolja.areas.room.service.RoomService;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +20,7 @@ import java.util.List;
 public class PortalRoomController {
 
     private final PortalRoomService portalRoomService;
+    private final RoomService roomService;
 
     @PostMapping("/search")
     @Operation(summary = "객실 검색", description = "조건에 맞는 객실을 검색합니다. (이름, 가격 범위, 수용 인원 등)")
@@ -43,5 +46,20 @@ public class PortalRoomController {
             @PathVariable Long accommodationId) {
         List<PortalRoomDto.ListResponse> responses = portalRoomService.getRoomsByAccommodation(accommodationId);
         return ApiResponse.success(responses, "숙소별 객실 목록 조회 성공");
+    }
+
+    @GetMapping("/{roomId}/options")
+    @Operation(summary = "객실 옵션 목록 조회 (포털용)", description = "특정 객실에 연결된 모든 옵션을 조회합니다.")
+    public ApiResponse<List<RoomOptionDto.ListResponse>> getRoomOptions(@PathVariable Long roomId) {
+        List<RoomOptionDto.ListResponse> responses = roomService.getRoomOptions(roomId);
+        return ApiResponse.success(responses, "객실 옵션 목록 조회 성공");
+    }
+
+    @GetMapping("/by-option/{optionId}")
+    @Operation(summary = "옵션별 객실 목록 조회 (포털용)", description = "특정 옵션을 사용하는 모든 객실을 조회합니다.")
+    public ApiResponse<List<PortalRoomDto.ListResponse>> getRoomsByOption(@PathVariable Long optionId) {
+        
+        List<PortalRoomDto.ListResponse> responses = portalRoomService.getRoomsByOptionId(optionId);
+        return ApiResponse.success(responses, "옵션별 객실 목록 조회 성공");
     }
 } 
