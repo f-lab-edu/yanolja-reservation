@@ -47,6 +47,7 @@ CREATE TABLE accommodation_images (
     image_url VARCHAR(255) NOT NULL,
     is_main BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id) ON DELETE CASCADE
@@ -76,6 +77,7 @@ CREATE TABLE room_images (
     image_url VARCHAR(255) NOT NULL,
     is_main BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
@@ -122,6 +124,7 @@ CREATE TABLE review_images (
     review_id BIGINT NOT NULL,
     image_url VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE
@@ -133,6 +136,7 @@ CREATE TABLE wishlists (
     user_id BIGINT NOT NULL,
     accommodation_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
@@ -166,6 +170,7 @@ CREATE TABLE user_coupons (
     is_used BOOLEAN DEFAULT FALSE,
     used_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
@@ -193,6 +198,7 @@ CREATE TABLE amenities (
     name VARCHAR(100) NOT NULL,
     icon_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255)
 );
@@ -202,6 +208,8 @@ CREATE TABLE accommodation_amenities (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     accommodation_id BIGINT NOT NULL,
     amenity_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (accommodation_id) REFERENCES accommodations(id) ON DELETE CASCADE,
@@ -214,6 +222,7 @@ CREATE TABLE room_options (
     name VARCHAR(100) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255)
 );
@@ -223,6 +232,8 @@ CREATE TABLE room_option_mappings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     room_id BIGINT NOT NULL,
     option_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
@@ -237,6 +248,7 @@ CREATE TABLE reservation_options (
     quantity INT NOT NULL DEFAULT 1,
     price DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
