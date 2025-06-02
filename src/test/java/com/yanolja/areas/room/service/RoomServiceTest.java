@@ -5,6 +5,8 @@ import com.yanolja.areas.room.dto.RoomImageDto;
 import com.yanolja.areas.room.entity.Room;
 import com.yanolja.areas.room.entity.RoomImage;
 import com.yanolja.areas.room.repository.RoomRepository;
+import com.yanolja.areas.room.repository.RoomOptionMappingRepository;
+import com.yanolja.areas.room.repository.RoomOptionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +39,12 @@ public class RoomServiceTest {
     
     @Mock
     private RoomImageService roomImageService;
+
+    @Mock
+    private RoomOptionMappingRepository roomOptionMappingRepository;
+
+    @Mock
+    private RoomOptionRepository roomOptionRepository;
 
     @InjectMocks
     private RoomService roomService;
@@ -125,6 +133,8 @@ public class RoomServiceTest {
     void createRoomSuccess() {
         // Given
         when(roomRepository.save(any(Room.class))).thenReturn(room);
+        when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
+        when(roomOptionMappingRepository.findByRoomIdAndRoomNotDeleted(1L)).thenReturn(Arrays.asList());
 
         // When
         RoomDto.Response response = roomService.createRoom(roomRequest);
@@ -169,6 +179,7 @@ public class RoomServiceTest {
     void getRoomByIdSuccess() {
         // Given
         when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
+        when(roomOptionMappingRepository.findByRoomIdAndRoomNotDeleted(1L)).thenReturn(Arrays.asList());
 
         // When
         RoomDto.Response response = roomService.getRoomById(1L);
@@ -232,6 +243,7 @@ public class RoomServiceTest {
     void updateRoomSuccess() {
         // Given
         when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
+        when(roomOptionMappingRepository.findByRoomIdAndRoomNotDeleted(1L)).thenReturn(Arrays.asList());
 
         // 수정할 객실 정보
         RoomDto.Request updateRequest = new RoomDto.Request();
@@ -240,6 +252,7 @@ public class RoomServiceTest {
         updateRequest.setDescription("수정된 설명입니다.");
         updateRequest.setCapacity(3);
         updateRequest.setPricePerNight(new BigDecimal("150000"));
+        updateRequest.setOptionIds(Arrays.asList()); // 빈 리스트로 설정하여 기존 옵션 제거
 
         // When
         RoomDto.Response response = roomService.updateRoom(1L, updateRequest);
@@ -251,7 +264,8 @@ public class RoomServiceTest {
         assertEquals(3, response.getCapacity());
         assertEquals(new BigDecimal("150000"), response.getPricePerNight());
         
-        verify(roomRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(roomRepository, times(2)).findByIdAndNotDeleted(1L); // updateRoom 내부에서 2번 호출됨
+        verify(roomOptionMappingRepository, times(1)).deleteByRoomId(1L);
     }
 
     @Test
@@ -266,6 +280,7 @@ public class RoomServiceTest {
         // Then
         assertEquals("Y", room.getDeletedYn());
         verify(roomRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(roomOptionMappingRepository, times(1)).deleteByRoomId(1L);
     }
 
     @Test
