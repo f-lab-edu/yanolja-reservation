@@ -2,6 +2,7 @@ package com.yanolja.areas.room.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.yanolja.areas.room.entity.Room;
+import com.yanolja.areas.room.entity.RoomOptionMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RoomDto {
 
@@ -83,7 +85,7 @@ public class RoomDto {
         private List<RoomImageDto.Response> images;
 
         @Schema(description = "객실 옵션 목록")
-        private List<RoomOptionDto> options;
+        private List<RoomOptionDto.ListResponse> options;
         
         @Schema(description = "생성일시")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -103,7 +105,27 @@ public class RoomDto {
                     .pricePerNight(room.getPricePerNight())
                     .status(room.getStatus())
                     .images(new ArrayList<>())
-                    .options(new ArrayList<>())
+                    .options(room.getRoomOptionMappings().stream()
+                            .map(mapping -> RoomOptionDto.ListResponse.fromEntity(mapping.getRoomOption()))
+                            .collect(Collectors.toList()))
+                    .createdAt(room.getCreatedAt())
+                    .updatedAt(room.getUpdatedAt())
+                    .build();
+        }
+
+        public static Response fromEntityWithImagesAndOptions(Room room, 
+                List<RoomImageDto.Response> images, 
+                List<RoomOptionDto.ListResponse> options) {
+            return Response.builder()
+                    .id(room.getId())
+                    .accommodationId(room.getAccommodationId())
+                    .name(room.getName())
+                    .description(room.getDescription())
+                    .capacity(room.getCapacity())
+                    .pricePerNight(room.getPricePerNight())
+                    .status(room.getStatus())
+                    .images(images != null ? images : new ArrayList<>())
+                    .options(options != null ? options : new ArrayList<>())
                     .createdAt(room.getCreatedAt())
                     .updatedAt(room.getUpdatedAt())
                     .build();
@@ -140,6 +162,9 @@ public class RoomDto {
 
         @Schema(description = "메인 이미지 URL", example = "https://example.com/images/room1.jpg")
         private String mainImageUrl;
+
+        @Schema(description = "객실 옵션 개수")
+        private int optionCount;
         
         public static ListResponse fromEntity(Room room) {
             return ListResponse.builder()
@@ -150,6 +175,7 @@ public class RoomDto {
                     .capacity(room.getCapacity())
                     .pricePerNight(room.getPricePerNight())
                     .status(room.getStatus())
+                    .optionCount(room.getRoomOptionMappings().size())
                     .build();
         }
         
@@ -163,6 +189,7 @@ public class RoomDto {
                     .pricePerNight(room.getPricePerNight())
                     .status(room.getStatus())
                     .mainImageUrl(mainImageUrl)
+                    .optionCount(room.getRoomOptionMappings().size())
                     .build();
         }
     }
