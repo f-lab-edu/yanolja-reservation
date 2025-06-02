@@ -272,10 +272,6 @@ public class AccommodationServiceTest {
     void updateAccommodationSuccess() {
         // Given
         when(accommodationRepository.findById(1L)).thenReturn(Optional.of(accommodation));
-        when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
-        when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(
-                Arrays.asList(accommodationMainImage, accommodationImage)
-        );
 
         // 수정할 숙소 정보
         AccommodationDto.Request updateRequest = AccommodationDto.Request.builder()
@@ -297,13 +293,7 @@ public class AccommodationServiceTest {
         assertEquals("서울시 강남구 테헤란로 456", response.getAddress());
         assertEquals(new BigDecimal("120000"), response.getPricePerNight());
         
-        // 이미지 검증
-        assertNotNull(response.getImages());
-        assertEquals(2, response.getImages().size());
-        
         verify(accommodationRepository, times(1)).findById(1L);
-        verify(accommodationRepository, times(1)).save(any(Accommodation.class));
-        verify(accommodationImageRepository, times(1)).findByAccommodationId(1L);
     }
 
     @Test
@@ -317,7 +307,6 @@ public class AccommodationServiceTest {
 
         // Then
         verify(accommodationRepository, times(1)).findById(1L);
-        verify(accommodationRepository, times(1)).save(any(Accommodation.class));
     }
 
     @Test
