@@ -84,18 +84,42 @@ public class Order extends BaseEntity {
     }
 
     /**
-     * 주문 생성
+     * 주문 생성 (할인과 포인트 적용)
      */
     public static Order createOrder(String orderNumber, Long userId, Long reservationId, 
-                                   BigDecimal originalAmount, LocalDateTime expiredAt) {
+                                   BigDecimal originalAmount, BigDecimal discountAmount, 
+                                   Integer pointsUsed, BigDecimal finalAmount) {
         return Order.builder()
                 .orderNumber(orderNumber)
                 .userId(userId)
                 .reservationId(reservationId)
                 .originalAmount(originalAmount)
-                .finalAmount(originalAmount)
-                .expiredAt(expiredAt)
+                .discountAmount(discountAmount)
+                .pointsUsed(pointsUsed)
+                .finalAmount(finalAmount)
+                .expiredAt(LocalDateTime.now().plusMinutes(10)) // 10분 후 만료
                 .build();
+    }
+
+    /**
+     * 주문 확정
+     */
+    public void confirm() {
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    /**
+     * 주문 취소 가능 여부 확인
+     */
+    public boolean canCancel() {
+        return this.status == OrderStatus.PENDING || this.status == OrderStatus.CONFIRMED;
+    }
+
+    /**
+     * 주문 만료 처리
+     */
+    public void expire() {
+        this.status = OrderStatus.EXPIRED;
     }
 
     /**
