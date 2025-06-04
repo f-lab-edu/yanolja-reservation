@@ -21,35 +21,40 @@ public class OrderCoupon extends BaseEntity {
     @Comment("주문 쿠폰 ID")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    @Comment("주문")
-    private Order order;
+    @Column(name = "order_id", nullable = false)
+    @Comment("주문 ID")
+    private Long orderId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_coupon_id", nullable = false)
-    @Comment("사용자 쿠폰")
-    private UserCoupon userCoupon;
+    @Column(name = "user_coupon_id", nullable = false)
+    @Comment("사용자 쿠폰 ID")
+    private Long userCouponId;
 
     @Column(name = "discount_amount", nullable = false, precision = 12, scale = 2)
     @Comment("할인 금액")
     private BigDecimal discountAmount;
 
     @Builder
-    private OrderCoupon(Order order, UserCoupon userCoupon, BigDecimal discountAmount) {
-        this.order = order;
-        this.userCoupon = userCoupon;
+    private OrderCoupon(Long orderId, Long userCouponId, BigDecimal discountAmount) {
+        this.orderId = orderId;
+        this.userCouponId = userCouponId;
         this.discountAmount = discountAmount;
     }
 
     /**
      * 주문 쿠폰 생성
      */
-    public static OrderCoupon createOrderCoupon(Order order, UserCoupon userCoupon, BigDecimal discountAmount) {
+    public static OrderCoupon create(Long orderId, Long userCouponId, BigDecimal discountAmount) {
         return OrderCoupon.builder()
-                .order(order)
-                .userCoupon(userCoupon)
+                .orderId(orderId)
+                .userCouponId(userCouponId)
                 .discountAmount(discountAmount)
                 .build();
+    }
+
+    /**
+     * 사용자 쿠폰 ID 조회
+     */
+    public Long getUserCouponId() {
+        return this.userCouponId;
     }
 } 
