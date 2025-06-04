@@ -81,6 +81,10 @@ public class Payment extends BaseEntity {
     @Comment("영수증 URL")
     private String receiptUrl;
 
+    @Column(name = "refunded_amount", precision = 12, scale = 2)
+    @Comment("환불 금액")
+    private BigDecimal refundedAmount = BigDecimal.ZERO;
+
     @Builder
     private Payment(String paymentKey, Order order, PaymentMethod paymentMethod, 
                     BigDecimal amount, String pgProvider) {
@@ -95,20 +99,19 @@ public class Payment extends BaseEntity {
      * 결제 생성
      */
     public static Payment createPayment(String paymentKey, Order order, 
-                                       PaymentMethod paymentMethod, BigDecimal amount, String pgProvider) {
+                                       PaymentMethod paymentMethod, BigDecimal amount) {
         return Payment.builder()
                 .paymentKey(paymentKey)
                 .order(order)
                 .paymentMethod(paymentMethod)
                 .amount(amount)
-                .pgProvider(pgProvider)
                 .build();
     }
 
     /**
      * 결제 승인
      */
-    public void approve(String pgTransactionId, String approvalNumber, String receiptUrl) {
+    public void approvePayment(String pgTransactionId, String approvalNumber, String receiptUrl) {
         this.status = PaymentStatus.SUCCESS;
         this.pgTransactionId = pgTransactionId;
         this.approvalNumber = approvalNumber;
@@ -119,7 +122,7 @@ public class Payment extends BaseEntity {
     /**
      * 결제 실패
      */
-    public void fail(String failureReason) {
+    public void failPayment(String failureReason) {
         this.status = PaymentStatus.FAILED;
         this.failureReason = failureReason;
     }
@@ -127,8 +130,29 @@ public class Payment extends BaseEntity {
     /**
      * 결제 취소
      */
-    public void cancel() {
+    public void cancelPayment() {
         this.status = PaymentStatus.CANCELLED;
+    }
+
+    /**
+     * 부분 환불
+     */
+    public void refundPayment(BigDecimal refundAmount) {
+        this.refundedAmount = this.refundedAmount.add(refundAmount);
+        
+        // 전액 환불인 경우 상태 변경
+        if (this.refundedAmount.compareTo(this.amount) >= 0) {
+            this.status = PaymentStatus.REFUNDED;
+        } else {
+            this.status = PaymentStatus.PARTIAL_REFUNDED;
+        }
+    }
+
+    /**
+     * 환불된 금액 조회
+     */
+    public BigDecimal getRefundedAmount() {
+        return this.refundedAmount != null ? this.refundedAmount : BigDecimal.ZERO;
     }
 
     /**
