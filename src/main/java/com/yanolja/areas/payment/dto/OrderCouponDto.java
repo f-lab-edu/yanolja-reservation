@@ -22,11 +22,8 @@ public class OrderCouponDto {
         @Schema(description = "주문 쿠폰 ID")
         private Long id;
 
-        @Schema(description = "쿠폰 코드")
-        private String couponCode;
-
-        @Schema(description = "쿠폰명")
-        private String couponName;
+        @Schema(description = "사용자 쿠폰 ID")
+        private Long userCouponId;
 
         @Schema(description = "할인 금액")
         private BigDecimal discountAmount;
@@ -37,8 +34,7 @@ public class OrderCouponDto {
         public static Response fromEntity(OrderCoupon orderCoupon) {
             return Response.builder()
                     .id(orderCoupon.getId())
-                    .couponCode(orderCoupon.getUserCoupon().getCoupon().getCode())
-                    .couponName(orderCoupon.getUserCoupon().getCoupon().getName())
+                    .userCouponId(orderCoupon.getUserCouponId())
                     .discountAmount(orderCoupon.getDiscountAmount())
                     .createdAt(orderCoupon.getCreatedAt())
                     .build();
