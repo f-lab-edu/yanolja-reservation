@@ -198,4 +198,14 @@ public class Coupon extends BaseEntity {
     public void updateStatus(CouponStatus status) {
         this.status = status;
     }
+
+    /**
+     * 사용된 수량 증가
+     */
+    public void increaseUsedCount() {
+        this.usedCount++;
+        if (this.usedCount >= this.issueCount) {
+            this.status = CouponStatus.SOLD_OUT;
+        }
+    }
 } 
