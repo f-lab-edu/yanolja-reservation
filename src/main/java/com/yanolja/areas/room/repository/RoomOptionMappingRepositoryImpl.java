@@ -33,7 +33,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .join(mapping.room, room).fetchJoin()
                 .where(
                         room.accommodationId.eq(accommodationId),
-                        room.deletedYn.eq("N")
+                        room.deletedYn.eq(false)
                 )
                 .fetch();
     }
@@ -48,7 +48,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .join(mapping.room, room).fetchJoin()
                 .where(
                         mapping.roomOption.id.eq(optionId),
-                        room.deletedYn.eq("N")
+                        room.deletedYn.eq(false)
                 )
                 .fetch();
     }
@@ -65,7 +65,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .join(mapping.roomOption, roomOption).fetchJoin()
                 .where(
                         room.id.eq(roomId),
-                        room.deletedYn.eq("N")
+                        room.deletedYn.eq(false)
                 )
                 .fetch();
     }
@@ -86,7 +86,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .join(mapping.room, room)
                 .where(
                         mapping.roomOption.id.in(optionIds),
-                        room.deletedYn.eq("N")
+                        room.deletedYn.eq(false)
                 )
                 .groupBy(mapping.room.id)
                 .having(mapping.roomOption.id.countDistinct().eq((long) optionIds.size()))
@@ -103,7 +103,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .join(mapping.roomOption).fetchJoin()
                 .where(
                         mapping.room.id.in(roomIds),
-                        room.deletedYn.eq("N")
+                        room.deletedYn.eq(false)
                 )
                 .fetch();
     }
@@ -123,7 +123,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .join(mapping.roomOption).fetchJoin()
                 .where(
                         mapping.roomOption.id.in(optionIds),
-                        room.deletedYn.eq("N")
+                        room.deletedYn.eq(false)
                 )
                 .distinct()
                 .fetch();
@@ -144,7 +144,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 .from(mapping)
                 .join(mapping.room, room)
                 .join(mapping.roomOption, roomOption)
-                .where(room.deletedYn.eq("N"))
+                .where(room.deletedYn.eq(false))
                 .groupBy(roomOption.id, roomOption.name)
                 .orderBy(mapping.count().desc())
                 .fetch();
@@ -163,7 +163,7 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
                 ))
                 .from(mapping)
                 .join(mapping.room, room)
-                .where(room.deletedYn.eq("N"))
+                .where(room.deletedYn.eq(false))
                 .groupBy(room.id, room.name)
                 .orderBy(mapping.count().desc())
                 .fetch();
