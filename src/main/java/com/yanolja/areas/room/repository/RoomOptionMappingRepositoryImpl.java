@@ -3,6 +3,8 @@ package com.yanolja.areas.room.repository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.yanolja.areas.room.dto.OptionUsageStatisticsDto;
+import com.yanolja.areas.room.dto.RoomOptionCountStatisticsDto;
 import com.yanolja.areas.room.entity.QRoom;
 import com.yanolja.areas.room.entity.QRoomOption;
 import com.yanolja.areas.room.entity.QRoomOptionMapping;
@@ -128,57 +130,43 @@ public class RoomOptionMappingRepositoryImpl implements RoomOptionMappingReposit
     }
 
     @Override
-    public List<Object[]> getOptionUsageStatistics() {
+    public List<OptionUsageStatisticsDto> getOptionUsageStatistics() {
         QRoomOptionMapping mapping = QRoomOptionMapping.roomOptionMapping;
         QRoom room = QRoom.room;
         QRoomOption roomOption = QRoomOption.roomOption;
 
         return queryFactory
-                .select(
+                .select(Projections.constructor(OptionUsageStatisticsDto.class,
                         roomOption.id,
                         roomOption.name,
                         mapping.count()
-                )
+                ))
                 .from(mapping)
                 .join(mapping.room, room)
                 .join(mapping.roomOption, roomOption)
                 .where(room.deletedYn.eq("N"))
                 .groupBy(roomOption.id, roomOption.name)
                 .orderBy(mapping.count().desc())
-                .fetch()
-                .stream()
-                .map(tuple -> new Object[]{
-                        tuple.get(roomOption.id),
-                        tuple.get(roomOption.name),
-                        tuple.get(mapping.count())
-                })
-                .toList();
+                .fetch();
     }
 
     @Override
-    public List<Object[]> getRoomOptionCountStatistics() {
+    public List<RoomOptionCountStatisticsDto> getRoomOptionCountStatistics() {
         QRoomOptionMapping mapping = QRoomOptionMapping.roomOptionMapping;
         QRoom room = QRoom.room;
 
         return queryFactory
-                .select(
+                .select(Projections.constructor(RoomOptionCountStatisticsDto.class,
                         room.id,
                         room.name,
                         mapping.count()
-                )
+                ))
                 .from(mapping)
                 .join(mapping.room, room)
                 .where(room.deletedYn.eq("N"))
                 .groupBy(room.id, room.name)
                 .orderBy(mapping.count().desc())
-                .fetch()
-                .stream()
-                .map(tuple -> new Object[]{
-                        tuple.get(room.id),
-                        tuple.get(room.name),
-                        tuple.get(mapping.count())
-                })
-                .toList();
+                .fetch();
     }
 
 } 
