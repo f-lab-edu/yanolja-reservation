@@ -76,8 +76,8 @@ class RoomServiceWithOptionsTest {
         ReflectionTestUtils.setField(mapping2, "id", 2L);
 
         // 기본 모킹 설정
-        lenient().when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
-        lenient().when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        lenient().when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
         lenient().when(roomImageService.getMainImageUrl(any())).thenReturn("/api/rooms/images/main.jpg");
     }
 
@@ -127,7 +127,7 @@ class RoomServiceWithOptionsTest {
             roomService.addRoomOptions(999L, optionIds);
         });
 
-        verify(roomRepository).findByIdAndNotDeleted(999L);
+        verify(roomRepository).findById(999L);
         verify(roomOptionRepository, never()).findById(any());
     }
 

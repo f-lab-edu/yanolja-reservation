@@ -55,7 +55,7 @@ public class RoomService {
     }
 
     public List<RoomDto.ListResponse> getAllRooms() {
-        return roomRepository.findAllNotDeleted().stream()
+        return roomRepository.findAll().stream()
                 .map(room -> {
                     String mainImageUrl = roomImageService.getMainImageUrl(room.getId());
                     return RoomDto.ListResponse.fromEntityWithMainImage(room, mainImageUrl);
@@ -64,7 +64,7 @@ public class RoomService {
     }
 
     public RoomDto.Response getRoomById(Long id) {
-        Room room = roomRepository.findByIdAndNotDeleted(id)
+        Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("객실을 찾을 수 없습니다."));
                 
         // 이미지 정보 추가
@@ -77,7 +77,7 @@ public class RoomService {
     }
 
     public List<RoomDto.ListResponse> getRoomsByAccommodationId(Long accommodationId) {
-        return roomRepository.findByAccommodationIdAndNotDeleted(accommodationId).stream()
+        return roomRepository.findByAccommodationId(accommodationId).stream()
                 .map(room -> {
                     String mainImageUrl = roomImageService.getMainImageUrl(room.getId());
                     return RoomDto.ListResponse.fromEntityWithMainImage(room, mainImageUrl);
@@ -87,7 +87,7 @@ public class RoomService {
 
     @Transactional
     public RoomDto.Response updateRoom(Long id, RoomDto.Request request) {
-        Room room = roomRepository.findByIdAndNotDeleted(id)
+        Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("객실을 찾을 수 없습니다."));
 
         room.update(
@@ -110,7 +110,7 @@ public class RoomService {
 
     @Transactional
     public void deleteRoom(Long id) {
-        Room room = roomRepository.findByIdAndNotDeleted(id)
+        Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("객실을 찾을 수 없습니다."));
         
         // 객실 옵션 매핑 제거
@@ -126,7 +126,7 @@ public class RoomService {
      */
     @Transactional
     public void addRoomOptions(Long roomId, List<Long> optionIds) {
-        Room room = roomRepository.findByIdAndNotDeleted(roomId)
+        Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("객실을 찾을 수 없습니다."));
 
         for (Long optionId : optionIds) {
