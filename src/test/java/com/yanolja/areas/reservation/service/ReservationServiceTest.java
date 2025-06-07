@@ -40,6 +40,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.yanolja.areas.reservation.dto.ReservationStatsDto;
+import com.yanolja.areas.reservation.dto.ReservationStatusDto;
+
 @ExtendWith(MockitoExtension.class)
 public class ReservationServiceTest {
 
@@ -419,22 +422,30 @@ public class ReservationServiceTest {
     @DisplayName("사용자별 예약 통계 조회 테스트")
     void getUserReservationStatsSuccess() {
         // Given
-        List<Object[]> mockStats = Arrays.asList(
-                new Object[]{ReservationStatus.CONFIRMED, 5L, new BigDecimal("450000")},
-                new Object[]{ReservationStatus.COMPLETED, 3L, new BigDecimal("270000")}
+        List<ReservationStatsDto> mockStats = Arrays.asList(
+                ReservationStatsDto.builder()
+                        .status(ReservationStatus.CONFIRMED)
+                        .count(5L)
+                        .totalAmount(new BigDecimal("450000"))
+                        .build(),
+                ReservationStatsDto.builder()
+                        .status(ReservationStatus.COMPLETED)
+                        .count(3L)
+                        .totalAmount(new BigDecimal("270000"))
+                        .build()
         );
         
         when(reservationRepository.getReservationStatsByUser(1L)).thenReturn(mockStats);
 
         // When
-        List<Object[]> response = reservationService.getUserReservationStats(1L);
+        List<ReservationStatsDto> response = reservationService.getUserReservationStats(1L);
 
         // Then
         assertNotNull(response);
         assertEquals(2, response.size());
-        assertEquals(ReservationStatus.CONFIRMED, response.get(0)[0]);
-        assertEquals(5L, response.get(0)[1]);
-        assertEquals(new BigDecimal("450000"), response.get(0)[2]);
+        assertEquals(ReservationStatus.CONFIRMED, response.get(0).getStatus());
+        assertEquals(5L, response.get(0).getCount());
+        assertEquals(new BigDecimal("450000"), response.get(0).getTotalAmount());
         
         verify(reservationRepository, times(1)).getReservationStatsByUser(1L);
     }
@@ -446,22 +457,32 @@ public class ReservationServiceTest {
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = LocalDate.now().plusDays(30);
         
-        List<Object[]> mockStatus = Arrays.asList(
-                new Object[]{startDate, startDate.plusDays(1), ReservationStatus.CONFIRMED, 1L},
-                new Object[]{startDate.plusDays(5), startDate.plusDays(6), ReservationStatus.COMPLETED, 1L}
+        List<ReservationStatusDto> mockStatus = Arrays.asList(
+                ReservationStatusDto.builder()
+                        .checkInDate(startDate)
+                        .checkOutDate(startDate.plusDays(1))
+                        .status(ReservationStatus.CONFIRMED)
+                        .count(1L)
+                        .build(),
+                ReservationStatusDto.builder()
+                        .checkInDate(startDate.plusDays(5))
+                        .checkOutDate(startDate.plusDays(6))
+                        .status(ReservationStatus.COMPLETED)
+                        .count(1L)
+                        .build()
         );
         
         when(reservationRepository.getReservationStatusByRoom(1L, startDate, endDate))
                 .thenReturn(mockStatus);
 
         // When
-        List<Object[]> response = reservationService.getRoomReservationStatus(1L, startDate, endDate);
+        List<ReservationStatusDto> response = reservationService.getRoomReservationStatus(1L, startDate, endDate);
 
         // Then
         assertNotNull(response);
         assertEquals(2, response.size());
-        assertEquals(startDate, response.get(0)[0]);
-        assertEquals(ReservationStatus.CONFIRMED, response.get(0)[2]);
+        assertEquals(startDate, response.get(0).getCheckInDate());
+        assertEquals(ReservationStatus.CONFIRMED, response.get(0).getStatus());
         
         verify(reservationRepository, times(1)).getReservationStatusByRoom(1L, startDate, endDate);
     }

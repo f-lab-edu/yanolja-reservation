@@ -4,6 +4,8 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.yanolja.areas.reservation.dto.ReservationStatsDto;
+import com.yanolja.areas.reservation.dto.ReservationStatusDto;
 import com.yanolja.areas.reservation.entity.QReservation;
 import com.yanolja.areas.reservation.entity.Reservation;
 import com.yanolja.areas.reservation.entity.ReservationStatus;
@@ -121,35 +123,28 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
     }
 
     @Override
-    public List<Object[]> getReservationStatsByUser(Long userId) {
+    public List<ReservationStatsDto> getReservationStatsByUser(Long userId) {
         return queryFactory
-                .select(
+                .select(Projections.constructor(ReservationStatsDto.class,
                         reservation.status,
                         reservation.count(),
                         reservation.totalPrice.sum()
-                )
+                ))
                 .from(reservation)
                 .where(reservation.userId.eq(userId))
                 .groupBy(reservation.status)
-                .fetch()
-                .stream()
-                .map(tuple -> new Object[]{
-                        tuple.get(reservation.status),
-                        tuple.get(reservation.count()),
-                        tuple.get(reservation.totalPrice.sum())
-                })
-                .toList();
+                .fetch();
     }
 
     @Override
-    public List<Object[]> getReservationStatusByRoom(Long roomId, LocalDate startDate, LocalDate endDate) {
+    public List<ReservationStatusDto> getReservationStatusByRoom(Long roomId, LocalDate startDate, LocalDate endDate) {
         return queryFactory
-                .select(
+                .select(Projections.constructor(ReservationStatusDto.class,
                         reservation.checkInDate,
                         reservation.checkOutDate,
                         reservation.status,
                         reservation.count()
-                )
+                ))
                 .from(reservation)
                 .where(
                         reservation.roomId.eq(roomId)
@@ -162,14 +157,6 @@ public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
                         reservation.status
                 )
                 .orderBy(reservation.checkInDate.asc())
-                .fetch()
-                .stream()
-                .map(tuple -> new Object[]{
-                        tuple.get(reservation.checkInDate),
-                        tuple.get(reservation.checkOutDate),
-                        tuple.get(reservation.status),
-                        tuple.get(reservation.count())
-                })
-                .toList();
+                .fetch();
     }
 } 

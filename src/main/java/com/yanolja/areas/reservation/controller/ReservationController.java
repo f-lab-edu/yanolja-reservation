@@ -1,6 +1,7 @@
 package com.yanolja.areas.reservation.controller;
 
 import com.yanolja.areas.reservation.dto.ReservationDto;
+import com.yanolja.areas.reservation.dto.ReservationStatusDto;
 import com.yanolja.areas.reservation.service.ReservationService;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,12 +55,12 @@ public class ReservationController {
      */
     @GetMapping("/rooms/{roomId}/status")
     @Operation(summary = "객실 예약 현황 조회", description = "관리자가 특정 객실의 예약 현황을 조회합니다.")
-    public ApiResponse<List<Object[]>> getRoomReservationStatus(
+    public ApiResponse<List<ReservationStatusDto>> getRoomReservationStatus(
             @Parameter(description = "객실 ID") @PathVariable Long roomId,
             @Parameter(description = "시작 날짜") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "종료 날짜") @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
-        List<Object[]> status = reservationService.getRoomReservationStatus(roomId, startDate, endDate);
+        List<ReservationStatusDto> status = reservationService.getRoomReservationStatus(roomId, startDate, endDate);
         
         return ApiResponse.success(status);
     }
