@@ -1,6 +1,9 @@
 package com.yanolja.areas.reservation.repository;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.yanolja.areas.reservation.dto.ReservationOptionStatsDto;
+import com.yanolja.areas.reservation.dto.ReservationOptionUsageDto;
 import com.yanolja.areas.reservation.entity.QReservation;
 import com.yanolja.areas.reservation.entity.QReservationOption;
 import com.yanolja.areas.reservation.entity.ReservationOption;
@@ -32,36 +35,29 @@ public class ReservationOptionRepositoryImpl implements ReservationOptionReposit
     }
 
     @Override
-    public List<Object[]> getOptionUsageStats(Long optionId) {
+    public List<ReservationOptionStatsDto> getOptionUsageStats(Long optionId) {
         return queryFactory
-                .select(
+                .select(Projections.constructor(ReservationOptionStatsDto.class,
                         reservationOption.reservation.status,
                         reservationOption.quantity.sum(),
                         reservationOption.price.multiply(reservationOption.quantity).sum()
-                )
+                ))
                 .from(reservationOption)
                 .join(reservationOption.reservation, reservation)
                 .where(reservationOption.optionId.eq(optionId))
                 .groupBy(reservationOption.reservation.status)
-                .fetch()
-                .stream()
-                .map(tuple -> new Object[]{
-                        tuple.get(reservationOption.reservation.status),
-                        tuple.get(reservationOption.quantity.sum()),
-                        tuple.get(reservationOption.price.multiply(reservationOption.quantity).sum())
-                })
-                .toList();
+                .fetch();
     }
 
     @Override
-    public List<Object[]> getOptionUsageByPeriod(LocalDate startDate, LocalDate endDate) {
+    public List<ReservationOptionUsageDto> getOptionUsageByPeriod(LocalDate startDate, LocalDate endDate) {
         return queryFactory
-                .select(
+                .select(Projections.constructor(ReservationOptionUsageDto.class,
                         reservationOption.optionId,
                         reservationOption.quantity.sum(),
                         reservationOption.price.multiply(reservationOption.quantity).sum(),
                         reservationOption.count()
-                )
+                ))
                 .from(reservationOption)
                 .join(reservationOption.reservation, reservation)
                 .where(
@@ -70,14 +66,6 @@ public class ReservationOptionRepositoryImpl implements ReservationOptionReposit
                 )
                 .groupBy(reservationOption.optionId)
                 .orderBy(reservationOption.quantity.sum().desc())
-                .fetch()
-                .stream()
-                .map(tuple -> new Object[]{
-                        tuple.get(reservationOption.optionId),
-                        tuple.get(reservationOption.quantity.sum()),
-                        tuple.get(reservationOption.price.multiply(reservationOption.quantity).sum()),
-                        tuple.get(reservationOption.count())
-                })
-                .toList();
+                .fetch();
     }
 } 
