@@ -1,6 +1,8 @@
 package com.yanolja.areas.room.controller;
 
+import com.yanolja.areas.room.dto.OptionUsageStatisticsDto;
 import com.yanolja.areas.room.dto.RoomDto;
+import com.yanolja.areas.room.dto.RoomOptionCountStatisticsDto;
 import com.yanolja.areas.room.dto.RoomOptionDto;
 import com.yanolja.areas.room.service.RoomService;
 import com.yanolja.common.response.ApiResponse;
@@ -133,15 +135,15 @@ public class RoomController {
 
     @GetMapping("/statistics/option-usage")
     @Operation(summary = "옵션별 사용 통계 조회", description = "각 옵션이 몇 개의 객실에서 사용되고 있는지 통계를 조회합니다.")
-    public ApiResponse<List<Object[]>> getOptionUsageStatistics() {
-        List<Object[]> statistics = roomService.getOptionUsageStatistics();
+    public ApiResponse<List<OptionUsageStatisticsDto>> getOptionUsageStatistics() {
+        List<OptionUsageStatisticsDto> statistics = roomService.getOptionUsageStatistics();
         return ApiResponse.success(statistics);
     }
 
     @GetMapping("/statistics/room-option-count")
     @Operation(summary = "객실별 옵션 개수 통계 조회", description = "각 객실이 몇 개의 옵션을 가지고 있는지 통계를 조회합니다.")
-    public ApiResponse<List<Object[]>> getRoomOptionCountStatistics() {
-        List<Object[]> statistics = roomService.getRoomOptionCountStatistics();
+    public ApiResponse<List<RoomOptionCountStatisticsDto>> getRoomOptionCountStatistics() {
+        List<RoomOptionCountStatisticsDto> statistics = roomService.getRoomOptionCountStatistics();
         return ApiResponse.success(statistics);
     }
 } 

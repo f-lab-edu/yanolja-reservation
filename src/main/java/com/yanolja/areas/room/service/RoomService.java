@@ -1,16 +1,21 @@
 package com.yanolja.areas.room.service;
 
+import com.yanolja.areas.room.dto.OptionUsageStatisticsDto;
 import com.yanolja.areas.room.dto.RoomDto;
 import com.yanolja.areas.room.dto.RoomImageDto;
+import com.yanolja.areas.room.dto.RoomOptionCountStatisticsDto;
 import com.yanolja.areas.room.dto.RoomOptionDto;
 import com.yanolja.areas.room.entity.Room;
 import com.yanolja.areas.room.entity.RoomOption;
 import com.yanolja.areas.room.entity.RoomOptionMapping;
 import com.yanolja.areas.room.repository.RoomRepository;
+import com.yanolja.areas.room.repository.RoomImageRepository;
 import com.yanolja.areas.room.repository.RoomOptionMappingRepository;
 import com.yanolja.areas.room.repository.RoomOptionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -239,7 +244,7 @@ public class RoomService {
      * 옵션별 사용 통계 조회
      * @return 옵션 사용 통계
      */
-    public List<Object[]> getOptionUsageStatistics() {
+    public List<OptionUsageStatisticsDto> getOptionUsageStatistics() {
         return roomOptionMappingRepository.getOptionUsageStatistics();
     }
 
@@ -247,7 +252,7 @@ public class RoomService {
      * 객실별 옵션 개수 통계 조회
      * @return 객실별 옵션 개수 통계
      */
-    public List<Object[]> getRoomOptionCountStatistics() {
+    public List<RoomOptionCountStatisticsDto> getRoomOptionCountStatistics() {
         return roomOptionMappingRepository.getRoomOptionCountStatistics();
     }
 } 
