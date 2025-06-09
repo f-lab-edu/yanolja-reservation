@@ -137,8 +137,8 @@ class PortalAccommodationServiceTest {
         lenient().when(accommodationImageService.getMainImageUrl(1L)).thenReturn(mainImageUrl);
         lenient().when(accommodationImageService.getMainImageUrl(2L)).thenReturn("/images/accommodations/2/main.jpg");
         lenient().when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
-        lenient().when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
-        lenient().when(accommodationRepository.findByIdAndDeletedYn(999L,"N")).thenReturn(Optional.empty());
+        lenient().when(accommodationRepository.findById(1L)).thenReturn(Optional.of(detailAccommodation));
+        lenient().when(accommodationRepository.findById(999L)).thenReturn(Optional.empty());
         lenient().when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenityList);
         lenient().when(portalRoomService.getRoomsByAccommodation(1L)).thenReturn(roomList);
 
@@ -253,7 +253,7 @@ class PortalAccommodationServiceTest {
         // When
         // Setup specific image list for this test
         when(accommodationImageRepository.findByAccommodationId(1L)).thenReturn(imageList);
-        when(accommodationRepository.findByIdAndDeletedYn(1L,"N")).thenReturn(Optional.of(detailAccommodation));
+        when(accommodationRepository.findById(1L)).thenReturn(Optional.of(detailAccommodation));
         when(amenityService.getAmenitiesByAccommodationId(1L)).thenReturn(amenityList);
         when(portalRoomService.getRoomsByAccommodation(1L)).thenReturn(roomList);
         
@@ -289,7 +289,7 @@ class PortalAccommodationServiceTest {
         assertThat(result.getRooms().get(1).getPricePerNight()).isEqualTo(new BigDecimal("200000"));
         
         // 호출 검증
-        verify(accommodationRepository).findByIdAndDeletedYn(1L,"N");
+        verify(accommodationRepository).findById(1L);
         verify(accommodationImageRepository).findByAccommodationId(1L);
         verify(amenityService).getAmenitiesByAccommodationId(1L);
         verify(portalRoomService).getRoomsByAccommodation(1L);
@@ -305,7 +305,7 @@ class PortalAccommodationServiceTest {
         });
         
         assertThat(exception.getMessage()).contains("999");
-        verify(accommodationRepository).findByIdAndDeletedYn(999L,"N");
+        verify(accommodationRepository).findById(999L);
     }
     
     // 테스트 데이터 생성을 위한 도우미 메서드

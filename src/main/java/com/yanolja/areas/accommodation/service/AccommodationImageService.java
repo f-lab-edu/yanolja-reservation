@@ -63,7 +63,7 @@ public class AccommodationImageService {
     public List<AccommodationImageDto.Response> saveImages(Long accommodationId, MultipartFile[] files, Integer mainImageIndex) throws IOException {
         log.info("Start saving images for accommodation ID: {}", accommodationId);
         
-        Accommodation accommodation = accommodationRepository.findByIdAndDeletedYn(accommodationId,"N")
+        Accommodation accommodation = accommodationRepository.findById(accommodationId)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + accommodationId + "인 숙소를 찾을 수 없습니다."));
         
         List<AccommodationImageDto.Response> responses = new ArrayList<>();

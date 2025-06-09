@@ -3,8 +3,10 @@ package com.yanolja.areas.room.service;
 import com.yanolja.areas.room.dto.PortalRoomDto;
 import com.yanolja.areas.room.entity.Room;
 import com.yanolja.areas.room.entity.RoomImage;
+import com.yanolja.areas.room.entity.RoomOptionMapping;
 import com.yanolja.areas.room.repository.RoomImageRepository;
 import com.yanolja.areas.room.repository.RoomRepository;
+import com.yanolja.areas.room.repository.RoomOptionMappingRepository;
 import com.yanolja.common.dto.PageRequestDto;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +45,9 @@ class PortalRoomServiceTest {
     @Mock
     private RoomImageService roomImageService;
     
+    @Mock
+    private RoomOptionMappingRepository roomOptionMappingRepository;
+    
     @InjectMocks
     private PortalRoomService portalRoomService;
     
@@ -75,9 +80,9 @@ class PortalRoomServiceTest {
         roomImage2 = createMockRoomImage(2L, detailRoom, "/api/rooms/images/1/sub.jpg", false);
         
         // 기본 모킹 설정
-        lenient().when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailRoom));
-        lenient().when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
-        lenient().when(roomRepository.findByAccommodationIdAndNotDeleted(1L)).thenReturn(Arrays.asList(room1, room2));
+        lenient().when(roomRepository.findById(1L)).thenReturn(Optional.of(detailRoom));
+        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+        lenient().when(roomRepository.findByAccommodationId(1L)).thenReturn(Arrays.asList(room1, room2));
         lenient().when(roomImageRepository.findByRoomId(1L)).thenReturn(Arrays.asList(roomImage1, roomImage2));
         lenient().when(roomImageService.getMainImageUrl(1L)).thenReturn(MAIN_IMAGE_URL);
         lenient().when(roomImageService.getMainImageUrl(2L)).thenReturn("/api/rooms/images/2/main.jpg");
@@ -202,7 +207,7 @@ class PortalRoomServiceTest {
         assertThat(result.getCapacity()).isEqualTo(2);
         assertThat(result.getPricePerNight()).isEqualTo(new BigDecimal("120000"));
         
-        verify(roomRepository).findByIdAndNotDeleted(1L);
+        verify(roomRepository).findById(1L);
     }
     
     @Test
@@ -214,7 +219,7 @@ class PortalRoomServiceTest {
         });
         
         assertThat(exception.getMessage()).contains("999");
-        verify(roomRepository).findByIdAndNotDeleted(999L);
+        verify(roomRepository).findById(999L);
     }
     
     @Test
@@ -228,7 +233,7 @@ class PortalRoomServiceTest {
         assertThat(result.get(0).getName()).isEqualTo("디럭스 더블룸");
         assertThat(result.get(1).getName()).isEqualTo("스위트 룸");
         
-        verify(roomRepository).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomRepository).findByAccommodationId(1L);
     }
     
     @Test
@@ -246,7 +251,7 @@ class PortalRoomServiceTest {
         assertThat(result.getImageUrls()).hasSize(2);
         assertThat(result.getImageUrls()).contains("/api/rooms/images/1/main.jpg", "/api/rooms/images/1/sub.jpg");
         
-        verify(roomRepository).findByIdAndNotDeleted(1L);
+        verify(roomRepository).findById(1L);
         verify(roomImageRepository).findByRoomId(1L);
     }
     
@@ -261,9 +266,50 @@ class PortalRoomServiceTest {
         assertThat(results.get(0).getMainImageUrl()).isEqualTo(MAIN_IMAGE_URL);
         assertThat(results.get(1).getMainImageUrl()).isEqualTo("/api/rooms/images/2/main.jpg");
         
-        verify(roomRepository).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomRepository).findByAccommodationId(1L);
         verify(roomImageService).getMainImageUrl(1L);
         verify(roomImageService).getMainImageUrl(2L);
+    }
+    
+    @Test
+    @DisplayName("특정 옵션을 사용하는 객실 목록 조회 (포털용) - 성공")
+    void getRoomsByOptionId_ShouldReturnRoomsWithOption() {
+        // Given
+        RoomOptionMapping mapping1 = mock(RoomOptionMapping.class);
+        RoomOptionMapping mapping2 = mock(RoomOptionMapping.class);
+        
+        when(mapping1.getRoom()).thenReturn(room1);
+        when(mapping2.getRoom()).thenReturn(room2);
+        
+        when(roomOptionMappingRepository.findByRoomOptionIdAndRoomNotDeleted(1L))
+                .thenReturn(Arrays.asList(mapping1, mapping2));
+        
+        // When
+        List<PortalRoomDto.ListResponse> results = portalRoomService.getRoomsByOptionId(1L);
+        
+        // Then
+        assertThat(results).hasSize(2);
+        assertThat(results.get(0).getName()).isEqualTo("디럭스 더블룸");
+        assertThat(results.get(1).getName()).isEqualTo("스위트 룸");
+        assertThat(results.get(0).getMainImageUrl()).isEqualTo(MAIN_IMAGE_URL);
+        
+        verify(roomOptionMappingRepository).findByRoomOptionIdAndRoomNotDeleted(1L);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 옵션으로 객실 조회 - 빈 목록 반환")
+    void getRoomsByOptionId_WithNonExistingOption_ShouldReturnEmptyList() {
+        // Given
+        when(roomOptionMappingRepository.findByRoomOptionIdAndRoomNotDeleted(999L))
+                .thenReturn(Arrays.asList());
+        
+        // When
+        List<PortalRoomDto.ListResponse> results = portalRoomService.getRoomsByOptionId(999L);
+        
+        // Then
+        assertThat(results).isEmpty();
+        
+        verify(roomOptionMappingRepository).findByRoomOptionIdAndRoomNotDeleted(999L);
     }
     
     // 테스트 데이터 생성을 위한 도우미 메서드
@@ -278,7 +324,7 @@ class PortalRoomServiceTest {
         );
                 
         ReflectionTestUtils.setField(room, "id", id);
-        ReflectionTestUtils.setField(room, "deletedYn", "N");
+        ReflectionTestUtils.setField(room, "deletedYn", false);
         return room;
     }
     
@@ -293,7 +339,7 @@ class PortalRoomServiceTest {
         );
                 
         ReflectionTestUtils.setField(room, "id", id);
-        ReflectionTestUtils.setField(room, "deletedYn", "N");
+        ReflectionTestUtils.setField(room, "deletedYn", false);
         ReflectionTestUtils.setField(room, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(room, "updatedAt", LocalDateTime.now());
         

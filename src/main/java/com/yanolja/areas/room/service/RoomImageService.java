@@ -63,7 +63,7 @@ public class RoomImageService {
     public List<RoomImageDto.Response> saveImages(Long roomId, MultipartFile[] files, Integer mainImageIndex) throws IOException {
         log.info("Start saving images for room ID: {}", roomId);
         
-        Room room = roomRepository.findByIdAndNotDeleted(roomId)
+        Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + roomId + "인 객실을 찾을 수 없습니다."));
         
         List<RoomImageDto.Response> responses = new ArrayList<>();

@@ -5,6 +5,8 @@ import com.yanolja.areas.room.dto.RoomImageDto;
 import com.yanolja.areas.room.entity.Room;
 import com.yanolja.areas.room.entity.RoomImage;
 import com.yanolja.areas.room.repository.RoomRepository;
+import com.yanolja.areas.room.repository.RoomOptionMappingRepository;
+import com.yanolja.areas.room.repository.RoomOptionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +39,12 @@ public class RoomServiceTest {
     
     @Mock
     private RoomImageService roomImageService;
+
+    @Mock
+    private RoomOptionMappingRepository roomOptionMappingRepository;
+
+    @Mock
+    private RoomOptionRepository roomOptionRepository;
 
     @InjectMocks
     private RoomService roomService;
@@ -125,6 +133,8 @@ public class RoomServiceTest {
     void createRoomSuccess() {
         // Given
         when(roomRepository.save(any(Room.class))).thenReturn(room);
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomOptionMappingRepository.findByRoomIdAndRoomNotDeleted(1L)).thenReturn(Arrays.asList());
 
         // When
         RoomDto.Response response = roomService.createRoom(roomRequest);
@@ -145,7 +155,7 @@ public class RoomServiceTest {
     void getAllRoomsSuccess() {
         // Given
         List<Room> rooms = Arrays.asList(room);
-        when(roomRepository.findAllNotDeleted()).thenReturn(rooms);
+        when(roomRepository.findAll()).thenReturn(rooms);
 
         // When
         List<RoomDto.ListResponse> responses = roomService.getAllRooms();
@@ -160,7 +170,7 @@ public class RoomServiceTest {
         assertEquals("AVAILABLE", responses.get(0).getStatus());
         assertEquals("/api/rooms/images/1/main.jpg", responses.get(0).getMainImageUrl());
         
-        verify(roomRepository, times(1)).findAllNotDeleted();
+        verify(roomRepository, times(1)).findAll();
         verify(roomImageService, times(1)).getMainImageUrl(1L);
     }
 
@@ -168,7 +178,8 @@ public class RoomServiceTest {
     @DisplayName("객실 상세 조회 성공 테스트 - 이미지 포함")
     void getRoomByIdSuccess() {
         // Given
-        when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomOptionMappingRepository.findByRoomIdAndRoomNotDeleted(1L)).thenReturn(Arrays.asList());
 
         // When
         RoomDto.Response response = roomService.getRoomById(1L);
@@ -187,7 +198,7 @@ public class RoomServiceTest {
         assertEquals("/api/rooms/images/1/test1.jpg", response.getImages().get(0).getImageUrl());
         assertEquals("/api/rooms/images/1/test2.jpg", response.getImages().get(1).getImageUrl());
         
-        verify(roomRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(roomRepository, times(1)).findById(1L);
         verify(roomImageService, times(1)).getImagesByRoomId(1L);
     }
 
@@ -195,14 +206,14 @@ public class RoomServiceTest {
     @DisplayName("객실 상세 조회 실패 테스트 - 존재하지 않는 ID")
     void getRoomByIdFailNotFound() {
         // Given
-        when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        when(roomRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When & Then
         assertThrows(EntityNotFoundException.class, () -> {
             roomService.getRoomById(999L);
         });
         
-        verify(roomRepository, times(1)).findByIdAndNotDeleted(999L);
+        verify(roomRepository, times(1)).findById(999L);
     }
 
     @Test
@@ -210,7 +221,7 @@ public class RoomServiceTest {
     void getRoomsByAccommodationIdSuccess() {
         // Given
         List<Room> rooms = Arrays.asList(room);
-        when(roomRepository.findByAccommodationIdAndNotDeleted(1L)).thenReturn(rooms);
+        when(roomRepository.findByAccommodationId(1L)).thenReturn(rooms);
 
         // When
         List<RoomDto.ListResponse> responses = roomService.getRoomsByAccommodationId(1L);
@@ -223,7 +234,7 @@ public class RoomServiceTest {
         assertEquals(1L, responses.get(0).getAccommodationId());
         assertEquals("/api/rooms/images/1/main.jpg", responses.get(0).getMainImageUrl());
         
-        verify(roomRepository, times(1)).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomRepository, times(1)).findByAccommodationId(1L);
         verify(roomImageService, times(1)).getMainImageUrl(1L);
     }
 
@@ -231,7 +242,8 @@ public class RoomServiceTest {
     @DisplayName("객실 수정 성공 테스트")
     void updateRoomSuccess() {
         // Given
-        when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomOptionMappingRepository.findByRoomIdAndRoomNotDeleted(1L)).thenReturn(Arrays.asList());
 
         // 수정할 객실 정보
         RoomDto.Request updateRequest = new RoomDto.Request();
@@ -240,6 +252,7 @@ public class RoomServiceTest {
         updateRequest.setDescription("수정된 설명입니다.");
         updateRequest.setCapacity(3);
         updateRequest.setPricePerNight(new BigDecimal("150000"));
+        updateRequest.setOptionIds(Arrays.asList()); // 빈 리스트로 설정하여 기존 옵션 제거
 
         // When
         RoomDto.Response response = roomService.updateRoom(1L, updateRequest);
@@ -251,35 +264,37 @@ public class RoomServiceTest {
         assertEquals(3, response.getCapacity());
         assertEquals(new BigDecimal("150000"), response.getPricePerNight());
         
-        verify(roomRepository, times(1)).findByIdAndNotDeleted(1L);
+        verify(roomRepository, times(2)).findById(1L); // updateRoom 내부에서 2번 호출됨
+        verify(roomOptionMappingRepository, times(1)).deleteByRoomId(1L);
     }
 
     @Test
     @DisplayName("객실 삭제 성공 테스트")
     void deleteRoomSuccess() {
         // Given
-        when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
         
         // When
         roomService.deleteRoom(1L);
 
         // Then
-        assertEquals("Y", room.getDeletedYn());
-        verify(roomRepository, times(1)).findByIdAndNotDeleted(1L);
+        assertEquals(true, room.getDeletedYn());
+        verify(roomRepository, times(1)).findById(1L);
+        verify(roomOptionMappingRepository, times(1)).deleteByRoomId(1L);
     }
 
     @Test
     @DisplayName("객실 삭제 실패 테스트 - 존재하지 않는 ID")
     void deleteRoomFailNotFound() {
         // Given
-        when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        when(roomRepository.findById(999L)).thenReturn(Optional.empty());
 
         // When & Then
         assertThrows(EntityNotFoundException.class, () -> {
             roomService.deleteRoom(999L);
         });
         
-        verify(roomRepository, times(1)).findByIdAndNotDeleted(999L);
+        verify(roomRepository, times(1)).findById(999L);
     }
 
 } 

@@ -6,13 +6,19 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+@DynamicUpdate
 @Entity
 @Table(name = "rooms")
 @Getter
 @NoArgsConstructor
+@Where(clause = "deleted_yn = 0")
 public class Room extends BaseEntity {
 
     @Id
@@ -44,9 +50,13 @@ public class Room extends BaseEntity {
     @Comment("상태 (AVAILABLE, UNAVAILABLE)")
     private String status;
     
-    @Column(name = "deleted_yn", nullable = false, length = 1)
-    @Comment("삭제 여부 (Y, N)")
-    private String deletedYn = "N";
+    @Column(name = "deleted_yn", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Comment("삭제 여부 (1: 삭제, 0: 미삭제)")
+    private Boolean deletedYn;
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Comment("객실 옵션 매핑 목록")
+    private List<RoomOptionMapping> roomOptionMappings = new ArrayList<>();
 
     /**
      * 객실 생성자
@@ -66,7 +76,8 @@ public class Room extends BaseEntity {
         this.capacity = capacity;
         this.pricePerNight = pricePerNight;
         this.status = status;
-        this.deletedYn = "N";
+        this.deletedYn = false;
+        this.roomOptionMappings = new ArrayList<>();
     }
     
     /**
@@ -104,11 +115,46 @@ public class Room extends BaseEntity {
         this.capacity = capacity;
         this.pricePerNight = pricePerNight;
     }
+
+    /**
+     * 객실 옵션 추가
+     * @param roomOption 추가할 객실 옵션
+     */
+    public void addRoomOption(RoomOption roomOption) {
+        RoomOptionMapping mapping = RoomOptionMapping.createMapping(this, roomOption);
+        this.roomOptionMappings.add(mapping);
+    }
+
+    /**
+     * 객실 옵션 제거
+     * @param roomOption 제거할 객실 옵션
+     */
+    public void removeRoomOption(RoomOption roomOption) {
+        this.roomOptionMappings.removeIf(mapping -> 
+                mapping.getRoomOption().getId().equals(roomOption.getId()));
+    }
+
+    /**
+     * 모든 객실 옵션 제거
+     */
+    public void clearRoomOptions() {
+        this.roomOptionMappings.clear();
+    }
+
+    /**
+     * 특정 옵션이 이미 추가되어 있는지 확인
+     * @param roomOptionId 확인할 옵션 ID
+     * @return 존재하면 true, 없으면 false
+     */
+    public boolean hasRoomOption(Long roomOptionId) {
+        return this.roomOptionMappings.stream()
+                .anyMatch(mapping -> mapping.getRoomOption().getId().equals(roomOptionId));
+    }
     
     /**
      * 소프트 삭제 처리
      */
     public void delete() {
-        this.deletedYn = "Y";
+        this.deletedYn = true;
     }
 } 

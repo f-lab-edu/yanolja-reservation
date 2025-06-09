@@ -4,8 +4,10 @@ import com.yanolja.areas.room.dto.PortalRoomDto;
 import com.yanolja.areas.room.dto.RoomImageDto;
 import com.yanolja.areas.room.entity.Room;
 import com.yanolja.areas.room.entity.RoomImage;
+import com.yanolja.areas.room.entity.RoomOptionMapping;
 import com.yanolja.areas.room.repository.RoomImageRepository;
 import com.yanolja.areas.room.repository.RoomRepository;
+import com.yanolja.areas.room.repository.RoomOptionMappingRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ public class PortalRoomService {
     private final RoomRepository roomRepository;
     private final RoomImageRepository roomImageRepository;
     private final RoomImageService roomImageService;
+    private final RoomOptionMappingRepository roomOptionMappingRepository;
     
     /**
      * 객실 검색
@@ -59,7 +62,7 @@ public class PortalRoomService {
      * @return 객실 상세 정보
      */
     public PortalRoomDto.DetailResponse getRoomDetail(Long id) {
-        Room room = roomRepository.findByIdAndNotDeleted(id)
+        Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 객실을 찾을 수 없습니다."));
         
         // 이미지 정보 조회
@@ -80,10 +83,27 @@ public class PortalRoomService {
      * @return 객실 목록
      */
     public List<PortalRoomDto.ListResponse> getRoomsByAccommodation(Long accommodationId) {
-        List<Room> rooms = roomRepository.findByAccommodationIdAndNotDeleted(accommodationId);
+        List<Room> rooms = roomRepository.findByAccommodationId(accommodationId);
         
         return rooms.stream()
                 .map(room -> {
+                    String mainImageUrl = roomImageService.getMainImageUrl(room.getId());
+                    return PortalRoomDto.ListResponse.fromEntityWithMainImage(room, mainImageUrl);
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 옵션을 사용하는 객실 목록 조회 (포털용)
+     * @param optionId 옵션 ID
+     * @return 객실 목록
+     */
+    public List<PortalRoomDto.ListResponse> getRoomsByOptionId(Long optionId) {
+        List<RoomOptionMapping> mappings = roomOptionMappingRepository.findByRoomOptionIdAndRoomNotDeleted(optionId);
+        
+        return mappings.stream()
+                .map(mapping -> {
+                    Room room = mapping.getRoom();
                     String mainImageUrl = roomImageService.getMainImageUrl(room.getId());
                     return PortalRoomDto.ListResponse.fromEntityWithMainImage(room, mainImageUrl);
                 })
@@ -103,4 +123,4 @@ public class PortalRoomService {
                 return "id";
         }
     }
-} 
+}

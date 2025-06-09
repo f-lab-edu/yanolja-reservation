@@ -16,51 +16,12 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
 public class RoomRepositoryImpl implements RoomRepositoryCustom {
     
     private final JPAQueryFactory queryFactory;
-    
-    @Override
-    public List<Room> findAllNotDeleted() {
-        QRoom room = QRoom.room;
-        
-        return queryFactory
-                .selectFrom(room)
-                .where(room.deletedYn.eq("N"))
-                .fetch();
-    }
-    
-    @Override
-    public Optional<Room> findByIdAndNotDeleted(Long id) {
-        QRoom room = QRoom.room;
-        
-        return Optional.ofNullable(
-                queryFactory
-                        .selectFrom(room)
-                        .where(
-                                room.id.eq(id),
-                                room.deletedYn.eq("N")
-                        )
-                        .fetchOne()
-        );
-    }
-    
-    @Override
-    public List<Room> findByAccommodationIdAndNotDeleted(Long accommodationId) {
-        QRoom room = QRoom.room;
-        
-        return queryFactory
-                .selectFrom(room)
-                .where(
-                        room.accommodationId.eq(accommodationId),
-                        room.deletedYn.eq("N")
-                )
-                .fetch();
-    }
     
     @Override
     public Page<Room> searchRooms(
@@ -73,37 +34,43 @@ public class RoomRepositoryImpl implements RoomRepositoryCustom {
         
         QRoom room = QRoom.room;
         
-        // 기본 조건 : 삭제되지 않은 객실
-        BooleanExpression conditions = room.deletedYn.eq("N");
+        // 기본 조건 : @Where 어노테이션에 의해 자동으로 삭제되지 않은 객실만 조회됨
+        // 추가 조건만 작성
+        BooleanExpression conditions = null;
         
         // 키워드 검색 조건
         if (StringUtils.hasText(keyword)) {
-            conditions = conditions.and(
-                    room.name.containsIgnoreCase(keyword)
-                            .or(room.description.containsIgnoreCase(keyword))
-            );
+            conditions = room.name.containsIgnoreCase(keyword)
+                            .or(room.description.containsIgnoreCase(keyword));
         }
         
         // 가격 범위 조건
         if (minPrice != null) {
-            conditions = conditions.and(room.pricePerNight.goe(minPrice));
+            BooleanExpression minPriceCondition = room.pricePerNight.goe(minPrice);
+            conditions = conditions != null ? conditions.and(minPriceCondition) : minPriceCondition;
         }
         
         if (maxPrice != null) {
-            conditions = conditions.and(room.pricePerNight.loe(maxPrice));
+            BooleanExpression maxPriceCondition = room.pricePerNight.loe(maxPrice);
+            conditions = conditions != null ? conditions.and(maxPriceCondition) : maxPriceCondition;
         }
         
         // 수용 인원 조건
         if (minCapacity != null) {
-            conditions = conditions.and(room.capacity.goe(minCapacity));
+            BooleanExpression capacityCondition = room.capacity.goe(minCapacity);
+            conditions = conditions != null ? conditions.and(capacityCondition) : capacityCondition;
         }
         
         // 쿼리 생성
         JPAQuery<Room> query = queryFactory
                 .selectFrom(room)
-                .where(conditions)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
+        
+        // 조건 추가 (조건이 있는 경우에만)
+        if (conditions != null) {
+            query.where(conditions);
+        }
         
         // 정렬 조건
         if (StringUtils.hasText(sortBy)) {
@@ -118,8 +85,11 @@ public class RoomRepositoryImpl implements RoomRepositoryCustom {
         // 카운트 쿼리
         JPAQuery<Long> countQuery = queryFactory
                 .select(room.count())
-                .from(room)
-                .where(conditions);
+                .from(room);
+        
+        if (conditions != null) {
+            countQuery.where(conditions);
+        }
         
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
