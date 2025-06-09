@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.yanolja.domain.payment.entity.QPayment.payment;
-import static com.yanolja.domain.payment.entity.QOrder.order;
+import static com.yanolja.areas.payment.entity.QPayment.payment;
+import static com.yanolja.areas.payment.entity.QOrder.order;
 
 @Repository
 @RequiredArgsConstructor

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.yanolja.domain.payment.entity.QPoint.point;
+import static com.yanolja.areas.payment.entity.QPoint.point;
 
 @Repository
 @RequiredArgsConstructor

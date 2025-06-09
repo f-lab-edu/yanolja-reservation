@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.yanolja.domain.payment.entity.QOrder.order;
+import static com.yanolja.areas.payment.entity.QOrder.order;
 
 @Repository
 @RequiredArgsConstructor

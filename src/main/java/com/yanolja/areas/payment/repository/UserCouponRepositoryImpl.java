@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.yanolja.domain.payment.entity.QUserCoupon.userCoupon;
-import static com.yanolja.domain.payment.entity.QCoupon.coupon;
+import static com.yanolja.areas.payment.entity.QUserCoupon.userCoupon;
+import static com.yanolja.areas.payment.entity.QCoupon.coupon;
 
 @Repository
 @RequiredArgsConstructor

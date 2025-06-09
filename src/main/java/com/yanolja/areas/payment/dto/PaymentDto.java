@@ -1,8 +1,8 @@
 package com.yanolja.areas.payment.dto;
 
-import com.yanolja.domain.payment.entity.Payment;
-import com.yanolja.domain.payment.entity.PaymentMethod;
-import com.yanolja.domain.payment.entity.PaymentStatus;
+import com.yanolja.areas.payment.entity.Payment;
+import com.yanolja.areas.payment.entity.PaymentMethod;
+import com.yanolja.areas.payment.entity.PaymentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
