@@ -43,20 +43,6 @@ public class CouponRepositoryImpl implements CouponRepositoryCustom {
                 .fetch();
     }
 
-    @Override
-    public List<Coupon> findUsableCouponsForUser(Long userId, LocalDateTime currentTime) {
-        return queryFactory
-                .selectFrom(coupon)
-                .join(userCoupon).on(userCoupon.coupon.eq(coupon))
-                .where(
-                        userCoupon.userId.eq(userId),
-                        userCoupon.status.eq(UserCouponStatus.AVAILABLE),
-                        coupon.validFrom.loe(currentTime),
-                        coupon.validUntil.goe(currentTime),
-                        coupon.status.eq(CouponStatus.ACTIVE)
-                )
-                .fetch();
-    }
 
     @Override
     public List<Coupon> searchCoupons(String keyword) {

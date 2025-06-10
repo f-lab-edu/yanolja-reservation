@@ -20,16 +20,6 @@ public interface CouponRepository extends JpaRepository<Coupon, Long>, CouponRep
     Optional<Coupon> findByCode(String code);
 
     /**
-     * 활성 상태 쿠폰 목록 조회
-     */
-    List<Coupon> findByStatusOrderByCreatedAtDesc(CouponStatus status);
-
-    /**
-     * 발급 타입별 쿠폰 조회
-     */
-    List<Coupon> findByIssueType(CouponIssueType issueType);
-
-    /**
      * 쿠폰 코드 존재 여부 확인
      */
     boolean existsByCode(String code);
