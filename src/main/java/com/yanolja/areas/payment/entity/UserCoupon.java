@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,6 +22,10 @@ public class UserCoupon extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("사용자 쿠폰 ID")
     private Long id;
+
+    @Version
+    @Comment("낙관적 락 버전")
+    private Long version;
 
     @Column(name = "user_id", nullable = false)
     @Comment("사용자 ID")
@@ -73,10 +78,13 @@ public class UserCoupon extends BaseEntity {
     /**
      * 쿠폰 사용
      */
-    public void use(Long orderId) {
-        this.status = UserCouponStatus.USED;
-        this.usedAt = LocalDateTime.now();
-        this.orderId = orderId;
+    public boolean tryUse() {
+        if (this.status == UserCouponStatus.AVAILABLE) {
+            this.status = UserCouponStatus.USED;
+            this.usedAt = LocalDateTime.now();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -91,19 +99,21 @@ public class UserCoupon extends BaseEntity {
     /**
      * 쿠폰 만료
      */
-    public void expire() {
-        this.status = UserCouponStatus.EXPIRED;
+    public boolean tryExpire() {
+        if (this.status == UserCouponStatus.AVAILABLE) {
+            this.status = UserCouponStatus.EXPIRED;
+            return true;
+        }
+        return false;
     }
 
     /**
      * 쿠폰 사용 가능 여부 확인
      */
     public boolean canUse() {
-        if (status != UserCouponStatus.AVAILABLE) {
-            return false;
-        }
-        
         LocalDateTime now = LocalDateTime.now();
-        return !now.isAfter(coupon.getValidUntil());
+        return status == UserCouponStatus.AVAILABLE &&
+               coupon.canUse(BigDecimal.ZERO) && // 기본 금액으로 확인
+               now.isBefore(coupon.getValidUntil());
     }
 } 

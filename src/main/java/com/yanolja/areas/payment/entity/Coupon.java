@@ -22,6 +22,10 @@ public class Coupon extends BaseEntity {
     @Comment("쿠폰 ID")
     private Long id;
 
+    @Version
+    @Comment("낙관적 락 버전")
+    private Long version;
+
     @Column(name = "code", nullable = false, unique = true, length = 50)
     @Comment("쿠폰 코드")
     private String code;
@@ -185,11 +189,17 @@ public class Coupon extends BaseEntity {
     /**
      * 쿠폰 사용
      */
-    public void use() {
+    public boolean tryUse() {
+        // 재고 확인
+        if (usedCount >= issueCount) {
+            return false;
+        }
+        
         this.usedCount++;
         if (this.usedCount >= this.issueCount) {
             this.status = CouponStatus.SOLD_OUT;
         }
+        return true;
     }
 
     /**
@@ -202,10 +212,15 @@ public class Coupon extends BaseEntity {
     /**
      * 사용된 수량 증가
      */
-    public void increaseUsedCount() {
+    public boolean tryIncreaseUsedCount() {
+        if (usedCount >= issueCount) {
+            return false;
+        }
+        
         this.usedCount++;
         if (this.usedCount >= this.issueCount) {
             this.status = CouponStatus.SOLD_OUT;
         }
+        return true;
     }
 } 
