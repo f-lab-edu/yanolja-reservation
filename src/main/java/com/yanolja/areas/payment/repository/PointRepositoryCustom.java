@@ -11,11 +11,6 @@ import java.util.Optional;
 public interface PointRepositoryCustom {
 
     /**
-     * 사용자별 최신 포인트 잔액 조회
-     */
-    Optional<Point> findLatestPointByUserId(Long userId);
-
-    /**
      * 사용자별 현재 포인트 잔액 조회
      */
     Integer getCurrentPointBalance(Long userId, PointStatus status);
@@ -41,4 +36,6 @@ public interface PointRepositoryCustom {
      * 사용자별 만료 예정 포인트 조회
      */
     List<Point> findUserExpiringPoints(Long userId, LocalDateTime startTime, LocalDateTime endTime);
+
+
 } 
