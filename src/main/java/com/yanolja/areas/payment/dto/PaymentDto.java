@@ -188,6 +188,9 @@ public class PaymentDto {
         @Schema(description = "결제 키")
         private String paymentKey;
 
+        @Schema(description = "주문 번호")
+        private String orderNumber;
+
         @Schema(description = "결제 수단")
         private PaymentMethod paymentMethod;
 
@@ -200,6 +203,9 @@ public class PaymentDto {
         @Schema(description = "결제 완료 시간")
         private LocalDateTime paidAt;
 
+        @Schema(description = "환불 금액")
+        private BigDecimal refundedAmount;
+
         @Schema(description = "생성 시간")
         private LocalDateTime createdAt;
 
@@ -207,10 +213,12 @@ public class PaymentDto {
             return ListResponse.builder()
                     .id(payment.getId())
                     .paymentKey(payment.getPaymentKey())
+                    .orderNumber(payment.getOrder().getOrderNumber())
                     .paymentMethod(payment.getPaymentMethod())
                     .amount(payment.getAmount())
                     .status(payment.getStatus())
                     .paidAt(payment.getPaidAt())
+                    .refundedAmount(payment.getRefundedAmount())
                     .createdAt(payment.getCreatedAt())
                     .build();
         }
