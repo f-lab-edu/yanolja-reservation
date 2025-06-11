@@ -79,3 +79,77 @@ app:
     base-delay: 100 # 기본 재시도 대기 시간 (ms)
     max-delay: 2000 # 최대 재시도 대기 시간 (ms)
     max-attempts: 5 # 기본 최대 재시도 횟수
+
+# PG 결제 설정
+payment:
+  pg:
+    # 토스페이먼츠 설정
+    toss:
+      api-url: ${TOSS_API_URL:https://api.tosspayments.com}
+      client-key: ${TOSS_CLIENT_KEY:test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq}
+      secret-key: ${TOSS_SECRET_KEY:test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R}
+      success-url: ${spring.base-url}/payment/success
+      fail-url: ${spring.base-url}/payment/fail
+      timeout: 30000 # 30초
+
+    # 카카오페이 설정
+    kakao:
+      api-url: ${KAKAO_PAY_API_URL:https://kapi.kakao.com}
+      cid: ${KAKAO_PAY_CID:TC0ONETIME}
+      admin-key: ${KAKAO_PAY_ADMIN_KEY:your_admin_key}
+      timeout: 30000 # 30초
+
+    # 네이버페이 설정
+    naver:
+      api-url: ${NAVER_PAY_API_URL:https://dev.apis.naver.com}
+      client-id: ${NAVER_PAY_CLIENT_ID:your_client_id}
+      client-secret: ${NAVER_PAY_CLIENT_SECRET:your_client_secret}
+      timeout: 30000 # 30초
+
+    # 페이코 설정
+    payco:
+      api-url: ${PAYCO_API_URL:https://apis.payco.com}
+      client-id: ${PAYCO_CLIENT_ID:your_client_id}
+      client-secret: ${PAYCO_CLIENT_SECRET:your_client_secret}
+      timeout: 30000 # 30초
+
+  # 결제 공통 설정
+  common:
+    # 결제 완료 후 리다이렉트 URL
+    redirect:
+      success-url: ${spring.base-url}/payment/success
+      fail-url: ${spring.base-url}/payment/fail
+      cancel-url: ${spring.base-url}/payment/cancel
+
+    # 결제 관련 시간 설정
+    timeout:
+      payment: 600000 # 결제 타임아웃 10분 (밀리초)
+      approval: 300000 # 승인 타임아웃 5분 (밀리초)
+
+    # 재시도 설정
+    retry:
+      max-attempts: 3
+      delay: 1000 # 1초
+
+    # 웹훅 설정
+    webhook:
+      secret-key: ${PAYMENT_WEBHOOK_SECRET:your_webhook_secret_key}
+      endpoint: ${spring.base-url}/api/v1/payments/webhook
+
+    # 환불 설정
+    refund:
+      auto-refund-enabled: true
+      partial-refund-enabled: true
+      refund-fee-rate: 0.01 # 1% 환불 수수료
+
+    # 포인트 적립 설정
+    point:
+      earning-rate: 0.01 # 1% 적립
+      max-earning-per-order: 10000 # 주문당 최대 적립 포인트
+      min-order-amount-for-earning: 10000 # 적립 최소 주문 금액
+
+    # 쿠폰 설정
+    coupon:
+      max-discount-rate: 0.5 # 최대 할인율 50%
+      max-discount-amount: 100000 # 최대 할인 금액
+      min-order-amount-for-use: 10000 # 쿠폰 사용 최소 주문 금액
