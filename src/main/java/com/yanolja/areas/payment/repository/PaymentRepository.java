@@ -25,16 +25,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, Payment
      * 주문별 성공 결제 조회
      */
     Optional<Payment> findSuccessPaymentByOrderId(Long orderId, PaymentStatus status);
-
-    /**
-     * PG사 거래 ID로 결제 조회
-     */
-    Optional<Payment> findByPgTransactionId(String pgTransactionId);
-
-    /**
-     * 특정 상태의 결제 목록 조회
-     */
-    List<Payment> findByStatus(PaymentStatus status);
+    
 
     /**
      * 주문별 결제 존재 여부 확인
