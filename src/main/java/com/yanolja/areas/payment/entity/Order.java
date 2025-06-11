@@ -24,6 +24,10 @@ public class Order extends BaseEntity {
     @Comment("주문 ID")
     private Long id;
 
+    @Version
+    @Comment("낙관적 락 버전")
+    private Long version;
+
     @Column(name = "order_number", nullable = false, unique = true, length = 50)
     @Comment("주문 번호")
     private String orderNumber;
@@ -104,8 +108,12 @@ public class Order extends BaseEntity {
     /**
      * 주문 확정
      */
-    public void confirm() {
-        this.status = OrderStatus.CONFIRMED;
+    public boolean tryConfirm() {
+        if (this.status == OrderStatus.PENDING) {
+            this.status = OrderStatus.CONFIRMED;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -118,8 +126,12 @@ public class Order extends BaseEntity {
     /**
      * 주문 만료 처리
      */
-    public void expire() {
-        this.status = OrderStatus.EXPIRED;
+    public boolean tryExpire() {
+        if (this.status == OrderStatus.PENDING) {
+            this.status = OrderStatus.EXPIRED;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -141,8 +153,51 @@ public class Order extends BaseEntity {
     /**
      * 주문 상태 변경
      */
-    public void updateStatus(OrderStatus status) {
-        this.status = status;
+    public boolean tryUpdateStatus(OrderStatus newStatus) {
+        if (canTransitionTo(newStatus)) {
+            this.status = newStatus;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 주문 취소
+     */
+    public boolean tryCancel() {
+        if (canCancel()) {
+            this.status = OrderStatus.CANCELLED;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 주문 완료
+     */
+    public boolean tryComplete() {
+        if (this.status == OrderStatus.CONFIRMED) {
+            this.status = OrderStatus.COMPLETED;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 상태 전환 가능 여부 확인
+     */
+    private boolean canTransitionTo(OrderStatus newStatus) {
+        switch (this.status) {
+            case PENDING:
+                return newStatus == OrderStatus.CONFIRMED || 
+                       newStatus == OrderStatus.CANCELLED || 
+                       newStatus == OrderStatus.EXPIRED;
+            case CONFIRMED:
+                return newStatus == OrderStatus.COMPLETED || 
+                       newStatus == OrderStatus.CANCELLED;
+            default:
+                return false;
+        }
     }
 
     /**
@@ -150,19 +205,5 @@ public class Order extends BaseEntity {
      */
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expiredAt);
-    }
-
-    /**
-     * 주문 취소
-     */
-    public void cancel() {
-        this.status = OrderStatus.CANCELLED;
-    }
-
-    /**
-     * 주문 완료
-     */
-    public void complete() {
-        this.status = OrderStatus.COMPLETED;
     }
 } 
