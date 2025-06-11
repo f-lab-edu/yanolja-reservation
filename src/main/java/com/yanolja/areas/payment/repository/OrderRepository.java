@@ -23,15 +23,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, OrderReposi
      */
     Page<Order> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
-    /**
-     * 사용자별 특정 상태 주문 목록 조회
-     */
-    List<Order> findByUserIdAndStatus(Long userId, OrderStatus status);
-
-    /**
-     * 예약 ID로 주문 조회
-     */
-    Optional<Order> findByReservationId(Long reservationId);
 
     /**
      * 사용자별 주문 존재 여부 확인

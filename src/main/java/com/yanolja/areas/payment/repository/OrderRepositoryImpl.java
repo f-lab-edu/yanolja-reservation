@@ -17,47 +17,16 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
+
     @Override
-    public List<Order> findExpiredOrders(OrderStatus status, LocalDateTime currentTime) {
+    public List<Order> findExpiredPendingOrders(LocalDateTime expiredTime) {
         return queryFactory
                 .selectFrom(order)
                 .where(
-                        order.status.eq(status),
-                        order.expiredAt.lt(currentTime)
+                        order.status.eq(OrderStatus.PENDING),
+                        order.createdAt.lt(expiredTime)
                 )
+                .orderBy(order.createdAt.asc())
                 .fetch();
-    }
-
-    @Override
-    public Long countOrdersByStatusAndDateRange(OrderStatus status, LocalDateTime startDate, LocalDateTime endDate) {
-        return queryFactory
-                .select(order.count())
-                .from(order)
-                .where(
-                        order.status.eq(status),
-                        order.createdAt.between(startDate, endDate)
-                )
-                .fetchOne();
-    }
-
-    @Override
-    public List<Order> findOrdersByUserIdAndDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate) {
-        return queryFactory
-                .selectFrom(order)
-                .where(
-                        order.userId.eq(userId),
-                        order.createdAt.between(startDate, endDate)
-                )
-                .orderBy(order.createdAt.desc())
-                .fetch();
-    }
-
-    @Override
-    public Long countOrdersByStatus(OrderStatus status) {
-        return queryFactory
-                .select(order.count())
-                .from(order)
-                .where(order.status.eq(status))
-                .fetchOne();
     }
 } 
