@@ -22,6 +22,10 @@ public class Payment extends BaseEntity {
     @Comment("결제 ID")
     private Long id;
 
+    @Version
+    @Comment("낙관적 락 버전")
+    private Long version;
+
     @Column(name = "payment_key", nullable = false, unique = true, length = 100)
     @Comment("결제 키")
     private String paymentKey;
@@ -109,36 +113,57 @@ public class Payment extends BaseEntity {
     }
 
     /**
-     * 결제 승인
+     * 결제 승인 (동시성 안전)
      */
-    public void approvePayment(String pgTransactionId, String approvalNumber, String receiptUrl) {
-        this.status = PaymentStatus.SUCCESS;
-        this.pgTransactionId = pgTransactionId;
-        this.approvalNumber = approvalNumber;
-        this.receiptUrl = receiptUrl;
-        this.paidAt = LocalDateTime.now();
+    public boolean tryApprovePayment(String pgTransactionId, String approvalNumber, String receiptUrl) {
+        if (this.status == PaymentStatus.PENDING) {
+            this.status = PaymentStatus.SUCCESS;
+            this.pgTransactionId = pgTransactionId;
+            this.approvalNumber = approvalNumber;
+            this.receiptUrl = receiptUrl;
+            this.paidAt = LocalDateTime.now();
+            return true;
+        }
+        return false;
     }
 
     /**
-     * 결제 실패
+     * 결제 실패 (동시성 안전)
      */
-    public void failPayment(String failureReason) {
-        this.status = PaymentStatus.FAILED;
-        this.failureReason = failureReason;
+    public boolean tryFailPayment(String failureReason) {
+        if (this.status == PaymentStatus.PENDING) {
+            this.status = PaymentStatus.FAILED;
+            this.failureReason = failureReason;
+            return true;
+        }
+        return false;
     }
 
     /**
-     * 결제 취소
+     * 결제 취소 (동시성 안전)
      */
-    public void cancelPayment() {
-        this.status = PaymentStatus.CANCELLED;
+    public boolean tryCancelPayment() {
+        if (this.status == PaymentStatus.PENDING || this.status == PaymentStatus.SUCCESS) {
+            this.status = PaymentStatus.CANCELLED;
+            return true;
+        }
+        return false;
     }
 
     /**
-     * 부분 환불
+     * 부분 환불 (동시성 안전)
      */
-    public void refundPayment(BigDecimal refundAmount) {
-        this.refundedAmount = this.refundedAmount.add(refundAmount);
+    public boolean tryRefundPayment(BigDecimal refundAmount) {
+        if (this.status != PaymentStatus.SUCCESS && this.status != PaymentStatus.PARTIAL_REFUNDED) {
+            return false;
+        }
+
+        BigDecimal totalRefundAmount = this.refundedAmount.add(refundAmount);
+        if (totalRefundAmount.compareTo(this.amount) > 0) {
+            return false; // 환불 금액이 결제 금액을 초과할 수 없음
+        }
+
+        this.refundedAmount = totalRefundAmount;
         
         // 전액 환불인 경우 상태 변경
         if (this.refundedAmount.compareTo(this.amount) >= 0) {
@@ -146,6 +171,7 @@ public class Payment extends BaseEntity {
         } else {
             this.status = PaymentStatus.PARTIAL_REFUNDED;
         }
+        return true;
     }
 
     /**
