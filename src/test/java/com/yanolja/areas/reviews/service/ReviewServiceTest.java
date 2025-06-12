@@ -5,6 +5,7 @@ import com.yanolja.areas.reviews.entity.Review;
 import com.yanolja.areas.reviews.entity.ReviewImage;
 import com.yanolja.areas.reviews.repository.ReviewImageRepository;
 import com.yanolja.areas.reviews.repository.ReviewRepository;
+import com.yanolja.areas.accommodation.service.AccommodationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +37,9 @@ class ReviewServiceTest {
 
     @Mock
     private ReviewImageRepository reviewImageRepository;
+
+    @Mock
+    private AccommodationService accommodationService;
 
     @InjectMocks
     private ReviewService reviewService;
@@ -397,5 +402,70 @@ class ReviewServiceTest {
         assertThat(result).isTrue();
 
         verify(reviewRepository).existsByReservationId(reservationId);
+    }
+
+    @Test
+    @DisplayName("리뷰 생성 시 숙소 평점과 리뷰 수 업데이트 성공")
+    void createReview_UpdateAccommodationRatingAndCount_Success() {
+        // Given
+        Long userId = 1L;
+        Long accommodationId = 1L;
+        when(reviewRepository.existsByReservationId(1L)).thenReturn(false);
+        when(reviewRepository.save(any(Review.class))).thenReturn(review);
+        when(reviewImageRepository.saveAll(anyList())).thenReturn(Collections.singletonList(reviewImage));
+        when(reviewRepository.findAverageRatingByAccommodationId(accommodationId)).thenReturn(5.0);
+        doNothing().when(accommodationService).incrementReviewCountWithRetry(eq(accommodationId), anyInt());
+        doNothing().when(accommodationService).updateRatingWithRetry(eq(accommodationId), any(BigDecimal.class), anyInt());
+
+        // When
+        ReviewDto.Response response = reviewService.createReview(userId, createRequest);
+
+        // Then
+        assertThat(response).isNotNull();
+        verify(accommodationService).incrementReviewCountWithRetry(eq(accommodationId), anyInt());
+        verify(accommodationService).updateRatingWithRetry(eq(accommodationId), any(BigDecimal.class), anyInt());
+        verify(reviewRepository).findAverageRatingByAccommodationId(accommodationId);
+    }
+
+    @Test
+    @DisplayName("리뷰 수정 시 숙소 평점 업데이트 성공")
+    void updateReview_UpdateAccommodationRating_Success() {
+        // Given
+        Long userId = 1L;
+        Long reviewId = 1L;
+        Long accommodationId = 1L;
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
+        when(reviewRepository.findAverageRatingByAccommodationId(accommodationId)).thenReturn(4.0);
+        doNothing().when(accommodationService).updateRatingWithRetry(eq(accommodationId), any(BigDecimal.class), anyInt());
+
+        // When
+        ReviewDto.Response response = reviewService.updateReview(userId, reviewId, updateRequest);
+
+        // Then
+        assertThat(response).isNotNull();
+        verify(accommodationService).updateRatingWithRetry(eq(accommodationId), any(BigDecimal.class), anyInt());
+        verify(reviewRepository).findAverageRatingByAccommodationId(accommodationId);
+    }
+
+    @Test
+    @DisplayName("리뷰 삭제 시 숙소 평점과 리뷰 수 업데이트 성공")
+    void deleteReview_UpdateAccommodationRatingAndCount_Success() {
+        // Given
+        Long userId = 1L;
+        Long reviewId = 1L;
+        Long accommodationId = 1L;
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
+        when(reviewRepository.findAverageRatingByAccommodationId(accommodationId)).thenReturn(4.5);
+        doNothing().when(accommodationService).decrementReviewCount(accommodationId);
+        doNothing().when(accommodationService).updateRatingWithRetry(eq(accommodationId), any(BigDecimal.class), anyInt());
+
+        // When
+        reviewService.deleteReview(userId, reviewId);
+
+        // Then
+        verify(accommodationService).decrementReviewCount(accommodationId);
+        verify(accommodationService).updateRatingWithRetry(eq(accommodationId), any(BigDecimal.class), anyInt());
+        verify(reviewRepository).findAverageRatingByAccommodationId(accommodationId);
+        verify(reviewRepository).delete(review);
     }
 } 
