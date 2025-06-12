@@ -5,6 +5,7 @@ import com.yanolja.areas.reviews.entity.Review;
 import com.yanolja.areas.reviews.entity.ReviewImage;
 import com.yanolja.areas.reviews.repository.ReviewImageRepository;
 import com.yanolja.areas.reviews.repository.ReviewRepository;
+import com.yanolja.areas.accommodation.service.AccommodationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,8 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
+    private final AccommodationService accommodationService;
+    private static final int MAX_RETRIES = 3;
 
     /**
      * 리뷰 생성
@@ -64,6 +69,10 @@ public class ReviewService {
                     .collect(Collectors.toList());
             reviewImageRepository.saveAll(reviewImages);
         }
+
+        // 숙소의 리뷰 수와 평점 업데이트
+        accommodationService.incrementReviewCountWithRetry(request.getAccommodationId(), MAX_RETRIES);
+        updateAccommodationRating(request.getAccommodationId());
 
         log.info("리뷰 생성 완료 - reviewId: {}", savedReview.getId());
         return ReviewDto.Response.from(savedReview);
@@ -108,6 +117,9 @@ public class ReviewService {
             }
         }
 
+        // 숙소의 평점 업데이트
+        updateAccommodationRating(review.getAccommodationId());
+
         log.info("리뷰 수정 완료 - reviewId: {}", reviewId);
         return ReviewDto.Response.from(review);
     }
@@ -124,13 +136,31 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리뷰입니다."));
 
-        // 작성자 확인
-        if (!review.getUserId().equals(userId)) {
+        // 작성자 확인 (관리자는 userId가 null이므로 체크하지 않음)
+        if (userId != null && !review.getUserId().equals(userId)) {
             throw new IllegalArgumentException("리뷰 삭제 권한이 없습니다.");
         }
 
+        Long accommodationId = review.getAccommodationId();
         reviewRepository.delete(review);
+
+        // 숙소의 리뷰 수와 평점 업데이트
+        accommodationService.decrementReviewCount(accommodationId);
+        updateAccommodationRating(accommodationId);
+
         log.info("리뷰 삭제 완료 - reviewId: {}", reviewId);
+    }
+
+    /**
+     * 숙소의 평균 평점을 계산하고 업데이트
+     * @param accommodationId 숙소 ID
+     */
+    private void updateAccommodationRating(Long accommodationId) {
+        Double averageRating = reviewRepository.findAverageRatingByAccommodationId(accommodationId);
+        if (averageRating != null) {
+            BigDecimal rating = BigDecimal.valueOf(averageRating).setScale(2, RoundingMode.HALF_UP);
+            accommodationService.updateRatingWithRetry(accommodationId, rating, MAX_RETRIES);
+        }
     }
 
     /**
