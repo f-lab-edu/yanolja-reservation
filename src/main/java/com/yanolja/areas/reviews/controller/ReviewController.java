@@ -2,6 +2,8 @@ package com.yanolja.areas.reviews.controller;
 
 import com.yanolja.areas.reviews.dto.ReviewDto;
 import com.yanolja.areas.reviews.service.ReviewService;
+import com.yanolja.areas.user.domain.UserDetail;
+import com.yanolja.areas.user.domain.UserRole;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -21,6 +25,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/reviews")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")  // 컨트롤러 전체에 관리자 권한 체크 적용
 @Tag(name = "리뷰 관리", description = "관리자용 리뷰 관리 API")
 public class ReviewController {
 
@@ -93,10 +98,9 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}")
     public ApiResponse<Void> deleteReview(
             @Parameter(description = "리뷰 ID", example = "1")
-            @PathVariable Long reviewId) {
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal UserDetail userDetail) {
         
-        // 관리자는 모든 리뷰를 삭제할 수 있으므로 userId를 null로 전달
-        // 실제로는 관리자 권한 체크 로직이 필요
         reviewService.deleteReview(null, reviewId);
         return ApiResponse.success();
     }
