@@ -30,14 +30,14 @@ public class PortalRoomController {
         Page<PortalRoomDto.ListResponse> responses = 
                 portalRoomService.searchRooms(searchRequest);
                 
-        return ApiResponse.success(responses, "객실 검색 결과입니다.");
+        return ApiResponse.success(responses);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "객실 상세 조회", description = "객실의 상세 정보를 조회합니다.")
     public ApiResponse<PortalRoomDto.DetailResponse> getRoomDetail(@PathVariable Long id) {
         PortalRoomDto.DetailResponse response = portalRoomService.getRoomDetail(id);
-        return ApiResponse.success(response, "객실 상세 정보입니다.");
+        return ApiResponse.success(response);
     }
     
     @GetMapping("/accommodation/{accommodationId}")
@@ -45,14 +45,14 @@ public class PortalRoomController {
     public ApiResponse<List<PortalRoomDto.ListResponse>> getRoomsByAccommodation(
             @PathVariable Long accommodationId) {
         List<PortalRoomDto.ListResponse> responses = portalRoomService.getRoomsByAccommodation(accommodationId);
-        return ApiResponse.success(responses, "숙소별 객실 목록 조회 성공");
+        return ApiResponse.success(responses);
     }
 
     @GetMapping("/{roomId}/options")
     @Operation(summary = "객실 옵션 목록 조회 (포털용)", description = "특정 객실에 연결된 모든 옵션을 조회합니다.")
     public ApiResponse<List<RoomOptionDto.ListResponse>> getRoomOptions(@PathVariable Long roomId) {
         List<RoomOptionDto.ListResponse> responses = roomService.getRoomOptions(roomId);
-        return ApiResponse.success(responses, "객실 옵션 목록 조회 성공");
+        return ApiResponse.success(responses);
     }
 
     @GetMapping("/by-option/{optionId}")
@@ -60,6 +60,6 @@ public class PortalRoomController {
     public ApiResponse<List<PortalRoomDto.ListResponse>> getRoomsByOption(@PathVariable Long optionId) {
         
         List<PortalRoomDto.ListResponse> responses = portalRoomService.getRoomsByOptionId(optionId);
-        return ApiResponse.success(responses, "옵션별 객실 목록 조회 성공");
+        return ApiResponse.success(responses);
     }
 } 
