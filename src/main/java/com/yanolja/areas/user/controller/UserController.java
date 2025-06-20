@@ -55,4 +55,11 @@ public class UserController {
         userService.withdrawUser(id);
         return ApiResponse.success();
     }
+
+    @Operation(summary = "이메일 중복 확인", description = "이메일 중복 여부 확인")
+    @GetMapping("/check-email")
+    public ApiResponse<Boolean> checkEmailDuplicate(@RequestParam String email) {
+        boolean isDuplicate = userService.checkEmailDuplicate(email);
+        return ApiResponse.success(isDuplicate);
+    }
 } 

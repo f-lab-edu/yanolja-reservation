@@ -94,6 +94,12 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /** 이메일 중복 확인 */
+    @Transactional(readOnly = true)
+    public boolean checkEmailDuplicate(String email) {
+        return userRepository.findActiveUserByEmail(email).isPresent();
+    }
+
     // 내부 함수
     private User findUserOrThrow(Long userId) {
         return userRepository.findActiveUserById(userId)
