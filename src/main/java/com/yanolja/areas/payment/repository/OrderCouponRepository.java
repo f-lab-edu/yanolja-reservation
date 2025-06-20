@@ -12,7 +12,7 @@ public interface OrderCouponRepository extends JpaRepository<OrderCoupon, Long> 
     /**
      * 주문별 사용된 쿠폰 목록 조회
      */
-    List<OrderCoupon> findByOrderId(Long orderId);
+    List<OrderCoupon> findByOrder_Id(Long orderId);
 
     /**
      * 사용자 쿠폰별 주문 목록 조회

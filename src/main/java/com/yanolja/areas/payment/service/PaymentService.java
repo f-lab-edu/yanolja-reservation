@@ -4,6 +4,7 @@ import com.yanolja.areas.payment.dto.PaymentDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.OrderRepository;
 import com.yanolja.areas.payment.repository.PaymentRepository;
+import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -251,7 +252,7 @@ public class PaymentService {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new EntityNotFoundException("주문을 찾을 수 없습니다: " + orderNumber));
         
-        List<Payment> payments = paymentRepository.findByOrderIdOrderByCreatedAtDesc(order.getId());
+        List<Payment> payments = paymentRepository.findByOrder_IdOrderByCreatedAtDesc(order.getId());
         
         if (payments.isEmpty()) {
             throw new EntityNotFoundException("결제 정보를 찾을 수 없습니다: " + orderNumber);
@@ -552,7 +553,7 @@ public class PaymentService {
         }
 
         // 이미 성공한 결제가 있는지 확인
-        boolean hasSuccessPayment = paymentRepository.existsByOrderIdAndStatus(
+        boolean hasSuccessPayment = paymentRepository.existsByOrder_IdAndStatus(
             order.getId(), PaymentStatus.SUCCESS
         );
         

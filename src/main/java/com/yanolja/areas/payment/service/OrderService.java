@@ -7,6 +7,7 @@ import com.yanolja.areas.payment.repository.OrderCouponRepository;
 import com.yanolja.areas.payment.repository.OrderRepository;
 import com.yanolja.areas.payment.repository.PointRepository;
 import com.yanolja.areas.payment.repository.UserCouponRepository;
+import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +112,7 @@ public class OrderService {
                 userCouponRepository.save(userCoupon);
 
                 // 주문-쿠폰 연결 정보 저장
-                OrderCoupon orderCoupon = OrderCoupon.create(order.getId(), userCoupon.getId(), couponDiscount);
+                OrderCoupon orderCoupon = OrderCoupon.create(order, userCoupon.getId(), couponDiscount);
                 orderCouponRepository.save(orderCoupon);
             }
 
@@ -137,7 +138,7 @@ public class OrderService {
         OrderDto.Response response = OrderDto.Response.fromEntity(order);
 
         // 사용된 쿠폰 정보 조회
-        List<OrderCoupon> orderCoupons = orderCouponRepository.findByOrderId(order.getId());
+        List<OrderCoupon> orderCoupons = orderCouponRepository.findByOrder_Id(order.getId());
         List<OrderCouponDto.Response> couponResponses = orderCoupons.stream()
             .map(OrderCouponDto.Response::fromEntity)
             .collect(Collectors.toList());
@@ -315,7 +316,7 @@ public class OrderService {
     }
 
     private void restoreUsedCoupons(Long orderId) {
-        List<OrderCoupon> orderCoupons = orderCouponRepository.findByOrderId(orderId);
+        List<OrderCoupon> orderCoupons = orderCouponRepository.findByOrder_Id(orderId);
         
         for (OrderCoupon orderCoupon : orderCoupons) {
             UserCoupon userCoupon = userCouponRepository.findById(orderCoupon.getUserCouponId())

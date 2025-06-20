@@ -6,6 +6,7 @@ import com.yanolja.areas.reviews.entity.ReviewImage;
 import com.yanolja.areas.reviews.repository.ReviewImageRepository;
 import com.yanolja.areas.reviews.repository.ReviewRepository;
 import com.yanolja.areas.accommodation.service.AccommodationService;
+import com.yanolja.common.service.DistributedLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,7 +29,11 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final AccommodationService accommodationService;
+    private final DistributedLockService distributedLockService;
+    
     private static final int MAX_RETRIES = 3;
+    private static final long LOCK_TIMEOUT = 10L; // 10초
+    private static final long LOCK_LEASE_TIME = 30L; // 30초
 
     /**
      * 리뷰 생성
@@ -51,31 +56,36 @@ public class ReviewService {
             throw new IllegalArgumentException("평점은 1~5 사이의 값이어야 합니다.");
         }
 
-        // 리뷰 생성
-        Review review = Review.createReview(
-                userId,
-                request.getAccommodationId(),
-                request.getReservationId(),
-                request.getRating(),
-                request.getComment()
-        );
+        // 분산 락을 사용하여 리뷰 생성
+        String lockKey = "review:create:accommodation:" + request.getAccommodationId();
+        
+        return distributedLockService.executeWithLock(lockKey, LOCK_TIMEOUT, LOCK_LEASE_TIME, () -> {
+            // 리뷰 생성
+            Review review = Review.createReview(
+                    userId,
+                    request.getAccommodationId(),
+                    request.getReservationId(),
+                    request.getRating(),
+                    request.getComment()
+            );
 
-        Review savedReview = reviewRepository.save(review);
+            Review savedReview = reviewRepository.save(review);
 
-        // 이미지 URL이 있으면 이미지 저장
-        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-            List<ReviewImage> reviewImages = request.getImageUrls().stream()
-                    .map(imageUrl -> ReviewImage.createReviewImage(savedReview, imageUrl))
-                    .collect(Collectors.toList());
-            reviewImageRepository.saveAll(reviewImages);
-        }
+            // 이미지 URL이 있으면 이미지 저장
+            if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+                List<ReviewImage> reviewImages = request.getImageUrls().stream()
+                        .map(imageUrl -> ReviewImage.createReviewImage(savedReview, imageUrl))
+                        .collect(Collectors.toList());
+                reviewImageRepository.saveAll(reviewImages);
+            }
 
-        // 숙소의 리뷰 수와 평점 업데이트
-        accommodationService.incrementReviewCountWithRetry(request.getAccommodationId(), MAX_RETRIES);
-        updateAccommodationRating(request.getAccommodationId());
+            // 숙소의 리뷰 수와 평점 업데이트
+            accommodationService.incrementReviewCountWithRetry(request.getAccommodationId(), MAX_RETRIES);
+            updateAccommodationRating(request.getAccommodationId());
 
-        log.info("리뷰 생성 완료 - reviewId: {}", savedReview.getId());
-        return ReviewDto.Response.from(savedReview);
+            log.info("리뷰 생성 완료 - reviewId: {}", savedReview.getId());
+            return ReviewDto.Response.from(savedReview);
+        });
     }
 
     /**
@@ -102,26 +112,31 @@ public class ReviewService {
             throw new IllegalArgumentException("평점은 1~5 사이의 값이어야 합니다.");
         }
 
-        // 리뷰 정보 수정
-        review.updateReview(request.getRating(), request.getComment());
+        // 분산 락을 사용하여 리뷰 수정
+        String lockKey = "review:update:accommodation:" + review.getAccommodationId();
+        
+        return distributedLockService.executeWithLock(lockKey, LOCK_TIMEOUT, LOCK_LEASE_TIME, () -> {
+            // 리뷰 정보 수정
+            review.updateReview(request.getRating(), request.getComment());
 
-        // 기존 이미지 삭제 후 새 이미지 저장
-        if (request.getImageUrls() != null) {
-            reviewImageRepository.deleteByReviewId(reviewId);
-            
-            if (!request.getImageUrls().isEmpty()) {
-                List<ReviewImage> reviewImages = request.getImageUrls().stream()
-                        .map(imageUrl -> ReviewImage.createReviewImage(review, imageUrl))
-                        .collect(Collectors.toList());
-                reviewImageRepository.saveAll(reviewImages);
+            // 기존 이미지 삭제 후 새 이미지 저장
+            if (request.getImageUrls() != null) {
+                reviewImageRepository.deleteByReviewId(reviewId);
+                
+                if (!request.getImageUrls().isEmpty()) {
+                    List<ReviewImage> reviewImages = request.getImageUrls().stream()
+                            .map(imageUrl -> ReviewImage.createReviewImage(review, imageUrl))
+                            .collect(Collectors.toList());
+                    reviewImageRepository.saveAll(reviewImages);
+                }
             }
-        }
 
-        // 숙소의 평점 업데이트
-        updateAccommodationRating(review.getAccommodationId());
+            // 숙소의 평점 업데이트
+            updateAccommodationRating(review.getAccommodationId());
 
-        log.info("리뷰 수정 완료 - reviewId: {}", reviewId);
-        return ReviewDto.Response.from(review);
+            log.info("리뷰 수정 완료 - reviewId: {}", reviewId);
+            return ReviewDto.Response.from(review);
+        });
     }
 
     /**
@@ -141,14 +156,19 @@ public class ReviewService {
             throw new IllegalArgumentException("리뷰 삭제 권한이 없습니다.");
         }
 
+        // 분산 락을 사용하여 리뷰 삭제
+        String lockKey = "review:delete:accommodation:" + review.getAccommodationId();
         Long accommodationId = review.getAccommodationId();
-        reviewRepository.delete(review);
+        
+        distributedLockService.executeWithLock(lockKey, LOCK_TIMEOUT, LOCK_LEASE_TIME, () -> {
+            reviewRepository.delete(review);
 
-        // 숙소의 리뷰 수와 평점 업데이트
-        accommodationService.decrementReviewCount(accommodationId);
-        updateAccommodationRating(accommodationId);
+            // 숙소의 리뷰 수와 평점 업데이트
+            accommodationService.decrementReviewCount(accommodationId);
+            updateAccommodationRating(accommodationId);
 
-        log.info("리뷰 삭제 완료 - reviewId: {}", reviewId);
+            log.info("리뷰 삭제 완료 - reviewId: {}", reviewId);
+        });
     }
 
     /**
