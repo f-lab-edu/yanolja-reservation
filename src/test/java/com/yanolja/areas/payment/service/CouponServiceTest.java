@@ -4,6 +4,7 @@ import com.yanolja.areas.payment.dto.CouponDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.CouponRepository;
 import com.yanolja.areas.payment.repository.UserCouponRepository;
+import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
