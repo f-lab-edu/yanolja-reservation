@@ -3,6 +3,7 @@ package com.yanolja.areas.payment.service;
 import com.yanolja.areas.payment.dto.OrderDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.*;
+import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -138,7 +139,7 @@ class OrderServiceTest {
         given(orderRepository.save(any(Order.class))).willReturn(mockOrder);
         given(userCouponRepository.save(any(UserCoupon.class))).willReturn(mockUserCoupon);
         OrderCoupon mockOrderCoupon = OrderCoupon.builder()
-                .orderId(1L)
+                .order(mockOrder)
                 .userCouponId(1L)
                 .discountAmount(BigDecimal.valueOf(10000))
                 .build();
@@ -203,7 +204,7 @@ class OrderServiceTest {
         // given
         String orderNumber = "ORD123456789";
         given(orderRepository.findByOrderNumber(orderNumber)).willReturn(Optional.of(mockOrder));
-        given(orderCouponRepository.findByOrderId(mockOrder.getId())).willReturn(List.of());
+        given(orderCouponRepository.findByOrder_Id(mockOrder.getId())).willReturn(List.of());
 
         // when
         OrderDto.Response result = orderService.getOrder(orderNumber);
@@ -285,7 +286,7 @@ class OrderServiceTest {
         
         given(orderRepository.findByOrderNumber(orderNumber)).willReturn(Optional.of(pendingOrder));
         given(orderRepository.save(any(Order.class))).willReturn(pendingOrder);
-        given(orderCouponRepository.findByOrderId(2L)).willReturn(List.of());
+        given(orderCouponRepository.findByOrder_Id(2L)).willReturn(List.of());
 
         // when
         orderService.cancelOrder(orderNumber, reason);
@@ -359,7 +360,7 @@ class OrderServiceTest {
         given(orderRepository.findExpiredPendingOrders(any(LocalDateTime.class)))
                 .willReturn(expiredOrders);
         given(orderRepository.save(any(Order.class))).willReturn(mockOrder);
-        given(orderCouponRepository.findByOrderId(mockOrder.getId())).willReturn(List.of());
+        given(orderCouponRepository.findByOrder_Id(mockOrder.getId())).willReturn(List.of());
 
         // when
         orderService.expireOrders();

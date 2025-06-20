@@ -3,6 +3,7 @@ package com.yanolja.areas.payment.service;
 import com.yanolja.areas.payment.dto.PaymentDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.*;
+import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -144,7 +145,7 @@ class PaymentServiceTest {
     void processPayment_Card_Success() {
         // given
         given(orderRepository.findByOrderNumber("ORD123456789")).willReturn(Optional.of(mockOrder));
-        given(paymentRepository.existsByOrderIdAndStatus(any(Long.class), eq(PaymentStatus.SUCCESS)))
+        given(paymentRepository.existsByOrder_IdAndStatus(any(Long.class), eq(PaymentStatus.SUCCESS)))
                 .willReturn(false);
         given(paymentRepository.save(any(Payment.class))).willAnswer(invocation -> {
             Payment payment = invocation.getArgument(0);
@@ -211,7 +212,7 @@ class PaymentServiceTest {
     void processPayment_AlreadyPaid_ThrowsException() {
         // given
         given(orderRepository.findByOrderNumber("ORD123456789")).willReturn(Optional.of(mockOrder));
-        given(paymentRepository.existsByOrderIdAndStatus(any(Long.class), eq(PaymentStatus.SUCCESS)))
+        given(paymentRepository.existsByOrder_IdAndStatus(any(Long.class), eq(PaymentStatus.SUCCESS)))
                 .willReturn(true);
 
         // when & then
@@ -447,7 +448,7 @@ class PaymentServiceTest {
                 .build();
 
         given(orderRepository.findByOrderNumber("ORD123456789")).willReturn(Optional.of(mockOrder));
-        given(paymentRepository.existsByOrderIdAndStatus(any(Long.class), eq(PaymentStatus.SUCCESS)))
+        given(paymentRepository.existsByOrder_IdAndStatus(any(Long.class), eq(PaymentStatus.SUCCESS)))
                 .willReturn(false);
         given(paymentRepository.save(any(Payment.class))).willAnswer(invocation -> {
             Payment payment = invocation.getArgument(0);
