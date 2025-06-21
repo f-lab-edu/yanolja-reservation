@@ -50,6 +50,18 @@ public class AuthService {
             throw new UserException(ErrorCode.WITHDRAWN_USER);
         }
         
+        // 활성 사용자가 없고, 탈퇴한 회원인지 확인
+        if (user == null) {
+            // 탈퇴한 회원의 익명화된 이메일 패턴으로 검색
+            String withdrawnEmailPattern = "withdrawn_" + request.getEmail() + "@anonymized.local";
+            User withdrawnUser = userRepository.findUserByEmail(withdrawnEmailPattern)
+                    .orElse(null);
+            
+            if (withdrawnUser != null && "Y".equals(withdrawnUser.getWithdrawalYn())) {
+                throw new UserException(ErrorCode.WITHDRAWN_USER);
+            }
+        }
+        
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
