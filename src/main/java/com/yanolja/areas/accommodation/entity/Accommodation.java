@@ -29,7 +29,7 @@ public class Accommodation extends BaseEntity {
     private Long id;
 
     @Version
-    @Comment("낙관적 락킹을 위한 버전")
+    @Column(name = "version")
     private Long version;
 
     @Column(nullable = false)
@@ -57,9 +57,9 @@ public class Accommodation extends BaseEntity {
     @Comment("평점")
     private BigDecimal rating;
 
-    @Column(name = "review_count")
+    @Column(name = "review_count", columnDefinition = "INT DEFAULT 0")
     @Comment("리뷰 수")
-    private Integer reviewCount;
+    private Integer reviewCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -103,8 +103,9 @@ public class Accommodation extends BaseEntity {
                 .latitude(latitude)
                 .longitude(longitude)
                 .pricePerNight(pricePerNight)
-                .status(AccommodationStatus.ACTIVE)
+                .rating(BigDecimal.ZERO)
                 .reviewCount(0)
+                .status(AccommodationStatus.ACTIVE)
                 .deletedYn(false)
                 .build();
     }
@@ -148,16 +149,20 @@ public class Accommodation extends BaseEntity {
     /**
      * 리뷰 수 증가
      */
-    public synchronized void incrementReviewCount() {
-        this.reviewCount = (this.reviewCount != null ? this.reviewCount : 0) + 1;
+    public void incrementReviewCount() {
+        if (this.reviewCount == null) {
+            this.reviewCount = 1;
+        } else {
+            this.reviewCount++;
+        }
     }
 
     /**
      * 리뷰 수 감소
      */
-    public synchronized void decrementReviewCount() {
+    public void decrementReviewCount() {
         if (this.reviewCount != null && this.reviewCount > 0) {
-            this.reviewCount -= 1;
+            this.reviewCount--;
         }
     }
     

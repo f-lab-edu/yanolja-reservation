@@ -5,6 +5,7 @@ import com.yanolja.areas.accommodation.dto.AccommodationImageDto;
 import com.yanolja.areas.accommodation.dto.AmenityDto;
 import com.yanolja.areas.accommodation.entity.Accommodation;
 import com.yanolja.areas.accommodation.entity.AccommodationImage;
+import com.yanolja.areas.accommodation.entity.AccommodationStatus;
 import com.yanolja.areas.accommodation.repository.AccommodationImageRepository;
 import com.yanolja.areas.accommodation.repository.AccommodationRepository;
 import com.yanolja.areas.room.dto.RoomDto;
@@ -31,8 +32,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("AccommodationService 테스트")
 public class AccommodationServiceTest {
 
     @Mock
@@ -75,14 +79,13 @@ public class AccommodationServiceTest {
                 .build();
 
         // 테스트용 엔티티 생성
-        accommodation = Accommodation.createAccommodation(
-                "호텔 테스트",
-                "테스트용 호텔입니다.",
-                "서울시 강남구 테헤란로 123",
-                new BigDecimal("37.5665"),
-                new BigDecimal("126.9780"),
-                new BigDecimal("100000")
-        );
+        accommodation = Accommodation.builder()
+                .name("호텔 테스트")
+                .description("테스트용 호텔입니다.")
+                .address("서울시 강남구 테헤란로 123")
+                .rating(BigDecimal.valueOf(4.5))
+                .reviewCount(10)
+                .build();
         ReflectionTestUtils.setField(accommodation, "id", 1L);
         
         // 테스트용 이미지 엔티티 생성
@@ -158,7 +161,11 @@ public class AccommodationServiceTest {
     @DisplayName("숙소 생성 성공 테스트")
     void createAccommodationSuccess() {
         // Given
-        when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
+        when(accommodationRepository.save(any(Accommodation.class))).thenAnswer(invocation -> {
+            Accommodation savedAccommodation = invocation.getArgument(0);
+            ReflectionTestUtils.setField(savedAccommodation, "id", 1L);
+            return savedAccommodation;
+        });
 
         // When
         AccommodationDto.Response response = accommodationService.createAccommodation(accommodationRequest);
@@ -179,8 +186,21 @@ public class AccommodationServiceTest {
     @DisplayName("숙소 목록 조회 성공 테스트 - 메인 이미지 포함")
     void getAllAccommodationsSuccessWithMainImage() {
         // Given
-        List<Accommodation> accommodations = Arrays.asList(accommodation);
-        when(accommodationRepository.findAll()).thenReturn(accommodations);
+        Accommodation accommodation = Accommodation.builder()
+                .name("호텔 테스트")
+                .description("테스트용 호텔입니다.")
+                .address("서울시 강남구 테헤란로 123")
+                .latitude(new BigDecimal("37.5665"))
+                .longitude(new BigDecimal("126.9780"))
+                .pricePerNight(new BigDecimal("100000"))
+                .rating(BigDecimal.valueOf(4.5))
+                .reviewCount(10)
+                .status(AccommodationStatus.ACTIVE)
+                .deletedYn(false)
+                .build();
+        ReflectionTestUtils.setField(accommodation, "id", 1L);
+
+        when(accommodationRepository.findAll()).thenReturn(List.of(accommodation));
         when(accommodationImageService.getMainImageUrl(1L)).thenReturn("/images/accommodations/1/main.jpg");
 
         // When
@@ -189,14 +209,16 @@ public class AccommodationServiceTest {
         // Then
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        assertEquals("호텔 테스트", responses.get(0).getName());
-        assertEquals("서울시 강남구 테헤란로 123", responses.get(0).getAddress());
-        assertEquals(new BigDecimal("100000"), responses.get(0).getPricePerNight());
-        assertEquals("/images/accommodations/1/main.jpg", responses.get(0).getMainImageUrl());
-        
+        AccommodationDto.ListResponse response = responses.get(0);
+        assertEquals("호텔 테스트", response.getName());
+        assertEquals("서울시 강남구 테헤란로 123", response.getAddress());
+        assertEquals(new BigDecimal("100000"), response.getPricePerNight());
+        assertEquals(BigDecimal.valueOf(4.5), response.getRating());
+        assertEquals(10, response.getReviewCount());
+        assertEquals("/images/accommodations/1/main.jpg", response.getMainImageUrl());
+
         verify(accommodationRepository, times(1)).findAll();
         verify(accommodationImageService, times(1)).getMainImageUrl(1L);
-
     }
 
     @Test
@@ -322,5 +344,181 @@ public class AccommodationServiceTest {
         
         verify(accommodationRepository, times(1)).findById(999L);
         verify(accommodationRepository, never()).save(any(Accommodation.class));
+    }
+
+    @Test
+    @DisplayName("리뷰 수 증가 성공")
+    void incrementReviewCount_Success() {
+        // Given
+        Long accommodationId = 1L;
+        Accommodation accommodation = Accommodation.builder()
+                .name("호텔 테스트")
+                .description("테스트용 호텔입니다.")
+                .address("서울시 강남구 테헤란로 123")
+                .latitude(new BigDecimal("37.5665"))
+                .longitude(new BigDecimal("126.9780"))
+                .pricePerNight(new BigDecimal("100000"))
+                .reviewCount(10)
+                .build();
+        ReflectionTestUtils.setField(accommodation, "id", accommodationId);
+        
+        when(accommodationRepository.findById(accommodationId))
+                .thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.saveAndFlush(any(Accommodation.class)))
+                .thenReturn(accommodation);
+
+        // When
+        accommodationService.incrementReviewCount(accommodationId);
+
+        // Then
+        assertEquals(11, accommodation.getReviewCount());
+        verify(accommodationRepository, times(1)).findById(accommodationId);
+        verify(accommodationRepository, times(1)).saveAndFlush(accommodation);
+    }
+
+    @Test
+    @DisplayName("리뷰 수 증가 실패 - 존재하지 않는 숙소")
+    void incrementReviewCount_Fail_AccommodationNotFound() {
+        // Given
+        Long accommodationId = 1L;
+        when(accommodationRepository.findById(accommodationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> accommodationService.incrementReviewCount(accommodationId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("ID가 1인 숙소를 찾을 수 없습니다.");
+
+        verify(accommodationRepository).findById(accommodationId);
+        verify(accommodationRepository, never()).save(any(Accommodation.class));
+    }
+
+    @Test
+    @DisplayName("리뷰 수 증가 재시도 성공")
+    void incrementReviewCountWithRetry_Success() {
+        // Given
+        Long accommodationId = 1L;
+        Accommodation accommodation = Accommodation.builder()
+                .name("호텔 테스트")
+                .description("테스트용 호텔입니다.")
+                .address("서울시 강남구 테헤란로 123")
+                .reviewCount(10)
+                .build();
+        ReflectionTestUtils.setField(accommodation, "id", accommodationId);
+        ReflectionTestUtils.setField(accommodation, "version", 0L);
+
+        when(accommodationRepository.findById(accommodationId))
+                .thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.saveAndFlush(any(Accommodation.class)))
+                .thenReturn(accommodation);
+
+        // When
+        accommodationService.incrementReviewCountWithRetry(accommodationId, 3);
+
+        // Then
+        assertEquals(11, accommodation.getReviewCount());
+        verify(accommodationRepository, times(1)).findById(accommodationId);
+        verify(accommodationRepository, times(1)).saveAndFlush(accommodation);
+    }
+
+    @Test
+    @DisplayName("리뷰 수 감소 성공")
+    void decrementReviewCount_Success() {
+        // Given
+        Long accommodationId = 1L;
+        Accommodation accommodation = Accommodation.builder()
+                .name("호텔 테스트")
+                .description("테스트용 호텔입니다.")
+                .address("서울시 강남구 테헤란로 123")
+                .latitude(new BigDecimal("37.5665"))
+                .longitude(new BigDecimal("126.9780"))
+                .pricePerNight(new BigDecimal("100000"))
+                .reviewCount(10)
+                .build();
+        ReflectionTestUtils.setField(accommodation, "id", accommodationId);
+        
+        when(accommodationRepository.findById(accommodationId))
+                .thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.saveAndFlush(any(Accommodation.class)))
+                .thenReturn(accommodation);
+
+        // When
+        accommodationService.decrementReviewCount(accommodationId);
+
+        // Then
+        assertEquals(9, accommodation.getReviewCount());
+        verify(accommodationRepository, times(1)).findById(accommodationId);
+        verify(accommodationRepository, times(1)).saveAndFlush(accommodation);
+    }
+
+    @Test
+    @DisplayName("리뷰 수 감소 실패 - 존재하지 않는 숙소")
+    void decrementReviewCount_Fail_AccommodationNotFound() {
+        // Given
+        Long accommodationId = 1L;
+        when(accommodationRepository.findById(accommodationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> accommodationService.decrementReviewCount(accommodationId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("ID가 1인 숙소를 찾을 수 없습니다.");
+
+        verify(accommodationRepository).findById(accommodationId);
+        verify(accommodationRepository, never()).save(any(Accommodation.class));
+    }
+
+    @Test
+    @DisplayName("평점 업데이트 성공")
+    void updateRating_Success() {
+        // Given
+        Long accommodationId = 1L;
+        BigDecimal newRating = BigDecimal.valueOf(4.8);
+        when(accommodationRepository.findById(accommodationId)).thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.save(any(Accommodation.class))).thenReturn(accommodation);
+
+        // When
+        accommodationService.updateRating(accommodationId, newRating);
+
+        // Then
+        assertThat(accommodation.getRating()).isEqualTo(newRating);
+        verify(accommodationRepository).findById(accommodationId);
+        verify(accommodationRepository).save(accommodation);
+    }
+
+    @Test
+    @DisplayName("평점 업데이트 실패 - 존재하지 않는 숙소")
+    void updateRating_Fail_AccommodationNotFound() {
+        // Given
+        Long accommodationId = 1L;
+        BigDecimal newRating = BigDecimal.valueOf(4.8);
+        when(accommodationRepository.findById(accommodationId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> accommodationService.updateRating(accommodationId, newRating))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("ID가 1인 숙소를 찾을 수 없습니다.");
+
+        verify(accommodationRepository).findById(accommodationId);
+        verify(accommodationRepository, never()).save(any(Accommodation.class));
+    }
+
+    @Test
+    @DisplayName("평점 업데이트 재시도 성공")
+    void updateRatingWithRetry_Success() {
+        // Given
+        Long accommodationId = 1L;
+        BigDecimal newRating = BigDecimal.valueOf(4.8);
+        when(accommodationRepository.findById(accommodationId))
+                .thenReturn(Optional.of(accommodation));
+        when(accommodationRepository.save(any(Accommodation.class)))
+                .thenThrow(OptimisticLockingFailureException.class)
+                .thenReturn(accommodation);
+
+        // When
+        accommodationService.updateRatingWithRetry(accommodationId, newRating, 3);
+
+        // Then
+        assertThat(accommodation.getRating()).isEqualTo(newRating);
+        verify(accommodationRepository, times(2)).findById(accommodationId);
+        verify(accommodationRepository, times(2)).save(accommodation);
     }
 } 

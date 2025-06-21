@@ -21,9 +21,10 @@ public class OrderCoupon extends BaseEntity {
     @Comment("주문 쿠폰 ID")
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
-    @Comment("주문 ID")
-    private Long orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    @Comment("주문")
+    private Order order;
 
     @Column(name = "user_coupon_id", nullable = false)
     @Comment("사용자 쿠폰 ID")
@@ -34,8 +35,8 @@ public class OrderCoupon extends BaseEntity {
     private BigDecimal discountAmount;
 
     @Builder
-    private OrderCoupon(Long orderId, Long userCouponId, BigDecimal discountAmount) {
-        this.orderId = orderId;
+    private OrderCoupon(Order order, Long userCouponId, BigDecimal discountAmount) {
+        this.order = order;
         this.userCouponId = userCouponId;
         this.discountAmount = discountAmount;
     }
@@ -43,12 +44,19 @@ public class OrderCoupon extends BaseEntity {
     /**
      * 주문 쿠폰 생성
      */
-    public static OrderCoupon create(Long orderId, Long userCouponId, BigDecimal discountAmount) {
+    public static OrderCoupon create(Order order, Long userCouponId, BigDecimal discountAmount) {
         return OrderCoupon.builder()
-                .orderId(orderId)
+                .order(order)
                 .userCouponId(userCouponId)
                 .discountAmount(discountAmount)
                 .build();
+    }
+
+    /**
+     * 주문 ID 조회 (편의 메서드)
+     */
+    public Long getOrderId() {
+        return this.order != null ? this.order.getId() : null;
     }
 
     /**

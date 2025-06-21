@@ -1,4 +1,4 @@
-package com.yanolja.areas.payment.service;
+package com.yanolja.common.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -111,5 +111,55 @@ public class DistributedLockService {
     public boolean forceUnlock(String key) {
         String lockKey = LOCK_PREFIX + key;
         return Boolean.TRUE.equals(redisTemplate.delete(lockKey));
+    }
+
+    /**
+     * 분산 락을 사용하여 작업 실행
+     * 
+     * @param key 락 키
+     * @param timeout 타임아웃 (초)
+     * @param leaseTime 락 보유 시간 (초)
+     * @param task 실행할 작업
+     * @param <T> 반환 타입
+     * @return 작업 결과
+     * @throws RuntimeException 락 획득 실패 또는 작업 실행 중 오류
+     */
+    public <T> T executeWithLock(String key, long timeout, long leaseTime, LockTask<T> task) {
+        String lockValue = tryLock(key, timeout, leaseTime);
+        if (lockValue == null) {
+            throw new RuntimeException("락 획득에 실패했습니다: " + key);
+        }
+        
+        try {
+            return task.execute();
+        } finally {
+            unlock(key, lockValue);
+        }
+    }
+
+    /**
+     * 분산 락을 사용하여 작업 실행 (반환값 없음)
+     */
+    public void executeWithLock(String key, long timeout, long leaseTime, VoidLockTask task) {
+        String lockValue = tryLock(key, timeout, leaseTime);
+        if (lockValue == null) {
+            throw new RuntimeException("락 획득에 실패했습니다: " + key);
+        }
+        
+        try {
+            task.execute();
+        } finally {
+            unlock(key, lockValue);
+        }
+    }
+
+    @FunctionalInterface
+    public interface LockTask<T> {
+        T execute();
+    }
+
+    @FunctionalInterface
+    public interface VoidLockTask {
+        void execute();
     }
 } 

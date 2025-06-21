@@ -3,6 +3,7 @@ package com.yanolja.areas.payment.service;
 import com.yanolja.areas.payment.dto.PointDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.PointRepository;
+import com.yanolja.common.service.DistributedLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

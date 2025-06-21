@@ -38,6 +38,10 @@ public class UserDetail implements UserDetails, OAuth2User {
         this.attributes = attributes;
     }
 
+    public Long getId() {
+        return user.getId();
+    }
+
     @Override
     public String getName() {
         return user.getEmail();
