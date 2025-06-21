@@ -77,6 +77,13 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
+# 파일 업로드 설정
+file:
+  upload:
+    accommodation-image-dir: uploads/accommodations
+    room-image-dir: uploads/rooms
+    max-size: 10485760 # 10MB
+
 # 애플리케이션 설정
 app:
   retry:

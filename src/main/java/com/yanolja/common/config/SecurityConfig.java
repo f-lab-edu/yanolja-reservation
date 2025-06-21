@@ -80,6 +80,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/portal/**").permitAll()
                 .requestMatchers("/api/users/register").permitAll()
+                .requestMatchers("/api/accommodations/images/**").permitAll()
+                .requestMatchers("/api/rooms/images/**").permitAll()
                 .requestMatchers("/login/**", "/oauth2/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
