@@ -237,6 +237,7 @@ CREATE TABLE coupons (
 -- 사용자 쿠폰 테이블
 CREATE TABLE user_coupons (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     user_id BIGINT NOT NULL,
     coupon_id BIGINT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE',
