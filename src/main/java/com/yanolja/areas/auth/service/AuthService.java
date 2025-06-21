@@ -6,6 +6,8 @@ import com.yanolja.areas.auth.dto.LogoutRequest;
 import com.yanolja.areas.auth.dto.TokenRefreshRequest;
 import com.yanolja.areas.auth.dto.TokenResponse;
 import com.yanolja.areas.user.repository.UserRepository;
+import com.yanolja.common.exception.ErrorCode;
+import com.yanolja.common.exception.UserException;
 import com.yanolja.common.jwt.JwtTokenProvider;
 import com.yanolja.common.jwt.TokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,14 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest request) {
+        // 먼저 탈퇴한 회원인지 확인
+        User user = userRepository.findUserByEmail(request.getEmail())
+                .orElse(null);
+        
+        if (user != null && "Y".equals(user.getWithdrawalYn())) {
+            throw new UserException(ErrorCode.WITHDRAWN_USER);
+        }
+        
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
