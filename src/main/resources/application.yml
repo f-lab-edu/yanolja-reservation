@@ -86,8 +86,14 @@ logging:
 # 파일 업로드 설정
 file:
   upload:
-    accommodation-image-dir: uploads/accommodations
-    room-image-dir: uploads/rooms
+    # 파일 저장 기본 경로 (서버의 특정 폴더)
+    # Linux/Mac: /var/uploads/yanolja 또는 /opt/uploads/yanolja
+    # Windows: C:/uploads/yanolja 또는 D:/uploads/yanolja
+    # 개발환경: 시스템 temp 폴더 사용 (기본값)
+    # base-dir: /var/uploads/yanolja  # 운영환경에서 주석 해제
+    accommodation-image-dir: accommodations
+    room-image-dir: rooms
+    amenity-icon-dir: amenities
     max-size: 10485760 # 10MB
 
 # 애플리케이션 설정

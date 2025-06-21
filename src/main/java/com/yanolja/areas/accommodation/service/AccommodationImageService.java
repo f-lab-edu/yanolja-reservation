@@ -76,7 +76,7 @@ public class AccommodationImageService {
         }
         
         // 폴더 생성
-        Path uploadPath = Paths.get(fileStorageProperties.getAccommodationImageDir(), accommodationId.toString());
+        Path uploadPath = Paths.get(fileStorageProperties.getFullAccommodationImageDir(), accommodationId.toString());
         if (!Files.exists(uploadPath)) {
             try {
                 Files.createDirectories(uploadPath);
@@ -171,7 +171,7 @@ public class AccommodationImageService {
         try {
             // 실제 파일 삭제
             String filename = image.getImageUrl().substring(image.getImageUrl().lastIndexOf("/") + 1);
-            Path filePath = Paths.get(fileStorageProperties.getAccommodationImageDir(), 
+            Path filePath = Paths.get(fileStorageProperties.getFullAccommodationImageDir(), 
                     accommodationId.toString(), filename);
             
             if (Files.deleteIfExists(filePath)) {

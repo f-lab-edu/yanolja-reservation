@@ -80,7 +80,7 @@ public class RoomImageServiceTest {
         );
         
         // FileStorageProperties 설정 - 모든 테스트에서 사용하는 것은 아니므로 lenient로 설정
-        lenient().when(fileStorageProperties.getRoomImageDir()).thenReturn(TEST_UPLOAD_DIR);
+        lenient().when(fileStorageProperties.getFullRoomImageDir()).thenReturn(TEST_UPLOAD_DIR);
         lenient().when(fileStorageProperties.getMaxSize()).thenReturn(10485760L); // 10MB
     }
 

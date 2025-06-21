@@ -68,7 +68,7 @@ public class AccommodationImageController {
             @PathVariable Long accommodationId, 
             @PathVariable String filename) {
         try {
-            Path filePath = Paths.get(fileStorageProperties.getAccommodationImageDir())
+            Path filePath = Paths.get(fileStorageProperties.getFullAccommodationImageDir())
                     .resolve(accommodationId.toString())
                     .resolve(filename)
                     .normalize();

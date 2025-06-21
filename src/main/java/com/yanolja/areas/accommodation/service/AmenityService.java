@@ -165,6 +165,19 @@ public class AmenityService {
     }
     
     /**
+     * 전체 편의시설 목록 조회
+     * @return 편의시설 응답 DTO 목록
+     */
+    @Transactional(readOnly = true)
+    public List<AmenityDto.Response> getAllAmenities() {
+        List<Amenity> amenities = amenityRepository.findAll();
+        
+        return amenities.stream()
+                .map(AmenityDto.Response::fromEntity)
+                .collect(Collectors.toList());
+    }
+    
+    /**
      * ID로 숙소 조회
      * @param id 숙소 ID
      * @return 숙소 엔티티

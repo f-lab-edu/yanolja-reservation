@@ -81,7 +81,7 @@ public class RoomImageController {
             @Parameter(description = "객실 ID", required = true) @PathVariable Long roomId,
             @Parameter(description = "파일명", required = true) @PathVariable String filename) {
         try {
-            Path filePath = Paths.get(fileStorageProperties.getRoomImageDir())
+            Path filePath = Paths.get(fileStorageProperties.getFullRoomImageDir())
                     .resolve(roomId.toString())
                     .resolve(filename)
                     .normalize();
