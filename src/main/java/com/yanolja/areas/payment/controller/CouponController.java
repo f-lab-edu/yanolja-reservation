@@ -3,7 +3,6 @@ package com.yanolja.areas.payment.controller;
 import com.yanolja.areas.payment.dto.CouponDto;
 import com.yanolja.areas.payment.service.CouponService;
 import com.yanolja.common.response.ApiResponse;
-import com.yanolja.areas.payment.entity.Coupon;
 import com.yanolja.areas.payment.entity.CouponIssueType;
 import com.yanolja.areas.payment.entity.CouponStatus;
 import com.yanolja.areas.payment.entity.UserCoupon;
@@ -33,23 +32,23 @@ public class CouponController {
 
     @PostMapping
     @Operation(summary = "쿠폰 생성", description = "새로운 쿠폰을 생성합니다.")
-    public ApiResponse<Coupon> createCoupon(
+    public ApiResponse<CouponDto.CouponResponse> createCoupon(
             @Valid @RequestBody CouponDto.CreateCouponRequest request) {
         log.info("쿠폰 생성 요청 - code: {}, name: {}", request.getCode(), request.getName());
         
-        Coupon response = couponService.createCoupon(request);
+        CouponDto.CouponResponse response = couponService.createCouponDto(request);
         
         return ApiResponse.success(response);
     }
 
     @PostMapping("/{couponCode}/issue/{userId}")
     @Operation(summary = "쿠폰 발급", description = "사용자에게 쿠폰을 발급합니다.")
-    public ApiResponse<UserCoupon> issueCoupon(
+    public ApiResponse<CouponDto.UserCouponResponse> issueCoupon(
             @Parameter(description = "쿠폰 코드") @PathVariable String couponCode,
             @Parameter(description = "사용자 ID") @PathVariable Long userId) {
         log.info("쿠폰 발급 요청 - couponCode: {}, userId: {}", couponCode, userId);
         
-        UserCoupon response = couponService.issueCouponToUser(userId, couponCode);
+        CouponDto.UserCouponResponse response = couponService.issueCouponToUserDto(userId, couponCode);
         
         return ApiResponse.success(response);
     }
@@ -91,22 +90,22 @@ public class CouponController {
 
     @GetMapping
     @Operation(summary = "쿠폰 목록 조회", description = "쿠폰 목록을 조회합니다.")
-    public ApiResponse<Page<Coupon>> getAllCoupons(
+    public ApiResponse<Page<CouponDto.CouponResponse>> getAllCoupons(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("쿠폰 목록 조회 요청");
         
-        Page<Coupon> response = couponService.getAllCoupons(pageable);
+        Page<CouponDto.CouponResponse> response = couponService.getAllCouponsDto(pageable);
         
         return ApiResponse.success(response);
     }
 
     @GetMapping("/search")
     @Operation(summary = "쿠폰 검색", description = "키워드로 쿠폰을 검색합니다.")
-    public ApiResponse<List<Coupon>> searchCoupons(
+    public ApiResponse<List<CouponDto.CouponResponse>> searchCoupons(
             @Parameter(description = "검색 키워드") @RequestParam String keyword) {
         log.info("쿠폰 검색 요청 - keyword: {}", keyword);
         
-        List<Coupon> response = couponService.searchCoupons(keyword);
+        List<CouponDto.CouponResponse> response = couponService.searchCouponsDto(keyword);
         
         return ApiResponse.success(response);
     }
