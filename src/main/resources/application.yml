@@ -14,12 +14,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MariaDBDialect
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 3000
+      # Redis 분산 락 설정
+      distributed-lock:
+        default-timeout: 10 # 기본 락 획득 타임아웃 (초)
+        default-lease-time: 30 # 기본 락 보유 시간 (초)
+        retry-interval: 100 # 락 획득 재시도 간격 (ms)
   security:
     oauth2:
       client:

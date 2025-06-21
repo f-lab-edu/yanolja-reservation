@@ -19,16 +19,16 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, Payment
     /**
      * 주문별 결제 목록 조회
      */
-    List<Payment> findByOrderIdOrderByCreatedAtDesc(Long orderId);
+    List<Payment> findByOrder_IdOrderByCreatedAtDesc(Long orderId);
 
     /**
-     * 주문별 성공 결제 조회
+     * 주문별 특정 상태 결제 조회
      */
-    Optional<Payment> findSuccessPaymentByOrderId(Long orderId, PaymentStatus status);
+    Optional<Payment> findByOrder_IdAndStatus(Long orderId, PaymentStatus status);
     
 
     /**
      * 주문별 결제 존재 여부 확인
      */
-    boolean existsByOrderIdAndStatus(Long orderId, PaymentStatus status);
+    boolean existsByOrder_IdAndStatus(Long orderId, PaymentStatus status);
 } 

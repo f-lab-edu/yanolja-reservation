@@ -151,6 +151,7 @@ CREATE TABLE wishlists (
 -- 주문 테이블
 CREATE TABLE orders (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     order_number VARCHAR(50) NOT NULL UNIQUE,
     user_id BIGINT NOT NULL,
     reservation_id BIGINT NOT NULL,
@@ -176,6 +177,7 @@ CREATE TABLE orders (
 -- 결제 테이블
 CREATE TABLE payments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     payment_key VARCHAR(100) NOT NULL UNIQUE,
     order_id BIGINT NOT NULL,
     payment_method VARCHAR(20) NOT NULL,
@@ -190,6 +192,7 @@ CREATE TABLE payments (
     paid_at TIMESTAMP NULL,
     failure_reason VARCHAR(500),
     receipt_url VARCHAR(500),
+    refunded_amount DECIMAL(10,2) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),

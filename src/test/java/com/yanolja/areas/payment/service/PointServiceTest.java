@@ -5,6 +5,7 @@ import com.yanolja.areas.payment.entity.Point;
 import com.yanolja.areas.payment.entity.PointStatus;
 import com.yanolja.areas.payment.entity.PointTransactionType;
 import com.yanolja.areas.payment.repository.PointRepository;
+import com.yanolja.common.service.DistributedLockService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

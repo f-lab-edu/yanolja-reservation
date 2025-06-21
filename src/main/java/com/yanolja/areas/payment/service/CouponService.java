@@ -4,6 +4,7 @@ import com.yanolja.areas.payment.dto.CouponDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.CouponRepository;
 import com.yanolja.areas.payment.repository.UserCouponRepository;
+import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
