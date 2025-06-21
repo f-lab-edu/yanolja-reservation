@@ -32,7 +32,7 @@ public class PortalCouponController {
     @Operation(summary = "사용자 쿠폰 목록 조회", description = "사용자가 보유한 쿠폰 목록을 조회합니다.")
     public ApiResponse<Page<UserCoupon>> getUserCoupons(
             @Parameter(description = "사용자 ID") @PathVariable Long userId,
-            @PageableDefault(size = 20, sort = "issuedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("사용자 쿠폰 목록 조회 요청 - userId: {}", userId);
         
         Page<UserCoupon> coupons = couponService.getUserCoupons(userId, pageable);
