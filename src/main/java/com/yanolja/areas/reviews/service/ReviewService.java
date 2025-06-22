@@ -14,7 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -30,13 +32,76 @@ public class ReviewService {
     private final ReviewImageRepository reviewImageRepository;
     private final AccommodationService accommodationService;
     private final DistributedLockService distributedLockService;
+    private final ReviewImageService reviewImageService;
     
     private static final int MAX_RETRIES = 3;
     private static final long LOCK_TIMEOUT = 10L; // 10초
     private static final long LOCK_LEASE_TIME = 30L; // 30초
 
     /**
-     * 리뷰 생성
+     * 리뷰 생성 (이미지 파일 포함)
+     * @param userId 사용자 ID
+     * @param request 리뷰 생성 요청
+     * @param imageFiles 이미지 파일 배열
+     * @return 생성된 리뷰 응답
+     */
+    @Transactional
+    public ReviewDto.Response createReviewWithImages(Long userId, ReviewDto.CreateRequest request, MultipartFile[] imageFiles) throws IOException {
+        log.info("리뷰 생성 시작 (이미지 포함) - userId: {}, accommodationId: {}, reservationId: {}, imageCount: {}", 
+                userId, request.getAccommodationId(), request.getReservationId(), 
+                imageFiles != null ? imageFiles.length : 0);
+
+        // 이미지 개수 제한 확인
+        if (imageFiles != null && imageFiles.length > 5) {
+            throw new IllegalArgumentException("리뷰 이미지는 최대 5개까지 업로드 가능합니다.");
+        }
+
+        // 이미 작성된 리뷰가 있는지 확인
+        if (reviewRepository.existsByReservationId(request.getReservationId())) {
+            throw new IllegalArgumentException("이미 해당 예약에 대한 리뷰가 존재합니다.");
+        }
+
+        // 평점 유효성 검증
+        if (!Review.isValidRating(request.getRating())) {
+            throw new IllegalArgumentException("평점은 1~5 사이의 값이어야 합니다.");
+        }
+
+        // 분산 락을 사용하여 리뷰 생성
+        String lockKey = "review:create:accommodation:" + request.getAccommodationId();
+        
+        return distributedLockService.executeWithLock(lockKey, LOCK_TIMEOUT, LOCK_LEASE_TIME, () -> {
+            try {
+                // 리뷰 생성
+                Review review = Review.createReview(
+                        userId,
+                        request.getAccommodationId(),
+                        request.getReservationId(),
+                        request.getRating(),
+                        request.getComment()
+                );
+
+                Review savedReview = reviewRepository.save(review);
+
+                // 이미지 파일이 있으면 업로드
+                if (imageFiles != null && imageFiles.length > 0) {
+                    reviewImageService.saveImages(savedReview.getId(), imageFiles);
+                }
+
+                // 숙소의 리뷰 수와 평점 업데이트
+                accommodationService.incrementReviewCountWithRetry(request.getAccommodationId(), MAX_RETRIES);
+                updateAccommodationRating(request.getAccommodationId());
+
+                log.info("리뷰 생성 완료 - reviewId: {}", savedReview.getId());
+                return ReviewDto.Response.from(savedReview);
+            } catch (IOException e) {
+                log.error("리뷰 이미지 업로드 실패 - userId: {}, accommodationId: {}", userId, request.getAccommodationId(), e);
+                throw new RuntimeException("리뷰 이미지 업로드에 실패했습니다.", e);
+            }
+        });
+    }
+
+    /**
+     * 리뷰 생성 (기존 메서드 - 하위 호환성 유지)
      * @param userId 사용자 ID
      * @param request 리뷰 생성 요청
      * @return 생성된 리뷰 응답
@@ -202,7 +267,7 @@ public class ReviewService {
      * @return 리뷰 페이지
      */
     public Page<ReviewDto.ListResponse> getReviewsByAccommodation(Long accommodationId, Pageable pageable) {
-        Page<Review> reviews = reviewRepository.findByAccommodationIdOrderByCreatedAtDesc(accommodationId, pageable);
+        Page<Review> reviews = reviewRepository.findByAccommodationIdWithImages(accommodationId, pageable);
         return reviews.map(ReviewDto.ListResponse::from);
     }
 
@@ -213,7 +278,7 @@ public class ReviewService {
      * @return 리뷰 페이지
      */
     public Page<ReviewDto.ListResponse> getReviewsByUser(Long userId, Pageable pageable) {
-        Page<Review> reviews = reviewRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Page<Review> reviews = reviewRepository.findByUserIdWithImages(userId, pageable);
         return reviews.map(ReviewDto.ListResponse::from);
     }
 

@@ -161,6 +161,9 @@ public class ReviewDto {
         @Schema(description = "이미지 개수", example = "3")
         private Integer imageCount;
 
+        @Schema(description = "이미지 정보 목록")
+        private List<ReviewImageDto.Response> images;
+
         @Schema(description = "작성일시", example = "2024-03-01T10:00:00")
         private LocalDateTime createdAt;
 
@@ -171,12 +174,17 @@ public class ReviewDto {
          * Review 엔티티로부터 DTO 생성
          */
         public static ListResponse from(Review review) {
+            List<ReviewImageDto.Response> imageResponses = review.getReviewImages().stream()
+                    .map(ReviewImageDto.Response::fromEntity)
+                    .collect(Collectors.toList());
+
             return ListResponse.builder()
                     .id(review.getId())
                     .userId(review.getUserId())
                     .rating(review.getRating())
                     .comment(review.getComment())
                     .imageCount(review.getReviewImages().size())
+                    .images(imageResponses)
                     .createdAt(review.getCreatedAt())
                     .createdBy(review.getCreatedBy())
                     .build();
