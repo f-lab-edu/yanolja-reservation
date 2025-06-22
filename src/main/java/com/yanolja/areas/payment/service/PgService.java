@@ -90,67 +90,22 @@ public class PgService {
         }
     }
 
-    /**
-     * 결제 요청 (카카오페이)
-     */
-    public PgResult requestKakaoPayment(Payment payment, PaymentDto.Request request) {
-        try {
-            String url = paymentConfig.getPg().getKakao().getApiUrl() + "/v1/payment/ready";
-            
-            // 결제 요청 데이터 구성
-            Map<String, Object> paymentData = new HashMap<>();
-            paymentData.put("cid", paymentConfig.getPg().getKakao().getCid());
-            paymentData.put("partner_order_id", payment.getOrder().getOrderNumber());
-            paymentData.put("partner_user_id", payment.getOrder().getUserId().toString());
-            paymentData.put("item_name", "야놀자 숙소 예약");
-            paymentData.put("quantity", 1);
-            paymentData.put("total_amount", payment.getAmount().intValue());
-            paymentData.put("vat_amount", 0);
-            paymentData.put("tax_free_amount", 0);
-            paymentData.put("approval_url", paymentConfig.getPg().getToss().getSuccessUrl());
-            paymentData.put("fail_url", paymentConfig.getPg().getToss().getFailUrl());
-            paymentData.put("cancel_url", paymentConfig.getPg().getToss().getFailUrl());
-            
-            // HTTP 헤더 설정
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            headers.set("Authorization", "KakaoAK " + paymentConfig.getPg().getKakao().getAdminKey());
-            
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(paymentData, headers);
-            
-            // API 호출
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
-            
-            if (response.getStatusCode() == HttpStatus.OK) {
-                Map<String, Object> responseBody = response.getBody();
-                return PgResult.builder()
-                        .success(true)
-                        .pgTransactionId((String) responseBody.get("tid"))
-                        .paymentUrl((String) responseBody.get("next_redirect_pc_url"))
-                        .build();
-            } else {
-                return PgResult.builder()
-                        .success(false)
-                        .failureReason("카카오페이 API 호출 실패: " + response.getStatusCode())
-                        .build();
-            }
-            
-        } catch (Exception e) {
-            log.error("카카오페이 결제 요청 실패", e);
-            return PgResult.builder()
-                    .success(false)
-                    .failureReason("카카오페이 연동 오류: " + e.getMessage())
-                    .build();
-        }
-    }
+
 
     /**
      * 결제 취소 요청 (토스페이먼츠)
      */
     public boolean cancelTossPayment(Payment payment, String reason) {
         try {
+            // paymentKey를 사용 (pgTransactionId 대신)
+            String paymentKeyToUse = payment.getPaymentKey();
+            if (paymentKeyToUse == null || paymentKeyToUse.isEmpty()) {
+                log.error("PaymentKey가 없어서 취소할 수 없습니다 - payment.id: {}", payment.getId());
+                return false;
+            }
+            
             String url = paymentConfig.getPg().getToss().getApiUrl() + 
-                        "/v1/payments/" + payment.getPgTransactionId() + "/cancel";
+                        "/v1/payments/" + paymentKeyToUse + "/cancel";
             
             Map<String, Object> cancelData = new HashMap<>();
             cancelData.put("cancelReason", reason);
@@ -177,8 +132,15 @@ public class PgService {
      */
     public boolean refundTossPayment(Payment payment, BigDecimal refundAmount, String reason) {
         try {
+            // paymentKey를 사용 (pgTransactionId 대신)
+            String paymentKeyToUse = payment.getPaymentKey();
+            if (paymentKeyToUse == null || paymentKeyToUse.isEmpty()) {
+                log.error("PaymentKey가 없어서 환불할 수 없습니다 - payment.id: {}", payment.getId());
+                return false;
+            }
+            
             String url = paymentConfig.getPg().getToss().getApiUrl() + 
-                        "/v1/payments/" + payment.getPgTransactionId() + "/cancel";
+                        "/v1/payments/" + paymentKeyToUse + "/cancel";
             
             Map<String, Object> refundData = new HashMap<>();
             refundData.put("cancelAmount", refundAmount.intValue());
@@ -240,15 +202,10 @@ public class PgService {
         
         switch (paymentMethod) {
             case CARD:
+            case BANK_TRANSFER:
+            case VIRTUAL_ACCOUNT:
+            case TOSS:
                 return requestTossPayment(payment, request);
-            case KAKAO_PAY:
-                return requestKakaoPayment(payment, request);
-            case NAVER_PAY:
-                // 네이버페이 구현 (필요시)
-                return PgResult.builder()
-                        .success(false)
-                        .failureReason("네이버페이는 현재 지원되지 않습니다.")
-                        .build();
             default:
                 return PgResult.builder()
                         .success(false)
