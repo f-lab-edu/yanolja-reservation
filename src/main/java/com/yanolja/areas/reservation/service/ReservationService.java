@@ -234,6 +234,42 @@ public class ReservationService {
     }
 
     /**
+     * 주문별 예약 취소 (결제 취소시 사용)
+     */
+    public void cancelReservationsByOrder(Long reservationId, String reason) {
+        log.info("Cancelling reservation: {} with reason: {}", reservationId, reason);
+
+        try {
+            Reservation reservation = reservationRepository.findById(reservationId)
+                    .orElse(null);
+                    
+            if (reservation != null) {
+                if (reservation.canCancel()) {
+                    reservation.cancel();  // status: CANCELLED, paymentStatus: CANCELLED
+                    reservationRepository.save(reservation);
+                    log.info("Reservation cancelled successfully: {} - status: {}, paymentStatus: {}", 
+                            reservationId, reservation.getStatus(), reservation.getPaymentStatus());
+                } else {
+                    // 이미 취소된 상태가 아니라면 강제로 취소 처리
+                    if (reservation.getStatus() != com.yanolja.areas.reservation.entity.ReservationStatus.CANCELLED) {
+                        reservation.cancel();
+                        reservationRepository.save(reservation);
+                        log.info("Reservation force cancelled: {} - status: {}, paymentStatus: {}", 
+                                reservationId, reservation.getStatus(), reservation.getPaymentStatus());
+                    } else {
+                        log.info("Reservation already cancelled: {}", reservationId);
+                    }
+                }
+            } else {
+                log.warn("No reservation found with ID: {}", reservationId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to cancel reservation: {}", reservationId, e);
+            // 예약 취소 실패해도 결제/주문 취소는 진행되도록 예외를 다시 던지지 않음
+        }
+    }
+
+    /**
      * 만료된 PENDING 예약 정리 (QueryDSL 사용)
      */
     public void cleanupExpiredReservations() {
