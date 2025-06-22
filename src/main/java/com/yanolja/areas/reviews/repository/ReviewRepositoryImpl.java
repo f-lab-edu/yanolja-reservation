@@ -48,16 +48,18 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 searchRequest.getSortDirection()
         );
 
-        // 쿼리 실행
+        // 메인 쿼리 (이미지 포함)
         List<Review> reviews = queryFactory
                 .selectFrom(review)
+                .distinct()
+                .leftJoin(review.reviewImages).fetchJoin()
                 .where(builder)
                 .orderBy(orderSpecifier)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 전체 개수 조회
+        // 전체 개수 조회 (이미지 조인 없이)
         Long total = queryFactory
                 .select(review.count())
                 .from(review)
@@ -88,14 +90,18 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     @Override
     public Page<Review> findReviewsByUserId(Long userId, Pageable pageable) {
+        // 메인 쿼리 (이미지 포함)
         List<Review> reviews = queryFactory
                 .selectFrom(review)
+                .distinct()
+                .leftJoin(review.reviewImages).fetchJoin()
                 .where(review.userId.eq(userId))
                 .orderBy(review.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
+        // 전체 개수 조회 (이미지 조인 없이)
         Long total = queryFactory
                 .select(review.count())
                 .from(review)
@@ -109,10 +115,57 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     public List<Review> findRecentReviewsByAccommodationId(Long accommodationId, int limit) {
         return queryFactory
                 .selectFrom(review)
+                .leftJoin(review.reviewImages).fetchJoin()
                 .where(review.accommodationId.eq(accommodationId))
                 .orderBy(review.createdAt.desc())
                 .limit(limit)
                 .fetch();
+    }
+
+    @Override
+    public Page<Review> findByAccommodationIdWithImages(Long accommodationId, Pageable pageable) {
+        // 메인 쿼리 (이미지 포함)
+        List<Review> reviews = queryFactory
+                .selectFrom(review)
+                .distinct()
+                .leftJoin(review.reviewImages).fetchJoin()
+                .where(review.accommodationId.eq(accommodationId))
+                .orderBy(review.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        // 전체 개수 조회 (이미지 조인 없이)
+        Long total = queryFactory
+                .select(review.count())
+                .from(review)
+                .where(review.accommodationId.eq(accommodationId))
+                .fetchOne();
+
+        return new PageImpl<>(reviews, pageable, total != null ? total : 0);
+    }
+
+    @Override
+    public Page<Review> findByUserIdWithImages(Long userId, Pageable pageable) {
+        // 메인 쿼리 (이미지 포함)
+        List<Review> reviews = queryFactory
+                .selectFrom(review)
+                .distinct()
+                .leftJoin(review.reviewImages).fetchJoin()
+                .where(review.userId.eq(userId))
+                .orderBy(review.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        // 전체 개수 조회 (이미지 조인 없이)
+        Long total = queryFactory
+                .select(review.count())
+                .from(review)
+                .where(review.userId.eq(userId))
+                .fetchOne();
+
+        return new PageImpl<>(reviews, pageable, total != null ? total : 0);
     }
 
     /**
