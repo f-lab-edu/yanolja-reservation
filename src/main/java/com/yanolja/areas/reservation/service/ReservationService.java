@@ -127,15 +127,18 @@ public class ReservationService {
         return reservations.map(reservation -> {
             Room room = roomRepository.findById(reservation.getRoomId()).orElse(null);
             Accommodation accommodation = null;
+            Long accommodationId = null;
             if (room != null) {
-                accommodation = accommodationRepository.findById(room.getAccommodationId()).orElse(null);
+                accommodationId = room.getAccommodationId();
+                accommodation = accommodationRepository.findById(accommodationId).orElse(null);
             }
 
-            return ReservationDto.ListResponse.fromEntityWithDetails(
+            return ReservationDto.ListResponse.fromEntityWithDetailsAndAccommodationId(
                     reservation,
                     room != null ? room.getName() : "알 수 없음",
                     accommodation != null ? accommodation.getName() : "알 수 없음",
-                    null // 이미지는 별도 서비스에서 조회
+                    null, // 이미지는 별도 서비스에서 조회
+                    accommodationId
             );
         });
     }
@@ -160,15 +163,18 @@ public class ReservationService {
         return reservations.map(reservation -> {
             Room room = roomRepository.findById(reservation.getRoomId()).orElse(null);
             Accommodation accommodation = null;
+            Long accommodationId = null;
             if (room != null) {
-                accommodation = accommodationRepository.findById(room.getAccommodationId()).orElse(null);
+                accommodationId = room.getAccommodationId();
+                accommodation = accommodationRepository.findById(accommodationId).orElse(null);
             }
 
-            return ReservationDto.ListResponse.fromEntityWithDetails(
+            return ReservationDto.ListResponse.fromEntityWithDetailsAndAccommodationId(
                     reservation,
                     room != null ? room.getName() : "알 수 없음",
                     accommodation != null ? accommodation.getName() : "알 수 없음",
-                    null
+                    null,
+                    accommodationId
             );
         });
     }
