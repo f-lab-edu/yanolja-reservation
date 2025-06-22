@@ -32,6 +32,11 @@ public class FileStorageProperties {
     private String amenityIconDir = "amenities";
     
     /**
+     * 리뷰 이미지 업로드 경로
+     */
+    private String reviewImageDir = "reviews";
+    
+    /**
      * 최대 파일 크기 (바이트 단위)
      */
     private long maxSize = 10485760; // 10MB
@@ -49,5 +54,9 @@ public class FileStorageProperties {
     
     public String getFullAmenityIconDir() {
         return baseDir + "/" + amenityIconDir;
+    }
+    
+    public String getFullReviewImageDir() {
+        return baseDir + "/" + reviewImageDir;
     }
 } 
