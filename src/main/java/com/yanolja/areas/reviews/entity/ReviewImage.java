@@ -24,12 +24,12 @@ public class ReviewImage extends BaseEntity {
     @Comment("리뷰")
     private Review review;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", nullable = false, length = 500)
     @Comment("이미지 URL")
     private String imageUrl;
 
     @Builder
-    private ReviewImage(Review review, String imageUrl) {
+    public ReviewImage(Review review, String imageUrl) {
         this.review = review;
         this.imageUrl = imageUrl;
     }
