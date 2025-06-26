@@ -1,5 +1,7 @@
 package com.yanolja.areas.reservation.repository;
 
+import com.yanolja.areas.reservation.dto.ReservationStatsDto;
+import com.yanolja.areas.reservation.dto.ReservationStatusDto;
 import com.yanolja.areas.reservation.entity.Reservation;
 import com.yanolja.areas.reservation.entity.ReservationStatus;
 import org.springframework.data.domain.Page;
@@ -45,10 +47,10 @@ public interface ReservationRepositoryCustom {
     /**
      * 사용자별 예약 통계 조회 (QueryDSL)
      */
-    List<Object[]> getReservationStatsByUser(Long userId);
+    List<ReservationStatsDto> getReservationStatsByUser(Long userId);
 
     /**
      * 객실별 예약 현황 조회 (QueryDSL)
      */
-    List<Object[]> getReservationStatusByRoom(Long roomId, LocalDate startDate, LocalDate endDate);
+    List<ReservationStatusDto> getReservationStatusByRoom(Long roomId, LocalDate startDate, LocalDate endDate);
 } 

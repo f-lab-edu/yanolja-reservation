@@ -1,7 +1,9 @@
 package com.yanolja.areas.room.service;
 
+import com.yanolja.areas.room.dto.OptionUsageStatisticsDto;
 import com.yanolja.areas.room.dto.RoomDto;
 import com.yanolja.areas.room.dto.RoomImageDto;
+import com.yanolja.areas.room.dto.RoomOptionCountStatisticsDto;
 import com.yanolja.areas.room.dto.RoomOptionDto;
 import com.yanolja.areas.room.entity.Room;
 import com.yanolja.areas.room.entity.RoomOption;
@@ -74,8 +76,8 @@ class RoomServiceWithOptionsTest {
         ReflectionTestUtils.setField(mapping2, "id", 2L);
 
         // 기본 모킹 설정
-        lenient().when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(room));
-        lenient().when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
+        lenient().when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
         lenient().when(roomImageService.getMainImageUrl(any())).thenReturn("/api/rooms/images/main.jpg");
     }
 
@@ -125,7 +127,7 @@ class RoomServiceWithOptionsTest {
             roomService.addRoomOptions(999L, optionIds);
         });
 
-        verify(roomRepository).findByIdAndNotDeleted(999L);
+        verify(roomRepository).findById(999L);
         verify(roomOptionRepository, never()).findById(any());
     }
 
@@ -237,19 +239,27 @@ class RoomServiceWithOptionsTest {
     @DisplayName("옵션별 사용 통계 조회 - 성공")
     void getOptionUsageStatistics_Success() {
         // Given
-        List<Object[]> mockStatistics = Arrays.asList(
-                new Object[]{1L, "조식 서비스", 5L},
-                new Object[]{2L, "늦은 체크아웃", 3L}
+        List<OptionUsageStatisticsDto> mockStatistics = Arrays.asList(
+                OptionUsageStatisticsDto.builder()
+                        .optionId(1L)
+                        .optionName("조식 서비스")
+                        .usageCount(5L)
+                        .build(),
+                OptionUsageStatisticsDto.builder()
+                        .optionId(2L)
+                        .optionName("늦은 체크아웃")
+                        .usageCount(3L)
+                        .build()
         );
         when(roomOptionMappingRepository.getOptionUsageStatistics()).thenReturn(mockStatistics);
 
         // When
-        List<Object[]> statistics = roomService.getOptionUsageStatistics();
+        List<OptionUsageStatisticsDto> statistics = roomService.getOptionUsageStatistics();
 
         // Then
         assertThat(statistics).hasSize(2);
-        assertThat(statistics.get(0)[1]).isEqualTo("조식 서비스");
-        assertThat(statistics.get(0)[2]).isEqualTo(5L);
+        assertThat(statistics.get(0).getOptionName()).isEqualTo("조식 서비스");
+        assertThat(statistics.get(0).getUsageCount()).isEqualTo(5L);
         verify(roomOptionMappingRepository).getOptionUsageStatistics();
     }
 
@@ -257,19 +267,27 @@ class RoomServiceWithOptionsTest {
     @DisplayName("객실별 옵션 개수 통계 조회 - 성공")
     void getRoomOptionCountStatistics_Success() {
         // Given
-        List<Object[]> mockStatistics = Arrays.asList(
-                new Object[]{1L, "디럭스 더블룸", 2L},
-                new Object[]{2L, "스위트 룸", 1L}
+        List<RoomOptionCountStatisticsDto> mockStatistics = Arrays.asList(
+                RoomOptionCountStatisticsDto.builder()
+                        .roomId(1L)
+                        .roomName("디럭스 더블룸")
+                        .optionCount(2L)
+                        .build(),
+                RoomOptionCountStatisticsDto.builder()
+                        .roomId(2L)
+                        .roomName("스위트 룸")
+                        .optionCount(1L)
+                        .build()
         );
         when(roomOptionMappingRepository.getRoomOptionCountStatistics()).thenReturn(mockStatistics);
 
         // When
-        List<Object[]> statistics = roomService.getRoomOptionCountStatistics();
+        List<RoomOptionCountStatisticsDto> statistics = roomService.getRoomOptionCountStatistics();
 
         // Then
         assertThat(statistics).hasSize(2);
-        assertThat(statistics.get(0)[1]).isEqualTo("디럭스 더블룸");
-        assertThat(statistics.get(0)[2]).isEqualTo(2L);
+        assertThat(statistics.get(0).getRoomName()).isEqualTo("디럭스 더블룸");
+        assertThat(statistics.get(0).getOptionCount()).isEqualTo(2L);
         verify(roomOptionMappingRepository).getRoomOptionCountStatistics();
     }
 

@@ -5,28 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 public interface RoomRepositoryCustom {
     
     /**
-     * 삭제되지 않은 모든 객실 목록 조회
-     */
-    List<Room> findAllNotDeleted();
-    
-    /**
-     * ID로 객실 상세 조회 (삭제되지 않은 객실만)
-     */
-    Optional<Room> findByIdAndNotDeleted(Long id);
-    
-    /**
-     * 숙소별 객실 목록 조회 (삭제되지 않은 객실만)
-     */
-    List<Room> findByAccommodationIdAndNotDeleted(Long accommodationId);
-    
-    /**
-     * 검색 조건에 맞는 객실 목록을 페이징하여 조회
+     * 검색 조건에 맞는 객실 목록을 페이징하여 조회 (QueryDSL)
+     * 복잡한 정렬 조건과 동적 쿼리가 필요하여 QueryDSL로 구현
      * 
      * @param keyword 검색 키워드 (객실명, 설명)
      * @param minPrice 최소 가격

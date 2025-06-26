@@ -1,6 +1,7 @@
 package com.yanolja.areas.reservation.controller;
 
 import com.yanolja.areas.reservation.dto.ReservationDto;
+import com.yanolja.areas.reservation.dto.ReservationStatsDto;
 import com.yanolja.areas.reservation.entity.ReservationStatus;
 import com.yanolja.areas.reservation.service.ReservationService;
 import com.yanolja.areas.user.domain.UserDetail;
@@ -140,10 +141,10 @@ public class PortalReservationController {
      */
     @GetMapping("/stats")
     @Operation(summary = "예약 통계 조회", description = "사용자의 예약 통계를 조회합니다.")
-    public ApiResponse<List<Object[]>> getUserReservationStats(
+    public ApiResponse<List<ReservationStatsDto>> getUserReservationStats(
             @AuthenticationPrincipal UserDetail userDetail) {
         
-        List<Object[]> stats = reservationService.getUserReservationStats(userDetail.getUser().getId());
+        List<ReservationStatsDto> stats = reservationService.getUserReservationStats(userDetail.getUser().getId());
         
         return ApiResponse.success(stats);
     }

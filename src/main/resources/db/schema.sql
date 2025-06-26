@@ -62,7 +62,7 @@ CREATE TABLE rooms (
     capacity INT NOT NULL,
     price_per_night DECIMAL(10, 2) NOT NULL,
     status VARCHAR(20) DEFAULT 'AVAILABLE',
-    deleted_yn CHAR(1) DEFAULT 'N',
+    deleted_yn TINYINT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_by VARCHAR(255),

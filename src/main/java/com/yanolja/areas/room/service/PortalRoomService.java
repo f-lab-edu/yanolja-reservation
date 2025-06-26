@@ -62,7 +62,7 @@ public class PortalRoomService {
      * @return 객실 상세 정보
      */
     public PortalRoomDto.DetailResponse getRoomDetail(Long id) {
-        Room room = roomRepository.findByIdAndNotDeleted(id)
+        Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ID가 " + id + "인 객실을 찾을 수 없습니다."));
         
         // 이미지 정보 조회
@@ -83,7 +83,7 @@ public class PortalRoomService {
      * @return 객실 목록
      */
     public List<PortalRoomDto.ListResponse> getRoomsByAccommodation(Long accommodationId) {
-        List<Room> rooms = roomRepository.findByAccommodationIdAndNotDeleted(accommodationId);
+        List<Room> rooms = roomRepository.findByAccommodationId(accommodationId);
         
         return rooms.stream()
                 .map(room -> {

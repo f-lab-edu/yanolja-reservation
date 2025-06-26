@@ -6,15 +6,19 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@DynamicUpdate
 @Entity
 @Table(name = "rooms")
 @Getter
 @NoArgsConstructor
+@Where(clause = "deleted_yn = 0")
 public class Room extends BaseEntity {
 
     @Id
@@ -46,9 +50,9 @@ public class Room extends BaseEntity {
     @Comment("상태 (AVAILABLE, UNAVAILABLE)")
     private String status;
     
-    @Column(name = "deleted_yn", nullable = false, length = 1)
-    @Comment("삭제 여부 (Y, N)")
-    private String deletedYn = "N";
+    @Column(name = "deleted_yn", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Comment("삭제 여부 (1: 삭제, 0: 미삭제)")
+    private Boolean deletedYn;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     @Comment("객실 옵션 매핑 목록")
@@ -72,7 +76,7 @@ public class Room extends BaseEntity {
         this.capacity = capacity;
         this.pricePerNight = pricePerNight;
         this.status = status;
-        this.deletedYn = "N";
+        this.deletedYn = false;
         this.roomOptionMappings = new ArrayList<>();
     }
     
@@ -151,6 +155,6 @@ public class Room extends BaseEntity {
      * 소프트 삭제 처리
      */
     public void delete() {
-        this.deletedYn = "Y";
+        this.deletedYn = true;
     }
 } 

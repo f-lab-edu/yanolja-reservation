@@ -1,7 +1,10 @@
 package com.yanolja.areas.reservation.repository;
 
+import com.yanolja.areas.reservation.dto.ReservationOptionStatsDto;
+import com.yanolja.areas.reservation.dto.ReservationOptionUsageDto;
 import com.yanolja.areas.reservation.entity.ReservationOption;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -17,10 +20,10 @@ public interface ReservationOptionRepositoryCustom {
     /**
      * 특정 옵션 ID의 사용 통계 조회 (QueryDSL)
      */
-    List<Object[]> getOptionUsageStats(Long optionId);
+    List<ReservationOptionStatsDto> getOptionUsageStats(Long optionId);
 
     /**
      * 기간별 옵션 사용량 조회 (QueryDSL)
      */
-    List<Object[]> getOptionUsageByPeriod(java.time.LocalDate startDate, java.time.LocalDate endDate);
+    List<ReservationOptionUsageDto> getOptionUsageByPeriod(LocalDate startDate, LocalDate endDate);
 } 

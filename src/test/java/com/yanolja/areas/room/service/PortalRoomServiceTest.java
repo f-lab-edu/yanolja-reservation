@@ -80,9 +80,9 @@ class PortalRoomServiceTest {
         roomImage2 = createMockRoomImage(2L, detailRoom, "/api/rooms/images/1/sub.jpg", false);
         
         // 기본 모킹 설정
-        lenient().when(roomRepository.findByIdAndNotDeleted(1L)).thenReturn(Optional.of(detailRoom));
-        lenient().when(roomRepository.findByIdAndNotDeleted(999L)).thenReturn(Optional.empty());
-        lenient().when(roomRepository.findByAccommodationIdAndNotDeleted(1L)).thenReturn(Arrays.asList(room1, room2));
+        lenient().when(roomRepository.findById(1L)).thenReturn(Optional.of(detailRoom));
+        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+        lenient().when(roomRepository.findByAccommodationId(1L)).thenReturn(Arrays.asList(room1, room2));
         lenient().when(roomImageRepository.findByRoomId(1L)).thenReturn(Arrays.asList(roomImage1, roomImage2));
         lenient().when(roomImageService.getMainImageUrl(1L)).thenReturn(MAIN_IMAGE_URL);
         lenient().when(roomImageService.getMainImageUrl(2L)).thenReturn("/api/rooms/images/2/main.jpg");
@@ -207,7 +207,7 @@ class PortalRoomServiceTest {
         assertThat(result.getCapacity()).isEqualTo(2);
         assertThat(result.getPricePerNight()).isEqualTo(new BigDecimal("120000"));
         
-        verify(roomRepository).findByIdAndNotDeleted(1L);
+        verify(roomRepository).findById(1L);
     }
     
     @Test
@@ -219,7 +219,7 @@ class PortalRoomServiceTest {
         });
         
         assertThat(exception.getMessage()).contains("999");
-        verify(roomRepository).findByIdAndNotDeleted(999L);
+        verify(roomRepository).findById(999L);
     }
     
     @Test
@@ -233,7 +233,7 @@ class PortalRoomServiceTest {
         assertThat(result.get(0).getName()).isEqualTo("디럭스 더블룸");
         assertThat(result.get(1).getName()).isEqualTo("스위트 룸");
         
-        verify(roomRepository).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomRepository).findByAccommodationId(1L);
     }
     
     @Test
@@ -251,7 +251,7 @@ class PortalRoomServiceTest {
         assertThat(result.getImageUrls()).hasSize(2);
         assertThat(result.getImageUrls()).contains("/api/rooms/images/1/main.jpg", "/api/rooms/images/1/sub.jpg");
         
-        verify(roomRepository).findByIdAndNotDeleted(1L);
+        verify(roomRepository).findById(1L);
         verify(roomImageRepository).findByRoomId(1L);
     }
     
@@ -266,7 +266,7 @@ class PortalRoomServiceTest {
         assertThat(results.get(0).getMainImageUrl()).isEqualTo(MAIN_IMAGE_URL);
         assertThat(results.get(1).getMainImageUrl()).isEqualTo("/api/rooms/images/2/main.jpg");
         
-        verify(roomRepository).findByAccommodationIdAndNotDeleted(1L);
+        verify(roomRepository).findByAccommodationId(1L);
         verify(roomImageService).getMainImageUrl(1L);
         verify(roomImageService).getMainImageUrl(2L);
     }
@@ -324,7 +324,7 @@ class PortalRoomServiceTest {
         );
                 
         ReflectionTestUtils.setField(room, "id", id);
-        ReflectionTestUtils.setField(room, "deletedYn", "N");
+        ReflectionTestUtils.setField(room, "deletedYn", false);
         return room;
     }
     
@@ -339,7 +339,7 @@ class PortalRoomServiceTest {
         );
                 
         ReflectionTestUtils.setField(room, "id", id);
-        ReflectionTestUtils.setField(room, "deletedYn", "N");
+        ReflectionTestUtils.setField(room, "deletedYn", false);
         ReflectionTestUtils.setField(room, "createdAt", LocalDateTime.now());
         ReflectionTestUtils.setField(room, "updatedAt", LocalDateTime.now());
         

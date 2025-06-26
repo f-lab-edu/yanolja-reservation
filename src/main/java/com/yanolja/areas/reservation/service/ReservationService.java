@@ -27,6 +27,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.yanolja.areas.reservation.dto.ReservationStatsDto;
+import com.yanolja.areas.reservation.dto.ReservationStatusDto;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -255,7 +258,7 @@ public class ReservationService {
      * 사용자별 예약 통계 조회 (QueryDSL 사용)
      */
     @Transactional(readOnly = true)
-    public List<Object[]> getUserReservationStats(Long userId) {
+    public List<ReservationStatsDto> getUserReservationStats(Long userId) {
         log.info("Getting reservation stats for user: {}", userId);
         return reservationRepository.getReservationStatsByUser(userId);
     }
@@ -264,7 +267,7 @@ public class ReservationService {
      * 객실별 예약 현황 조회 (QueryDSL 사용)
      */
     @Transactional(readOnly = true)
-    public List<Object[]> getRoomReservationStatus(Long roomId, LocalDate startDate, LocalDate endDate) {
+    public List<ReservationStatusDto> getRoomReservationStatus(Long roomId, LocalDate startDate, LocalDate endDate) {
         log.info("Getting reservation status for room: {} from {} to {}", roomId, startDate, endDate);
         return reservationRepository.getReservationStatusByRoom(roomId, startDate, endDate);
     }

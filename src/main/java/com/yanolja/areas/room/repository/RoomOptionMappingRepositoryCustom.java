@@ -1,5 +1,7 @@
 package com.yanolja.areas.room.repository;
 
+import com.yanolja.areas.room.dto.OptionUsageStatisticsDto;
+import com.yanolja.areas.room.dto.RoomOptionCountStatisticsDto;
 import com.yanolja.areas.room.entity.RoomOptionMapping;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,14 +47,14 @@ public interface RoomOptionMappingRepositoryCustom {
 
     /**
      * 옵션별 사용중인 객실 수 통계 (QueryDSL)
-     * @return 옵션 ID와 사용중인 객실 수의 매핑
+     * @return 옵션 사용 통계 DTO 목록
      */
-    List<Object[]> getOptionUsageStatistics();
+    List<OptionUsageStatisticsDto> getOptionUsageStatistics();
 
     /**
      * 객실별 연결된 옵션 수 통계 (QueryDSL)
-     * @return 객실 ID와 연결된 옵션 수의 매핑
+     * @return 객실별 옵션 개수 통계 DTO 목록
      */
-    List<Object[]> getRoomOptionCountStatistics();
+    List<RoomOptionCountStatisticsDto> getRoomOptionCountStatistics();
 
 } 

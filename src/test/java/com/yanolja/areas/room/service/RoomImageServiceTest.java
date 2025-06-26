@@ -29,6 +29,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.DisplayName;
+import org.assertj.core.api.Assertions;
 
 @ExtendWith(MockitoExtension.class)
 public class RoomImageServiceTest {
@@ -85,12 +87,13 @@ public class RoomImageServiceTest {
     }
 
     @Test
-    void saveImages_WithValidFiles_ShouldReturnSavedImageResponses() throws IOException {
-        // given
+    @DisplayName("이미지 저장 성공 테스트 - 대표 이미지 인덱스 지정")
+    void saveImagesSuccessWithMainImageIndex() throws IOException {
+        // Given
         MultipartFile[] files = {mockImage1, mockImage2};
         Integer mainImageIndex = 1; // 두 번째 이미지를 대표 이미지로 설정
         
-        when(roomRepository.findByIdAndNotDeleted(ROOM_ID)).thenReturn(Optional.of(room));
+        when(roomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
         
         doAnswer(invocation -> {
             RoomImage image = invocation.getArgument(0);
@@ -124,7 +127,7 @@ public class RoomImageServiceTest {
         assertFalse(results.get(0).getIsMain());
         assertTrue(results.get(1).getIsMain());
         
-        verify(roomRepository).findByIdAndNotDeleted(ROOM_ID);
+        verify(roomRepository).findById(ROOM_ID);
         verify(roomImageRepository, times(2)).save(any(RoomImage.class));
     }
     
@@ -138,7 +141,7 @@ public class RoomImageServiceTest {
                 "oversize content".getBytes()
         );
         
-        when(roomRepository.findByIdAndNotDeleted(ROOM_ID)).thenReturn(Optional.of(room));
+        when(roomRepository.findById(ROOM_ID)).thenReturn(Optional.of(room));
         // 파일 사이즈 검사를 위한 설정 (실제 설정은 10MB보다 작은 크기로 설정)
         when(fileStorageProperties.getMaxSize()).thenReturn(10L); // 10바이트로 제한
         
@@ -153,14 +156,14 @@ public class RoomImageServiceTest {
     void saveImages_WithNonExistingRoom_ShouldThrowEntityNotFoundException() {
         // given
         MultipartFile[] files = {mockImage1, mockImage2};
-        when(roomRepository.findByIdAndNotDeleted(ROOM_ID)).thenReturn(Optional.empty());
+        when(roomRepository.findById(ROOM_ID)).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(EntityNotFoundException.class, () -> {
             roomImageService.saveImages(ROOM_ID, files, 0);
         });
         
-        verify(roomRepository).findByIdAndNotDeleted(ROOM_ID);
+        verify(roomRepository).findById(ROOM_ID);
         verify(roomImageRepository, never()).save(any(RoomImage.class));
     }
 
