@@ -7,6 +7,7 @@ import com.yanolja.areas.payment.repository.OrderCouponRepository;
 import com.yanolja.areas.payment.repository.OrderRepository;
 import com.yanolja.areas.payment.repository.PointRepository;
 import com.yanolja.areas.payment.repository.UserCouponRepository;
+import com.yanolja.areas.reservation.service.ReservationService;
 import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class OrderService {
     private final PointRepository pointRepository;
     private final CouponService couponService;
     private final PointService pointService;
+    private final ReservationService reservationService;
     private final DistributedLockService distributedLockService;
 
     /**
@@ -167,6 +169,16 @@ public class OrderService {
             throw new IllegalStateException("주문 확정에 실패했습니다. 현재 상태: " + order.getStatus());
         }
         orderRepository.save(order);
+        
+        // 예약도 함께 확정
+        try {
+            reservationService.confirmReservation(order.getReservationId());
+            log.info("예약 확정 완료 - reservationId: {}", order.getReservationId());
+        } catch (Exception e) {
+            log.error("예약 확정 실패 - reservationId: {}, error: {}", order.getReservationId(), e.getMessage());
+            // 주문은 확정했지만 예약 확정에 실패한 경우 - 로그만 남기고 진행
+        }
+        
         log.info("주문 확정 완료 - orderNumber: {}", orderNumber);
     }
 
@@ -179,17 +191,28 @@ public class OrderService {
         
         boolean success = order.tryCancel();
         if (!success) {
+            // 이미 취소된 상태라면 로그만 남기고 진행
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                log.info("주문이 이미 취소됨 - orderNumber: {}", orderNumber);
+                return;
+            }
             throw new IllegalStateException("취소할 수 없는 주문 상태입니다: " + order.getStatus());
         }
 
         orderRepository.save(order);
+        log.info("주문 상태 취소됨 - orderNumber: {}, status: {}", orderNumber, order.getStatus());
 
-        // 사용된 쿠폰 복원
-        restoreUsedCoupons(order.getId());
-        
-        // 사용된 포인트 복원
-        if (order.getPointsUsed() > 0) {
-            pointService.refundPoints(order.getUserId(), order.getPointsUsed(), order.getId(), reason);
+        try {
+            // 사용된 쿠폰 복원
+            restoreUsedCoupons(order.getId());
+            
+            // 사용된 포인트 복원
+            if (order.getPointsUsed() > 0) {
+                pointService.refundPoints(order.getUserId(), order.getPointsUsed(), order.getId(), reason);
+            }
+        } catch (Exception e) {
+            log.error("주문 취소 중 쿠폰/포인트 복원 실패 - orderNumber: {}, error: {}", orderNumber, e.getMessage());
+            // 쿠폰/포인트 복원 실패해도 주문 취소는 완료된 상태로 유지
         }
 
         log.info("주문 취소 완료 - orderNumber: {}, reason: {}", orderNumber, reason);

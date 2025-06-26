@@ -76,7 +76,7 @@ public class RoomImageService {
         }
         
         // 폴더 생성
-        Path uploadPath = Paths.get(fileStorageProperties.getRoomImageDir(), roomId.toString());
+        Path uploadPath = Paths.get(fileStorageProperties.getFullRoomImageDir(), roomId.toString());
         if (!Files.exists(uploadPath)) {
             try {
                 Files.createDirectories(uploadPath);
@@ -171,7 +171,7 @@ public class RoomImageService {
         try {
             // 실제 파일 삭제
             String filename = image.getImageUrl().substring(image.getImageUrl().lastIndexOf("/") + 1);
-            Path filePath = Paths.get(fileStorageProperties.getRoomImageDir(), 
+            Path filePath = Paths.get(fileStorageProperties.getFullRoomImageDir(), 
                     roomId.toString(), filename);
             
             if (Files.deleteIfExists(filePath)) {

@@ -39,4 +39,20 @@ public interface ReviewRepositoryCustom {
      * @return 최신 리뷰 목록
      */
     List<Review> findRecentReviewsByAccommodationId(Long accommodationId, int limit);
+
+    /**
+     * 숙소별 리뷰 조회 (이미지 포함, 페이징)
+     * @param accommodationId 숙소 ID
+     * @param pageable 페이징 정보
+     * @return 리뷰 페이지
+     */
+    Page<Review> findByAccommodationIdWithImages(Long accommodationId, Pageable pageable);
+
+    /**
+     * 사용자별 리뷰 조회 (이미지 포함, 페이징)
+     * @param userId 사용자 ID
+     * @param pageable 페이징 정보
+     * @return 리뷰 페이지
+     */
+    Page<Review> findByUserIdWithImages(Long userId, Pageable pageable);
 } 

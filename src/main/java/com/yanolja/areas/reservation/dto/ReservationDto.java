@@ -132,6 +132,7 @@ public class ReservationDto {
     public static class ListResponse {
         private Long id;
         private Long roomId;
+        private Long accommodationId;
         private String roomName;
         private String accommodationName;
         private String accommodationImage;
@@ -149,6 +150,7 @@ public class ReservationDto {
             return ListResponse.builder()
                     .id(reservation.getId())
                     .roomId(reservation.getRoomId())
+                    .accommodationId(null)
                     .checkInDate(reservation.getCheckInDate())
                     .checkOutDate(reservation.getCheckOutDate())
                     .nights(reservation.getNights())
@@ -166,6 +168,28 @@ public class ReservationDto {
             return ListResponse.builder()
                     .id(reservation.getId())
                     .roomId(reservation.getRoomId())
+                    .accommodationId(null)
+                    .roomName(roomName)
+                    .accommodationName(accommodationName)
+                    .accommodationImage(accommodationImage)
+                    .checkInDate(reservation.getCheckInDate())
+                    .checkOutDate(reservation.getCheckOutDate())
+                    .nights(reservation.getNights())
+                    .totalPrice(reservation.getTotalPrice())
+                    .status(reservation.getStatus())
+                    .paymentStatus(reservation.getPaymentStatus())
+                    .canCancel(reservation.canCancel())
+                    .canModify(reservation.canModify())
+                    .createdAt(reservation.getCreatedAt())
+                    .build();
+        }
+        
+        public static ListResponse fromEntityWithDetailsAndAccommodationId(Reservation reservation, String roomName, 
+                                                       String accommodationName, String accommodationImage, Long accommodationId) {
+            return ListResponse.builder()
+                    .id(reservation.getId())
+                    .roomId(reservation.getRoomId())
+                    .accommodationId(accommodationId)
                     .roomName(roomName)
                     .accommodationName(accommodationName)
                     .accommodationImage(accommodationImage)

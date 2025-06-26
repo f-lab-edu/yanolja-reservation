@@ -13,10 +13,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -28,8 +31,29 @@ public class PortalReviewController {
 
     private final ReviewService reviewService;
 
-    @Operation(summary = "리뷰 작성", description = "숙박 완료 후 리뷰를 작성합니다.")
-    @PostMapping
+    @Operation(summary = "리뷰 작성 (이미지 포함)", description = "숙박 완료 후 리뷰를 작성합니다. 이미지 파일도 함께 업로드할 수 있습니다.")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ReviewDto.Response> createReviewWithImages(
+            @AuthenticationPrincipal UserDetail userDetail,
+            @RequestParam("accommodationId") Long accommodationId,
+            @RequestParam("reservationId") Long reservationId,
+            @RequestParam("rating") Integer rating,
+            @RequestParam("comment") String comment,
+            @RequestParam(value = "images", required = false) MultipartFile[] images) throws IOException {
+        
+        ReviewDto.CreateRequest request = ReviewDto.CreateRequest.builder()
+                .accommodationId(accommodationId)
+                .reservationId(reservationId)
+                .rating(rating)
+                .comment(comment)
+                .build();
+        
+        ReviewDto.Response response = reviewService.createReviewWithImages(userDetail.getId(), request, images);
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "리뷰 작성 (JSON)", description = "숙박 완료 후 리뷰를 작성합니다. (이미지 없이)")
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<ReviewDto.Response> createReview(
             @AuthenticationPrincipal UserDetail userDetail,
             @RequestBody @Valid ReviewDto.CreateRequest request) {

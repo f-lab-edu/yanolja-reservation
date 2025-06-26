@@ -279,6 +279,68 @@ public class CouponService {
     }
 
     /**
+     * 사용자 쿠폰 목록 조회 (페이징) - DTO 반환
+     */
+    @Transactional(readOnly = true)
+    public Page<CouponDto.UserCouponResponse> getUserCouponsDto(Long userId, Pageable pageable) {
+        Page<UserCoupon> userCoupons = userCouponRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        return userCoupons.map(CouponDto.UserCouponResponse::from);
+    }
+
+    /**
+     * 특정 주문 금액에 사용 가능한 쿠폰 목록 조회 - DTO 반환
+     */
+    @Transactional(readOnly = true)
+    public List<CouponDto.UserCouponResponse> getUsableCouponsDto(Long userId, BigDecimal orderAmount) {
+        List<UserCoupon> userCoupons = userCouponRepository.findUsableCouponsForAmount(
+            userId, 
+            orderAmount.longValue(), 
+            LocalDateTime.now()
+        );
+        return userCoupons.stream()
+                .map(CouponDto.UserCouponResponse::from)
+                .toList();
+    }
+
+    /**
+     * 쿠폰 목록 조회 (관리자용) - DTO 반환
+     */
+    @Transactional(readOnly = true)
+    public Page<CouponDto.CouponResponse> getAllCouponsDto(Pageable pageable) {
+        Page<Coupon> coupons = couponRepository.findAllByOrderByCreatedAtDesc(pageable);
+        return coupons.map(CouponDto.CouponResponse::from);
+    }
+
+    /**
+     * 쿠폰 발급 - DTO 반환
+     */
+    @Transactional
+    public CouponDto.UserCouponResponse issueCouponToUserDto(Long userId, String couponCode) {
+        UserCoupon userCoupon = issueCouponToUser(userId, couponCode);
+        return CouponDto.UserCouponResponse.from(userCoupon);
+    }
+
+    /**
+     * 쿠폰 검색 - DTO 반환
+     */
+    @Transactional(readOnly = true)
+    public List<CouponDto.CouponResponse> searchCouponsDto(String keyword) {
+        List<Coupon> coupons = couponRepository.searchCoupons(keyword);
+        return coupons.stream()
+                .map(CouponDto.CouponResponse::from)
+                .toList();
+    }
+
+    /**
+     * 쿠폰 생성 - DTO 반환
+     */
+    @Transactional
+    public CouponDto.CouponResponse createCouponDto(CouponDto.CreateCouponRequest request) {
+        Coupon coupon = createCoupon(request);
+        return CouponDto.CouponResponse.from(coupon);
+    }
+
+    /**
      * 사용자 쿠폰 목록 조회 (페이징)
      */
     @Transactional(readOnly = true)

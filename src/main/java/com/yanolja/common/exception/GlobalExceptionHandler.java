@@ -48,6 +48,18 @@ public class GlobalExceptionHandler {
         return ApiResponse.error("A002", "등록되지 않은 사용자입니다.");
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public ApiResponse<Void> handleRuntimeException(RuntimeException ex) {
+        log.error("런타임 예외: {}", ex.getMessage(), ex);
+        // 중복 이메일 에러인 경우 구체적인 메시지 반환
+        if (ex.getMessage() != null && ex.getMessage().contains("이미 사용 중인 이메일")) {
+            return ApiResponse.error("U001", "이미 사용 중인 이메일입니다.");
+        }
+        return ApiResponse.error("S002", ex.getMessage() != null ? ex.getMessage() : "서버 오류가 발생했습니다.");
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody

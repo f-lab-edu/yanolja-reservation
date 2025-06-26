@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class AmenityController {
     
@@ -119,5 +121,17 @@ public class AmenityController {
         AmenityDto.Response responseDto = amenityService.updateAmenity(amenityId, requestDto);
         
         return ResponseEntity.ok(ApiResponse.success(responseDto));
+    }
+    
+    /**
+     * 전체 편의시설 목록 조회
+     * @return ApiResponse<List<AmenityDto.Response>> 편의시설 목록
+     */
+    @GetMapping("/amenities")
+    public ResponseEntity<ApiResponse<List<AmenityDto.Response>>> getAllAmenities() {
+        log.info("전체 편의시설 목록 조회 요청");
+        List<AmenityDto.Response> responseDtos = amenityService.getAllAmenities();
+        
+        return ResponseEntity.ok(ApiResponse.success(responseDtos));
     }
 } 

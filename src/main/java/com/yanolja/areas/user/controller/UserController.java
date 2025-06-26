@@ -2,6 +2,7 @@ package com.yanolja.areas.user.controller;
 
 import com.yanolja.areas.auth.dto.RegisterRequest;
 import com.yanolja.areas.user.domain.User;
+import com.yanolja.areas.user.domain.UserDetail;
 import com.yanolja.areas.user.dto.UserInfoResponse;
 import com.yanolja.areas.user.dto.UserUpdateRequest;
 import com.yanolja.areas.user.dto.UserSearchCondition;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -25,6 +27,13 @@ public class UserController {
     @PostMapping("/register")
     public ApiResponse<User> register(@Valid @RequestBody RegisterRequest registerRequest) {
         User user = userService.registerUser(registerRequest);
+        return ApiResponse.success(user);
+    }
+
+    @Operation(summary = "현재 로그인한 사용자 정보 조회", description = "JWT 토큰 기반으로 현재 사용자 정보 조회")
+    @GetMapping("/me")
+    public ApiResponse<UserInfoResponse> getCurrentUser(@AuthenticationPrincipal UserDetail userDetail) {
+        UserInfoResponse user = userService.getUserById(userDetail.getId());
         return ApiResponse.success(user);
     }
 
@@ -54,5 +63,12 @@ public class UserController {
     public ApiResponse<Void> withdrawUser(@PathVariable Long id) {
         userService.withdrawUser(id);
         return ApiResponse.success();
+    }
+
+    @Operation(summary = "이메일 중복 확인", description = "이메일 중복 여부 확인")
+    @GetMapping("/check-email")
+    public ApiResponse<Boolean> checkEmailDuplicate(@RequestParam String email) {
+        boolean isDuplicate = userService.checkEmailDuplicate(email);
+        return ApiResponse.success(isDuplicate);
     }
 } 

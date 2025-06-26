@@ -27,7 +27,10 @@ public enum ErrorCode {
     // OAuth2
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O001", "지원하지 않는 소셜 로그인 제공자입니다."),
     MISSING_EMAIL(HttpStatus.BAD_REQUEST, "O002", "소셜 계정의 이메일 정보를 가져올 수 없습니다."),
-    ACCOUNT_ALREADY_LINKED(HttpStatus.CONFLICT, "O003", "이미 다른 소셜 계정과 연결된 이메일입니다.");
+    ACCOUNT_ALREADY_LINKED(HttpStatus.CONFLICT, "O003", "이미 다른 소셜 계정과 연결된 이메일입니다."),
+    
+    // 회원 탈퇴 관련
+    WITHDRAWN_USER(HttpStatus.FORBIDDEN, "A004", "탈퇴한 회원입니다.");
 
     private final HttpStatus status;
     private final String code;

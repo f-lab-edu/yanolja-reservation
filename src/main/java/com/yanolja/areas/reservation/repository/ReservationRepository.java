@@ -48,4 +48,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
      * 객실별 예약 건수 조회
      */
     long countByRoomIdAndStatus(Long roomId, ReservationStatus status);
+
+    /**
+     * 예약 ID로 예약 조회 (주문과 연관된 예약 조회용)
+     */
+    Optional<Reservation> findById(Long reservationId);
 } 

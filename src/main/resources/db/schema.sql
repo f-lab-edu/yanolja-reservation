@@ -207,6 +207,7 @@ CREATE TABLE payments (
 -- 쿠폰 테이블
 CREATE TABLE coupons (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
@@ -236,6 +237,7 @@ CREATE TABLE coupons (
 -- 사용자 쿠폰 테이블
 CREATE TABLE user_coupons (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    version BIGINT DEFAULT 0,
     user_id BIGINT NOT NULL,
     coupon_id BIGINT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE',

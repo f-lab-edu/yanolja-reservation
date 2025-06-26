@@ -73,4 +73,17 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .fetchOne();
         return Optional.ofNullable(result);
     }
+    
+    /**
+     * 탈퇴 여부와 관계없이 이메일로 사용자 조회
+     */
+    @Override
+    public Optional<User> findUserByEmail(String email) {
+        QUser user = QUser.user;
+        User result = queryFactory
+                .selectFrom(user)
+                .where(user.email.eq(email))
+                .fetchOne();
+        return Optional.ofNullable(result);
+    }
 } 

@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password:
   jpa:
@@ -12,3 +12,19 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+
+# 테스트용 파일 업로드 설정
+file:
+  upload:
+    base-dir: ${java.io.tmpdir}/yanolja-test-uploads
+    accommodation-image-dir: accommodations
+    room-image-dir: rooms
+    amenity-icon-dir: amenities
+    max-size: 10485760 # 10MB
+
+logging:
+  level:
+    com.yanolja: DEBUG

@@ -11,6 +11,7 @@ import com.yanolja.common.oauth2.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -78,8 +79,27 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/portal/**").permitAll()
+                .requestMatchers("/api/portal/accommodations/**").permitAll()
+                .requestMatchers("/api/portal/rooms/**").permitAll()
+                .requestMatchers("/api/portal/reviews/accommodations/**").permitAll()
+                .requestMatchers("/api/portal/reservations/**").authenticated()
+                .requestMatchers("/api/portal/reviews/reservations/**").authenticated()
+                .requestMatchers("/api/portal/reviews/my").authenticated()
+                .requestMatchers("/api/portal/reviews/search").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/portal/reviews").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/portal/reviews/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/portal/reviews/**").authenticated()
+                .requestMatchers("/api/portal/orders/**").authenticated()
+                .requestMatchers("/api/portal/payments/**").authenticated()
+                .requestMatchers("/api/portal/coupons/**").authenticated()
                 .requestMatchers("/api/users/register").permitAll()
+                .requestMatchers("/api/accommodations/images/**").permitAll()
+                .requestMatchers("/api/rooms/images/**").permitAll()
+                .requestMatchers("/api/reviews/images/**").permitAll()
+                .requestMatchers("/api/amenities/icons/**").permitAll()
+                .requestMatchers("/api/payments/approve").permitAll()
+                .requestMatchers("/api/payments/webhook").permitAll()
+                .requestMatchers("/api/toss-payments/**").permitAll()
                 .requestMatchers("/login/**", "/oauth2/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated()

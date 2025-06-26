@@ -18,8 +18,6 @@ public class PaymentConfig {
     @Setter
     public static class Pg {
         private Toss toss = new Toss();
-        private Kakao kakao = new Kakao();
-        private Naver naver = new Naver();
     }
 
     @Getter
@@ -32,21 +30,7 @@ public class PaymentConfig {
         private String failUrl;
     }
 
-    @Getter
-    @Setter
-    public static class Kakao {
-        private String cid;
-        private String adminKey;
-        private String apiUrl;
-    }
 
-    @Getter
-    @Setter
-    public static class Naver {
-        private String clientId;
-        private String clientSecret;
-        private String apiUrl;
-    }
 
     @Getter
     @Setter

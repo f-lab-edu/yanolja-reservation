@@ -1,7 +1,6 @@
 package com.yanolja.areas.payment.controller.portal;
 
 import com.yanolja.areas.payment.dto.CouponDto;
-import com.yanolja.areas.payment.entity.UserCoupon;
 import com.yanolja.areas.payment.service.CouponService;
 import com.yanolja.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,24 +29,24 @@ public class PortalCouponController {
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "사용자 쿠폰 목록 조회", description = "사용자가 보유한 쿠폰 목록을 조회합니다.")
-    public ApiResponse<Page<UserCoupon>> getUserCoupons(
+    public ApiResponse<Page<CouponDto.UserCouponResponse>> getUserCoupons(
             @Parameter(description = "사용자 ID") @PathVariable Long userId,
-            @PageableDefault(size = 20, sort = "issuedAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("사용자 쿠폰 목록 조회 요청 - userId: {}", userId);
         
-        Page<UserCoupon> coupons = couponService.getUserCoupons(userId, pageable);
+        Page<CouponDto.UserCouponResponse> coupons = couponService.getUserCouponsDto(userId, pageable);
         
         return ApiResponse.success(coupons);
     }
 
     @GetMapping("/user/{userId}/usable")
     @Operation(summary = "사용 가능한 쿠폰 조회", description = "특정 금액에 사용 가능한 쿠폰을 조회합니다.")
-    public ApiResponse<List<UserCoupon>> getUsableCoupons(
+    public ApiResponse<List<CouponDto.UserCouponResponse>> getUsableCoupons(
             @Parameter(description = "사용자 ID") @PathVariable Long userId,
             @Parameter(description = "주문 금액") @RequestParam BigDecimal orderAmount) {
         log.info("사용 가능한 쿠폰 조회 요청 - userId: {}, orderAmount: {}", userId, orderAmount);
         
-        List<UserCoupon> coupons = couponService.getUsableCoupons(userId, orderAmount);
+        List<CouponDto.UserCouponResponse> coupons = couponService.getUsableCouponsDto(userId, orderAmount);
         
         return ApiResponse.success(coupons);
     }

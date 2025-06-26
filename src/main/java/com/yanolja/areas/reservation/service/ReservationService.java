@@ -127,15 +127,18 @@ public class ReservationService {
         return reservations.map(reservation -> {
             Room room = roomRepository.findById(reservation.getRoomId()).orElse(null);
             Accommodation accommodation = null;
+            Long accommodationId = null;
             if (room != null) {
-                accommodation = accommodationRepository.findById(room.getAccommodationId()).orElse(null);
+                accommodationId = room.getAccommodationId();
+                accommodation = accommodationRepository.findById(accommodationId).orElse(null);
             }
 
-            return ReservationDto.ListResponse.fromEntityWithDetails(
+            return ReservationDto.ListResponse.fromEntityWithDetailsAndAccommodationId(
                     reservation,
                     room != null ? room.getName() : "알 수 없음",
                     accommodation != null ? accommodation.getName() : "알 수 없음",
-                    null // 이미지는 별도 서비스에서 조회
+                    null, // 이미지는 별도 서비스에서 조회
+                    accommodationId
             );
         });
     }
@@ -160,15 +163,18 @@ public class ReservationService {
         return reservations.map(reservation -> {
             Room room = roomRepository.findById(reservation.getRoomId()).orElse(null);
             Accommodation accommodation = null;
+            Long accommodationId = null;
             if (room != null) {
-                accommodation = accommodationRepository.findById(room.getAccommodationId()).orElse(null);
+                accommodationId = room.getAccommodationId();
+                accommodation = accommodationRepository.findById(accommodationId).orElse(null);
             }
 
-            return ReservationDto.ListResponse.fromEntityWithDetails(
+            return ReservationDto.ListResponse.fromEntityWithDetailsAndAccommodationId(
                     reservation,
                     room != null ? room.getName() : "알 수 없음",
                     accommodation != null ? accommodation.getName() : "알 수 없음",
-                    null
+                    null,
+                    accommodationId
             );
         });
     }
@@ -231,6 +237,42 @@ public class ReservationService {
 
         log.info("Reservation confirmed successfully: {}", reservationId);
         return ReservationDto.Response.fromEntity(confirmedReservation);
+    }
+
+    /**
+     * 주문별 예약 취소 (결제 취소시 사용)
+     */
+    public void cancelReservationsByOrder(Long reservationId, String reason) {
+        log.info("Cancelling reservation: {} with reason: {}", reservationId, reason);
+
+        try {
+            Reservation reservation = reservationRepository.findById(reservationId)
+                    .orElse(null);
+                    
+            if (reservation != null) {
+                if (reservation.canCancel()) {
+                    reservation.cancel();  // status: CANCELLED, paymentStatus: CANCELLED
+                    reservationRepository.save(reservation);
+                    log.info("Reservation cancelled successfully: {} - status: {}, paymentStatus: {}", 
+                            reservationId, reservation.getStatus(), reservation.getPaymentStatus());
+                } else {
+                    // 이미 취소된 상태가 아니라면 강제로 취소 처리
+                    if (reservation.getStatus() != com.yanolja.areas.reservation.entity.ReservationStatus.CANCELLED) {
+                        reservation.cancel();
+                        reservationRepository.save(reservation);
+                        log.info("Reservation force cancelled: {} - status: {}, paymentStatus: {}", 
+                                reservationId, reservation.getStatus(), reservation.getPaymentStatus());
+                    } else {
+                        log.info("Reservation already cancelled: {}", reservationId);
+                    }
+                }
+            } else {
+                log.warn("No reservation found with ID: {}", reservationId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to cancel reservation: {}", reservationId, e);
+            // 예약 취소 실패해도 결제/주문 취소는 진행되도록 예외를 다시 던지지 않음
+        }
     }
 
     /**

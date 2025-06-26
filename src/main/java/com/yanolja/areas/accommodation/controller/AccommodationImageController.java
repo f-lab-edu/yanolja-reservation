@@ -3,14 +3,23 @@ package com.yanolja.areas.accommodation.controller;
 import com.yanolja.areas.accommodation.dto.AccommodationImageDto;
 import com.yanolja.areas.accommodation.service.AccommodationImageService;
 import com.yanolja.common.response.ApiResponse;
+import com.yanolja.common.config.FileStorageProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -20,6 +29,7 @@ import java.util.List;
 public class AccommodationImageController {
 
     private final AccommodationImageService accommodationImageService;
+    private final FileStorageProperties fileStorageProperties;
 
     @Operation(summary = "숙소 이미지 목록 조회", description = "특정 숙소의 이미지 목록을 조회합니다.")
     @GetMapping("/{accommodationId}/images")
@@ -50,5 +60,36 @@ public class AccommodationImageController {
     public ApiResponse<Void> deleteAccommodationImage(@PathVariable Long imageId) {
         accommodationImageService.deleteImage(imageId);
         return ApiResponse.success();
+    }
+
+    @Operation(summary = "숙소 이미지 파일 제공", description = "숙소 이미지 파일을 제공합니다.")
+    @GetMapping("/images/{accommodationId}/{filename:.+}")
+    public ResponseEntity<Resource> getAccommodationImageFile(
+            @PathVariable Long accommodationId, 
+            @PathVariable String filename) {
+        try {
+            Path filePath = Paths.get(fileStorageProperties.getFullAccommodationImageDir())
+                    .resolve(accommodationId.toString())
+                    .resolve(filename)
+                    .normalize();
+
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                String contentType = Files.probeContentType(filePath);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 } 

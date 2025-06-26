@@ -4,6 +4,7 @@ import com.yanolja.areas.payment.dto.PaymentDto;
 import com.yanolja.areas.payment.entity.*;
 import com.yanolja.areas.payment.repository.OrderRepository;
 import com.yanolja.areas.payment.repository.PaymentRepository;
+import com.yanolja.areas.reservation.service.ReservationService;
 import com.yanolja.common.service.DistributedLockService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -26,6 +28,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final OrderService orderService;
+    private final ReservationService reservationService;
     private final PgService pgService;
     private final DistributedLockService distributedLockService;
 
@@ -165,6 +168,9 @@ public class PaymentService {
                 throw new IllegalStateException("취소할 수 없는 결제 상태입니다: " + payment.getStatus());
             }
 
+            // 결제 상태 변경은 먼저 저장
+            paymentRepository.save(payment);
+
             try {
                 // PG사 취소 요청
                 boolean cancelSuccess = requestCancelToPG(payment, reason);
@@ -172,17 +178,20 @@ public class PaymentService {
                 if (cancelSuccess) {
                     // 주문 취소
                     orderService.cancelOrder(payment.getOrder().getOrderNumber(), reason);
-                    log.info("결제 취소 완료 - paymentKey: {}", paymentKey);
+                    
+                    // 예약 취소 (주문의 reservationId를 사용)
+                    reservationService.cancelReservationsByOrder(payment.getOrder().getReservationId(), reason);
+                    
+                    log.info("결제 및 주문, 예약 취소 완료 - paymentKey: {}", paymentKey);
                 } else {
-                    throw new RuntimeException("PG사 취소 요청 실패");
+                    log.warn("PG사 취소 요청 실패했지만 내부 결제 상태는 취소됨 - paymentKey: {}", paymentKey);
                 }
 
             } catch (Exception e) {
-                log.error("결제 취소 실패 - paymentKey: {}", paymentKey, e);
-                throw new RuntimeException("결제 취소 처리 중 오류가 발생했습니다.", e);
+                log.error("결제 취소 중 오류 발생했지만 내부 결제 상태는 취소됨 - paymentKey: {}, error: {}", paymentKey, e.getMessage());
+                // PG 취소나 주문/예약 취소 실패해도 결제 상태는 취소됨으로 유지
             }
 
-            paymentRepository.save(payment);
             return PaymentDto.Response.fromEntity(payment);
             
         } finally {
@@ -212,22 +221,41 @@ public class PaymentService {
                 throw new IllegalStateException("환불할 수 없는 상태입니다.");
             }
 
+            // 결제 상태 변경 먼저 저장
+            paymentRepository.save(payment);
+
             try {
                 // PG사 부분 환불 요청
                 boolean refundSuccess = requestRefundToPG(payment, refundAmount, reason);
                 
                 if (refundSuccess) {
-                    log.info("부분 환불 완료 - paymentKey: {}, refundAmount: {}", paymentKey, refundAmount);
+                    log.info("PG사 환불 요청 성공 - paymentKey: {}, refundAmount: {}", paymentKey, refundAmount);
                 } else {
-                    throw new RuntimeException("PG사 환불 요청 실패");
+                    log.warn("PG사 환불 요청 실패했지만 내부 결제 상태는 환불됨 - paymentKey: {}", paymentKey);
+                }
+
+                // 전액 환불인 경우 주문 및 예약 취소 처리
+                if (payment.getStatus() == com.yanolja.areas.payment.entity.PaymentStatus.REFUNDED) {
+                    log.info("전액 환불 - 주문 및 예약 취소 처리 시작 - paymentKey: {}", paymentKey);
+                    
+                    try {
+                        // 주문 취소
+                        orderService.cancelOrder(payment.getOrder().getOrderNumber(), "전액 환불: " + reason);
+                        
+                        // 예약 취소
+                        reservationService.cancelReservationsByOrder(payment.getOrder().getReservationId(), "전액 환불: " + reason);
+                        
+                        log.info("전액 환불로 인한 주문 및 예약 취소 완료 - paymentKey: {}", paymentKey);
+                    } catch (Exception e) {
+                        log.error("전액 환불 시 주문/예약 취소 중 오류 발생 - paymentKey: {}, error: {}", paymentKey, e.getMessage());
+                    }
                 }
 
             } catch (Exception e) {
-                log.error("부분 환불 실패 - paymentKey: {}", paymentKey, e);
-                throw new RuntimeException("부분 환불 처리 중 오류가 발생했습니다.", e);
+                log.error("환불 처리 중 오류 발생했지만 내부 결제 상태는 환불됨 - paymentKey: {}, error: {}", paymentKey, e.getMessage());
+                // PG 환불 실패해도 결제 상태는 환불됨으로 유지
             }
 
-            paymentRepository.save(payment);
             return PaymentDto.Response.fromEntity(payment);
             
         } finally {
@@ -431,10 +459,17 @@ public class PaymentService {
     private void handlePaymentFailedWebhook(Payment payment, WebhookData webhookData) {
         payment.tryFailPayment(webhookData.getFailureReason());
         
-        // 주문 취소 처리
-        orderService.cancelOrder(payment.getOrder().getOrderNumber(), "결제 실패");
-        
-        log.info("웹훅으로 결제 실패 처리 완료 - paymentKey: {}", payment.getPaymentKey());
+        try {
+            // 주문 취소 처리
+            orderService.cancelOrder(payment.getOrder().getOrderNumber(), "결제 실패 (웹훅)");
+            
+            // 예약 취소 처리
+            reservationService.cancelReservationsByOrder(payment.getOrder().getReservationId(), "결제 실패 (웹훅)");
+            
+            log.info("웹훅으로 결제 실패 및 주문/예약 취소 완료 - paymentKey: {}", payment.getPaymentKey());
+        } catch (Exception e) {
+            log.error("웹훅 실패 처리 시 주문/예약 취소 실패 - paymentKey: {}, error: {}", payment.getPaymentKey(), e.getMessage());
+        }
     }
 
     /**
@@ -443,10 +478,17 @@ public class PaymentService {
     private void handlePaymentCancelledWebhook(Payment payment, WebhookData webhookData) {
         payment.tryCancelPayment();
         
-        // 주문 취소 및 쿠폰/포인트 복원
-        orderService.cancelOrder(payment.getOrder().getOrderNumber(), "결제 취소");
-        
-        log.info("웹훅으로 결제 취소 처리 완료 - paymentKey: {}", payment.getPaymentKey());
+        try {
+            // 주문 취소 및 쿠폰/포인트 복원
+            orderService.cancelOrder(payment.getOrder().getOrderNumber(), "결제 취소 (웹훅)");
+            
+            // 예약 취소
+            reservationService.cancelReservationsByOrder(payment.getOrder().getReservationId(), "결제 취소 (웹훅)");
+            
+            log.info("웹훅으로 결제 취소 및 주문/예약 취소 완료 - paymentKey: {}", payment.getPaymentKey());
+        } catch (Exception e) {
+            log.error("웹훅 취소 처리 시 주문/예약 취소 실패 - paymentKey: {}, error: {}", payment.getPaymentKey(), e.getMessage());
+        }
     }
 
     /**
@@ -456,9 +498,15 @@ public class PaymentService {
         BigDecimal refundAmount = webhookData.getRefundAmount();
         payment.tryRefundPayment(refundAmount);
         
-        // 부분 환불이 아닌 전액 환불인 경우 주문 취소
+        // 부분 환불이 아닌 전액 환불인 경우 주문 및 예약 취소
         if (payment.getRefundedAmount().compareTo(payment.getAmount()) >= 0) {
-            orderService.cancelOrder(payment.getOrder().getOrderNumber(), "전액 환불");
+            try {
+                orderService.cancelOrder(payment.getOrder().getOrderNumber(), "전액 환불 (웹훅)");
+                reservationService.cancelReservationsByOrder(payment.getOrder().getReservationId(), "전액 환불 (웹훅)");
+                log.info("웹훅으로 전액 환불 - 주문 및 예약 취소 완료 - paymentKey: {}", payment.getPaymentKey());
+            } catch (Exception e) {
+                log.error("웹훅 환불 처리 시 주문/예약 취소 실패 - paymentKey: {}, error: {}", payment.getPaymentKey(), e.getMessage());
+            }
         }
         
         log.info("웹훅으로 환불 처리 완료 - paymentKey: {}, refundAmount: {}", 
@@ -529,6 +577,95 @@ public class PaymentService {
         PAYMENT_FAILED,      // 결제 실패
         PAYMENT_CANCELLED,   // 결제 취소
         PAYMENT_REFUNDED     // 결제 환불
+    }
+
+    /**
+     * 토스페이먼츠 결제 정보 저장
+     */
+    @Transactional
+    public void savePaymentInfo(Map<String, Object> tossResponse, String orderNumber) {
+        log.info("결제 정보 저장 시작 - orderNumber: {}", orderNumber);
+        
+        // 주문 조회
+        Order order = findOrderByNumber(orderNumber);
+        
+        // 이미 결제 정보가 저장되어 있는지 확인
+        boolean paymentExists = paymentRepository.existsByOrder_IdAndStatus(order.getId(), PaymentStatus.SUCCESS);
+        if (paymentExists) {
+            log.info("이미 결제 정보가 저장되어 있음 - orderNumber: {}", orderNumber);
+            return;
+        }
+        
+        try {
+            // 토스 응답에서 필요한 정보 추출
+            String paymentKey = (String) tossResponse.get("paymentKey");
+            String pgTransactionId = (String) tossResponse.get("transactionId");
+            String approvalNumber = (String) tossResponse.get("approvalNumber");
+            String receiptUrl = (String) tossResponse.get("receiptUrl");
+            
+            // 결제 방법 정보 추출
+            PaymentMethod paymentMethod = PaymentMethod.CARD; // 기본값
+            String methodStr = (String) tossResponse.get("method");
+            if (methodStr != null) {
+                switch (methodStr.toUpperCase()) {
+                    case "CARD":
+                        paymentMethod = PaymentMethod.CARD;
+                        break;
+                    case "VIRTUAL_ACCOUNT":
+                        paymentMethod = PaymentMethod.VIRTUAL_ACCOUNT;
+                        break;
+                    case "TRANSFER":
+                    case "BANK_TRANSFER":
+                        paymentMethod = PaymentMethod.BANK_TRANSFER;
+                        break;
+                    case "PAYCO":
+                        paymentMethod = PaymentMethod.PAYCO;
+                        break;
+                    case "TOSS":
+                        paymentMethod = PaymentMethod.TOSS;
+                        break;
+                    case "POINT":
+                        paymentMethod = PaymentMethod.POINT;
+                        break;
+                    default:
+                        paymentMethod = PaymentMethod.CARD;
+                }
+            }
+            
+            // Payment 엔티티 생성
+            Payment payment = Payment.createPayment(
+                paymentKey != null ? paymentKey : "TOSS_" + System.currentTimeMillis(),
+                order,
+                paymentMethod,
+                order.getFinalAmount()
+            );
+            
+            // 결제 승인 처리
+            payment.tryApprovePayment(pgTransactionId, approvalNumber, receiptUrl);
+            
+            // 카드 정보 설정 (있는 경우)
+            Object cardInfo = tossResponse.get("card");
+            if (cardInfo instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> card = (Map<String, Object>) cardInfo;
+                String cardNumber = (String) card.get("number");
+                String cardType = (String) card.get("cardType");
+                Integer installmentMonths = (Integer) card.get("installmentPlanMonths");
+                
+                if (cardNumber != null) {
+                    payment.setCardInfo(maskCardNumber(cardNumber), cardType, installmentMonths);
+                }
+            }
+            
+            // 결제 정보 저장
+            paymentRepository.save(payment);
+            
+            log.info("결제 정보 저장 완료 - orderNumber: {}, paymentKey: {}", orderNumber, paymentKey);
+            
+        } catch (Exception e) {
+            log.error("결제 정보 저장 중 오류 발생 - orderNumber: {}", orderNumber, e);
+            throw new RuntimeException("결제 정보 저장에 실패했습니다.", e);
+        }
     }
 
     // === Private Methods ===

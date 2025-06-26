@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,9 @@ import static com.yanolja.common.oauth2.HttpCookieOAuth2AuthorizationRequestRepo
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenProvider tokenProvider;
+    
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
     
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -47,17 +51,22 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String accessToken = tokenProvider.createAccessToken(authentication);
         String refreshToken = tokenProvider.createRefreshToken(authentication);
         
+        // 로컬 개발 환경에서는 secure 플래그 비활성화
+        boolean isSecure = !"local".equals(activeProfile) && !"dev".equals(activeProfile);
+        
         Cookie accessTokenCookie = new Cookie("access_token", accessToken);
         accessTokenCookie.setPath("/");
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(true);
+        accessTokenCookie.setHttpOnly(false); // JavaScript에서 접근 가능하도록 변경
+        accessTokenCookie.setSecure(isSecure);
         response.addCookie(accessTokenCookie);
         
         Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
         refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setHttpOnly(false); // JavaScript에서 접근 가능하도록 변경
+        refreshTokenCookie.setSecure(isSecure);
         response.addCookie(refreshTokenCookie);
+        
+        log.debug("OAuth2 토큰 쿠키 설정 완료 - Secure: {}", isSecure);
         
         return targetUrl;
     }
