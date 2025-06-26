@@ -39,7 +39,7 @@ public class AmenityController {
         AmenityDto.Response responseDto = amenityService.createAmenity(requestDto);
         
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(responseDto, "편의시설이 성공적으로 등록되었습니다."));
+                .body(ApiResponse.success(responseDto));
     }
     
     /**
@@ -56,7 +56,7 @@ public class AmenityController {
         log.info("숙소 ID: {}에 편의시설 연결 요청, 편의시설 개수: {}", accommodationId, requestDto.getAmenityIds().size());
         List<AmenityDto.Response> responseDtos = amenityService.connectAmenitiesToAccommodation(accommodationId, requestDto);
         
-        return ResponseEntity.ok(ApiResponse.success(responseDtos, "편의시설이 성공적으로 연결되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success(responseDtos));
     }
     
     /**
@@ -84,7 +84,7 @@ public class AmenityController {
         log.info("편의시설 삭제 요청, ID: {}", amenityId);
         amenityService.deleteAmenity(amenityId);
         
-        return ResponseEntity.ok(ApiResponse.success("편의시설이 성공적으로 삭제되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success());
     }
     
     /**
@@ -101,7 +101,7 @@ public class AmenityController {
         log.info("숙소 ID: {}에서 편의시설 ID: {} 연결 해제 요청", accommodationId, amenityId);
         amenityService.removeAmenityFromAccommodation(accommodationId, amenityId);
         
-        return ResponseEntity.ok(ApiResponse.success("숙소에서 편의시설 연결이 성공적으로 해제되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success());
     }
     
     /**
@@ -118,6 +118,6 @@ public class AmenityController {
         log.info("편의시설 수정 요청, ID: {}, 이름: {}", amenityId, requestDto.getName());
         AmenityDto.Response responseDto = amenityService.updateAmenity(amenityId, requestDto);
         
-        return ResponseEntity.ok(ApiResponse.success(responseDto, "편의시설이 성공적으로 수정되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 } 

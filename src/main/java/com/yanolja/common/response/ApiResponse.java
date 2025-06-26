@@ -40,35 +40,6 @@ public class ApiResponse<T> {
                 .code(ResponseCode.SUCCESS)
                 .build();
     }
-
-    // 성공 응답 생성 (데이터 있음, 메시지 포함)
-    public static <T> ApiResponse<T> success(T data, String message) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .data(data)
-                .message(message)
-                .code(ResponseCode.SUCCESS)
-                .build();
-    }
-    
-    // 성공 응답 생성 (데이터 있음, MessageEnum 사용)
-    public static <T> ApiResponse<T> success(T data, MessageEnum messageEnum) {
-        return ApiResponse.<T>builder()
-                .success(true)
-                .data(data)
-                .message(messageEnum.getMessage())
-                .code(ResponseCode.SUCCESS)
-                .build();
-    }
-
-    // 성공 응답 생성 (데이터 없음, 메시지만)
-    public static ApiResponse<Void> success(String message) {
-        return ApiResponse.<Void>builder()
-                .success(true)
-                .message(message)
-                .code(ResponseCode.SUCCESS)
-                .build();
-    }
     
     // 성공 응답 생성 (데이터 없음, MessageEnum 사용)
     public static ApiResponse<Void> success(MessageEnum messageEnum) {

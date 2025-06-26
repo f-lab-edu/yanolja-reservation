@@ -63,6 +63,6 @@ public class RoomImageController {
     ) {
         log.info("Deleting image ID: {}", imageId);
         roomImageService.deleteImage(imageId);
-        return ApiResponse.success("객실 이미지 삭제 성공");
+        return ApiResponse.success();
     }
 } 

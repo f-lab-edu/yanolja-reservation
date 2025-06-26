@@ -32,7 +32,7 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         TokenResponse tokenResponse = authService.login(loginRequest);
-        return ApiResponse.success(tokenResponse, "로그인이 성공적으로 완료되었습니다.");
+        return ApiResponse.success(tokenResponse);
     }
     
     @Operation(summary = "사용자 로그아웃", description = "requestDto[LogoutRequest], responseDto[Map<String, Object>]", tags = {"인증"})
@@ -42,13 +42,13 @@ public class AuthController {
         Map<String, Object> data = new HashMap<>();
         data.put("success", result);
         String message = result ? "로그아웃 되었습니다." : "로그아웃 처리 중 오류가 발생했습니다.";
-        return ApiResponse.success(data, message);
+        return ApiResponse.success(data);
     }
     
     @Operation(summary = "토큰 갱신", description = "requestDto[TokenRefreshRequest], responseDto[TokenResponse]", tags = {"인증"})
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest refreshRequest) {
         TokenResponse tokenResponse = authService.refreshToken(refreshRequest);
-        return ApiResponse.success(tokenResponse, "토큰이 성공적으로 갱신되었습니다.");
+        return ApiResponse.success(tokenResponse);
     }
 } 
